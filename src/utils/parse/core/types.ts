@@ -14,6 +14,18 @@ export enum Platforms {
   Twitch = 'twitch',
   Patreon = 'patreon',
   SoundCloud = 'soundcloud',
+  Threads = 'threads',
+  Bluesky = 'bluesky',
+  Mastodon = 'mastodon',
+  Tumblr = 'tumblr',
+  GitHub = 'github',
+  GitLab = 'gitlab',
+  Bitbucket = 'bitbucket',
+  Amazon = 'amazon',
+  Shopify = 'shopify',
+  OnlyFans = 'onlyfans',
+  Substack = 'substack',
+  KoFi = 'kofi',
   Unknown = 'unknown',
 }
 

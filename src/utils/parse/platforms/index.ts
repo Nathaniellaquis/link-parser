@@ -16,6 +16,18 @@ import { reddit } from './reddit'
 import { twitch } from './twitch'
 import { patreon } from './patreon'
 import { soundcloud } from './soundcloud'
+import { threads } from './threads'
+import { bluesky } from './bluesky'
+import { mastodon } from './mastodon'
+import { tumblr } from './tumblr'
+import { github } from './github'
+import { gitlab } from './gitlab'
+import { bitbucket } from './bitbucket'
+import { amazon } from './amazon'
+import { shopify } from './shopify'
+import { onlyfans } from './onlyfans'
+import { substack } from './substack'
+import { kofi } from './kofi'
 
 export const registry: Map<string, PlatformModule> = new Map(
   [
@@ -34,6 +46,18 @@ export const registry: Map<string, PlatformModule> = new Map(
     twitch,
     patreon,
     soundcloud,
+    threads,
+    bluesky,
+    mastodon,
+    tumblr,
+    github,
+    gitlab,
+    bitbucket,
+    amazon,
+    shopify,
+    onlyfans,
+    substack,
+    kofi,
   ].map(mod => [mod.id, mod]))
 
 export {
@@ -52,4 +76,16 @@ export {
   twitch,
   patreon,
   soundcloud,
+  threads,
+  bluesky,
+  mastodon,
+  tumblr,
+  github,
+  gitlab,
+  bitbucket,
+  amazon,
+  shopify,
+  onlyfans,
+  substack,
+  kofi,
 }
