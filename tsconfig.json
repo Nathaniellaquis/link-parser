@@ -8,7 +8,8 @@
     "skipLibCheck": true,
     "moduleResolution": "node",
     "baseUrl": "./",
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": ["node", "jest"]
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "tests/**/*"]
 }
