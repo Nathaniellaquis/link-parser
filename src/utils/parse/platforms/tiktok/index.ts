@@ -1,5 +1,5 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../core/types'
-import { normalize } from '../utils/url'
+import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
 
 export const tiktok: PlatformModule = {
   id: Platforms.TikTok,
@@ -24,7 +24,6 @@ export const tiktok: PlatformModule = {
   },
 
   extract(url: string, result: ParsedUrl): void {
-    // Video detection
     if (this.patterns.content) {
       for (const [type, patternValue] of Object.entries(this.patterns.content)) {
         const pattern = patternValue as RegExp | undefined
@@ -39,7 +38,6 @@ export const tiktok: PlatformModule = {
       }
     }
 
-    // Profile
     const profileMatch = this.patterns.profile.exec(url)
     if (profileMatch) {
       result.username = profileMatch[1]
@@ -70,7 +68,6 @@ export const tiktok: PlatformModule = {
   },
 
   async resolveShortUrl(shortUrl: string): Promise<string> {
-    // In real world we'd hit network; here stub to return same
     return shortUrl
   },
 }

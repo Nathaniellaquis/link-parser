@@ -1,5 +1,5 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../core/types'
-import { normalize } from '../utils/url'
+import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
 
 export const discord: PlatformModule = {
   id: Platforms.Discord,

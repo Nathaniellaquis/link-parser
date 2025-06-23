@@ -1,5 +1,5 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../core/types'
-import { normalize } from '../utils/url'
+import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
 
 export const twitter: PlatformModule = {
   id: Platforms.Twitter,
@@ -22,7 +22,6 @@ export const twitter: PlatformModule = {
   },
 
   extract(url: string, result: ParsedUrl): void {
-    // Post detection
     const postMatch = this.patterns.content?.post?.exec(url)
     if (postMatch) {
       result.ids.postId = postMatch[1]
@@ -30,7 +29,6 @@ export const twitter: PlatformModule = {
       result.metadata.contentType = 'post'
     }
 
-    // Profile detection
     const profileMatch = this.patterns.profile.exec(url)
     if (profileMatch && !/\/status\//.test(url)) {
       result.username = profileMatch[1]

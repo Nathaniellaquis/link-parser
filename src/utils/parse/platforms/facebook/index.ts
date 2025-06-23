@@ -1,5 +1,5 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../core/types'
-import { normalize } from '../utils/url'
+import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
 
 export const facebook: PlatformModule = {
   id: Platforms.Facebook,
@@ -23,7 +23,6 @@ export const facebook: PlatformModule = {
   },
 
   extract(url: string, result: ParsedUrl): void {
-    // content
     if (this.patterns.content) {
       for (const [type, patternValue] of Object.entries(this.patterns.content)) {
         const pattern = patternValue as RegExp | undefined
@@ -38,7 +37,6 @@ export const facebook: PlatformModule = {
       }
     }
 
-    // profile
     const profileMatch = this.patterns.profile.exec(url)
     if (profileMatch) {
       result.username = profileMatch[2] || undefined

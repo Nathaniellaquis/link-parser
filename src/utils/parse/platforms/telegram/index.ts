@@ -1,23 +1,23 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../core/types'
-import { normalize } from '../utils/url'
+import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
 
-export const linkedin: PlatformModule = {
-  id: Platforms.LinkedIn,
-  name: 'LinkedIn',
-  color: '#0A66C2',
+export const telegram: PlatformModule = {
+  id: Platforms.Telegram,
+  name: 'Telegram',
+  color: '#0088CC',
 
-  domains: ['linkedin.com'],
+  domains: ['t.me', 'telegram.me'],
 
   patterns: {
-    profile: /linkedin\.com\/in\/([A-Za-z0-9-_%]+)/i,
-    handle: /^[A-Za-z0-9-]{3,100}$/,
+    profile: /(?:t\.me|telegram\.me)\/([A-Za-z0-9_]+)/i,
+    handle: /^[A-Za-z0-9_]{5,32}$/,
     content: {
-      post: /linkedin\.com\/feed\/update\/urn:li:activity:(\d+)/i,
+      post: /(?:t\.me|telegram\.me)\/[A-Za-z0-9_]+\/(\d+)/i,
     },
   },
 
   detect(url: string): boolean {
-    return url.includes('linkedin.com')
+    return this.domains.some(d => url.includes(d))
   },
 
   extract(url: string, result: ParsedUrl): void {
@@ -37,14 +37,14 @@ export const linkedin: PlatformModule = {
   },
 
   validateHandle(handle: string): boolean {
-    return this.patterns.handle.test(handle)
+    return this.patterns.handle.test(handle.replace('@', ''))
   },
 
   buildProfileUrl(username: string): string {
-    return `https://linkedin.com/in/${username}`
+    return `https://t.me/${username}`
   },
 
   normalizeUrl(url: string): string {
-    return normalize(url.replace(/[?&]trk=[^&]+/g, ''))
+    return normalize(url)
   },
 }

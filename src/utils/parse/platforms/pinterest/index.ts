@@ -1,20 +1,19 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../core/types'
-import { normalize } from '../utils/url'
+import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
 
-export const spotify: PlatformModule = {
-  id: Platforms.Spotify,
-  name: 'Spotify',
-  color: '#1DB954',
+export const pinterest: PlatformModule = {
+  id: Platforms.Pinterest,
+  name: 'Pinterest',
+  color: '#BD081C',
 
-  domains: ['spotify.com', 'open.spotify.com'],
+  domains: ['pinterest.com', 'pin.it'],
 
   patterns: {
-    profile: /open\.spotify\.com\/(?:user|artist)\/([A-Za-z0-9]+)/i,
-    handle: /^[A-Za-z0-9]{3,32}$/,
+    profile: /pinterest\.com\/([A-Za-z0-9_]+)/i,
+    handle: /^[A-Za-z0-9_]{3,15}$/,
     content: {
-      track: /open\.spotify\.com\/track\/([A-Za-z0-9]+)/i,
-      playlist: /open\.spotify\.com\/playlist\/([A-Za-z0-9]+)/i,
-      album: /open\.spotify\.com\/album\/([A-Za-z0-9]+)/i,
+      pin: /pinterest\.com\/pin\/(\d+)/i,
+      short: /pin\.it\/([A-Za-z0-9]+)/i,
     },
   },
 
@@ -37,7 +36,7 @@ export const spotify: PlatformModule = {
 
     const profileMatch = this.patterns.profile.exec(url)
     if (profileMatch) {
-      result.userId = profileMatch[1]
+      result.username = profileMatch[1]
       result.metadata.isProfile = true
       result.metadata.contentType = 'profile'
     }
@@ -48,14 +47,10 @@ export const spotify: PlatformModule = {
   },
 
   buildProfileUrl(username: string): string {
-    return `https://open.spotify.com/user/${username}`
-  },
-
-  buildContentUrl(contentType: string, id: string): string {
-    return `https://open.spotify.com/${contentType}/${id}`
+    return `https://pinterest.com/${username}`
   },
 
   normalizeUrl(url: string): string {
-    return normalize(url.replace(/[?&](si|utm_[^&]+)=[^&]+/g, ''))
+    return normalize(url.replace(/[?&]utm_[^&]+/g, ''))
   },
 }

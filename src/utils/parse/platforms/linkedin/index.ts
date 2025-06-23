@@ -1,23 +1,23 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../core/types'
-import { normalize } from '../utils/url'
+import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
 
-export const patreon: PlatformModule = {
-  id: Platforms.Patreon,
-  name: 'Patreon',
-  color: '#F96854',
+export const linkedin: PlatformModule = {
+  id: Platforms.LinkedIn,
+  name: 'LinkedIn',
+  color: '#0A66C2',
 
-  domains: ['patreon.com'],
+  domains: ['linkedin.com'],
 
   patterns: {
-    profile: /patreon\.com\/([A-Za-z0-9_-]+)/i,
-    handle: /^[A-Za-z0-9_-]{3,50}$/,
+    profile: /linkedin\.com\/in\/([A-Za-z0-9-_%]+)/i,
+    handle: /^[A-Za-z0-9-]{3,100}$/,
     content: {
-      post: /patreon\.com\/posts\/(\d+)/i,
+      post: /linkedin\.com\/feed\/update\/urn:li:activity:(\d+)/i,
     },
   },
 
   detect(url: string): boolean {
-    return url.includes('patreon.com')
+    return url.includes('linkedin.com')
   },
 
   extract(url: string, result: ParsedUrl): void {
@@ -41,10 +41,10 @@ export const patreon: PlatformModule = {
   },
 
   buildProfileUrl(username: string): string {
-    return `https://patreon.com/${username}`
+    return `https://linkedin.com/in/${username}`
   },
 
   normalizeUrl(url: string): string {
-    return normalize(url)
+    return normalize(url.replace(/[?&]trk=[^&]+/g, ''))
   },
 }

@@ -1,23 +1,23 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../core/types'
-import { normalize } from '../utils/url'
+import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
 
-export const telegram: PlatformModule = {
-  id: Platforms.Telegram,
-  name: 'Telegram',
-  color: '#0088CC',
+export const patreon: PlatformModule = {
+  id: Platforms.Patreon,
+  name: 'Patreon',
+  color: '#F96854',
 
-  domains: ['t.me', 'telegram.me'],
+  domains: ['patreon.com'],
 
   patterns: {
-    profile: /(?:t\.me|telegram\.me)\/([A-Za-z0-9_]+)/i,
-    handle: /^[A-Za-z0-9_]{5,32}$/,
+    profile: /patreon\.com\/([A-Za-z0-9_-]+)/i,
+    handle: /^[A-Za-z0-9_-]{3,50}$/,
     content: {
-      post: /(?:t\.me|telegram\.me)\/[A-Za-z0-9_]+\/(\d+)/i,
+      post: /patreon\.com\/posts\/(\d+)/i,
     },
   },
 
   detect(url: string): boolean {
-    return this.domains.some(d => url.includes(d))
+    return url.includes('patreon.com')
   },
 
   extract(url: string, result: ParsedUrl): void {
@@ -37,11 +37,11 @@ export const telegram: PlatformModule = {
   },
 
   validateHandle(handle: string): boolean {
-    return this.patterns.handle.test(handle.replace('@', ''))
+    return this.patterns.handle.test(handle)
   },
 
   buildProfileUrl(username: string): string {
-    return `https://t.me/${username}`
+    return `https://patreon.com/${username}`
   },
 
   normalizeUrl(url: string): string {
