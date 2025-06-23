@@ -1,5 +1,5 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../core/types'
-import { normalize } from '../utils/url'
+import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
 
 export const instagram: PlatformModule = {
   id: Platforms.Instagram,
@@ -25,7 +25,6 @@ export const instagram: PlatformModule = {
   },
 
   extract(url: string, result: ParsedUrl): void {
-    // Profile match (but avoid content paths)
     const profileMatch = this.patterns.profile.exec(url)
     if (profileMatch && !/\/(p|reel|tv|stories)\//.test(url)) {
       result.username = profileMatch[1]
@@ -33,7 +32,6 @@ export const instagram: PlatformModule = {
       result.metadata.contentType = 'profile'
     }
 
-    // Content detection
     if (this.patterns.content) {
       for (const [type, patternValue] of Object.entries(this.patterns.content)) {
         const pattern = patternValue as RegExp | undefined
