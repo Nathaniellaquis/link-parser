@@ -1,5 +1,5 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../core/types'
-import { normalize } from '../utils/url'
+import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
 
 export const youtube: PlatformModule = {
   id: Platforms.YouTube,
@@ -26,7 +26,6 @@ export const youtube: PlatformModule = {
   },
 
   extract(url: string, result: ParsedUrl): void {
-    // Content first (videos etc.)
     if (this.patterns.content) {
       for (const [type, patternValue] of Object.entries(this.patterns.content)) {
         const pattern = patternValue as RegExp | undefined
@@ -36,19 +35,15 @@ export const youtube: PlatformModule = {
           result.ids[`${type}Id`] = match[1]
           result.metadata[`is${type.charAt(0).toUpperCase() + type.slice(1)}`] = true
           result.metadata.contentType = type
-          if (type === 'video' || type === 'short' || type === 'live') {
-            // handle timestamp
+          if (['video', 'short', 'live'].includes(type)) {
             const tMatch = url.match(/[?&]t=(\d+)/)
-            if (tMatch) {
-              result.metadata.timestamp = parseInt(tMatch[1])
-            }
+            if (tMatch) result.metadata.timestamp = parseInt(tMatch[1])
           }
           break
         }
       }
     }
 
-    // Profile detection
     const profileMatch = this.patterns.profile.exec(url)
     if (profileMatch) {
       result.username = profileMatch[1]
@@ -64,24 +59,18 @@ export const youtube: PlatformModule = {
   buildProfileUrl(username: string): string {
     const clean = username.replace('@', '')
     if (clean.startsWith('UC') && clean.length === 24) {
-      // Channel id
       return `https://youtube.com/channel/${clean}`
     }
     return `https://youtube.com/@${clean}`
   },
 
   buildContentUrl(contentType: string, id: string): string {
-    if (contentType === 'video' || contentType === 'short' || contentType === 'live') {
-      return `https://youtube.com/watch?v=${id}`
-    }
-    if (contentType === 'playlist') {
-      return `https://youtube.com/playlist?list=${id}`
-    }
+    if (['video', 'short', 'live'].includes(contentType)) return `https://youtube.com/watch?v=${id}`
+    if (contentType === 'playlist') return `https://youtube.com/playlist?list=${id}`
     return `https://youtube.com/watch?v=${id}`
   },
 
   normalizeUrl(url: string): string {
-    // Remove some YouTube tracking params
     url = url.replace(/[?&](feature|si|pp|ab_channel)=[^&]+/g, '')
     return normalize(url)
   },
@@ -101,9 +90,7 @@ export const youtube: PlatformModule = {
 
   async resolveShortUrl(shortUrl: string): Promise<string> {
     const match = /youtu\.be\/([a-zA-Z0-9_-]{11})/.exec(shortUrl)
-    if (match) {
-      return `https://youtube.com/watch?v=${match[1]}`
-    }
+    if (match) return `https://youtube.com/watch?v=${match[1]}`
     return shortUrl
   },
 }
