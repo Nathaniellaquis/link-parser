@@ -194,6 +194,24 @@ parse('https://www.instagram.com/nasa/?utm_source=ig_embed')
 // Returns normalized URL without tracking params
 ```
 
+### Embed Data
+Get embed URLs and metadata for platforms that support embedding:
+```typescript
+const result = parse('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+console.log(result.embedData)
+// {
+//   platform: 'youtube',
+//   type: 'iframe',
+//   contentId: 'dQw4w9WgXcQ',
+//   embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+// }
+
+// Works with Instagram, Twitter, TikTok, Spotify, SoundCloud, and more
+const tweet = parse('https://twitter.com/user/status/1234567890')
+console.log(tweet.embedData?.embedUrl)
+// 'https://twitframe.com/show?url=...'
+```
+
 ### TypeScript Support
 Full type safety with discriminated unions:
 ```typescript

@@ -22,6 +22,26 @@ export function parse(url: string): ParsedUrl {
       module.extract(url, result)
       result.normalizedUrl = module.normalizeUrl(url)
       result.isValid = true
+
+      // Extract embed data if the platform supports it
+      if (module.getEmbedInfo) {
+        const embedInfo = module.getEmbedInfo(url, result)
+        if (embedInfo) {
+          result.embedData = {
+            platform: module.id,
+            type: embedInfo.type || 'iframe',
+            contentId: result.ids.videoId || result.ids.postId || result.ids.trackId || '',
+            embedUrl: embedInfo.embedUrl,
+            options: embedInfo.options
+          }
+
+          // Mark if the URL is already an embed
+          if (embedInfo.isEmbedAlready) {
+            result.metadata.isEmbed = true
+          }
+        }
+      }
+
       break
     }
   }
