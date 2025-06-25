@@ -1,28 +1,90 @@
 {
-  "name": "platform-parser",
-  "version": "1.0.0",
-  "type": "module",
+  "name": "link-parser",
+  "version": "0.1.0",
+  "description": "Extract usernames, IDs, and metadata from social media URLs across 100+ platforms",
   "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "build": "tsc",
-    "test": "jest --coverage"
+    "build": "npm run clean && npm run build:cjs && npm run build:esm && npm run build:types",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:types": "tsc -p tsconfig.types.json",
+    "clean": "rimraf dist",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "prepublishOnly": "npm run build && npm run test",
+    "prepare": "npm run build"
   },
   "keywords": [
-    "parser",
     "social-media",
-    "url"
+    "url-parser",
+    "link-parser",
+    "social-links",
+    "instagram",
+    "twitter",
+    "youtube",
+    "tiktok",
+    "linkedin",
+    "github",
+    "spotify",
+    "url-extraction",
+    "handle-validation",
+    "username-parser"
   ],
-  "author": "AI Assistant",
+  "author": "Nathaniel Laquis",
   "license": "MIT",
-  "devDependencies": {
-    "@types/jest": "^29.5.3",
-    "@types/node": "^20.11.19",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.1.1",
-    "typescript": "^5.4.3"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nathaniellaquis/link-parser.git"
   },
-  "dependencies": {
-    "libphonenumber-js": "^1.10.32",
-    "ts-node": "^10.9.2"
+  "bugs": {
+    "url": "https://github.com/Nathaniellaquis/link-parser/issues"
+  },
+  "homepage": "https://github.com/Nathaniellaquis/link-parser#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "jest": "^29.5.0",
+    "prettier": "^3.0.0",
+    "rimraf": "^5.0.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {},
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "roots": [
+      "<rootDir>/src",
+      "<rootDir>/tests"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.ts",
+      "**/?(*.)+(spec|test).ts"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.ts",
+      "!src/**/*.d.ts",
+      "!src/**/index.ts"
+    ]
   }
 }
