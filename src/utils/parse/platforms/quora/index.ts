@@ -1,15 +1,4 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
-import { normalize } from '../../utils/url'
-
-// Quora patterns
-// Profile: https://www.quora.com/profile/First-Last
-const profileRegex = /^https?:\/\/(?:www\.)?quora\.com\/profile\/([A-Za-z0-9._-]{2,60})\/?$/i
-
-// Question: https://www.quora.com/Why-is-the-sky-blue or with share params
-const questionRegex = /^https?:\/\/(?:www\.)?quora\.com\/([A-Za-z0-9._-]{5,})(?:\?.*)?$/i
-
-// Answer: https://www.quora.com/Why-is-the-sky-blue/answer/First-Last
-const answerRegex = /^https?:\/\/(?:www\.)?quora\.com\/([A-Za-z0-9._-]{5,})\/answer\/([A-Za-z0-9._-]{2,60})\/?$/i
 
 export const quora: PlatformModule = {
     id: Platforms.Quora,
@@ -19,61 +8,60 @@ export const quora: PlatformModule = {
     domains: ['quora.com'],
 
     patterns: {
-        profile: profileRegex,
-        handle: /^[A-Za-z0-9._-]{2,60}$/,
+        profile: /^https?:\/\/(?:www\.)?quora\.com\/profile\/([A-Za-z0-9-]+)/i,
+        handle: /^[A-Za-z0-9-]+$/,
         content: {
-            question: questionRegex,
-            answer: answerRegex,
-        },
+            question: /^https?:\/\/(?:www\.)?quora\.com\/([A-Za-z0-9-]+(?:-[A-Za-z0-9-]+)*)/i,
+            space: /^https?:\/\/(?:www\.)?quora\.com\/q\/([A-Za-z0-9-]+)/i
+        }
     },
 
     detect(url: string): boolean {
-        if (!url.includes('quora.com')) return false
-        return profileRegex.test(url) || answerRegex.test(url) || questionRegex.test(url)
+        return url.includes('quora.com')
     },
 
     extract(url: string, result: ParsedUrl): void {
-        const ans = answerRegex.exec(url)
-        if (ans) {
-            result.ids.questionSlug = ans[1]
-            result.username = ans[2]
-            result.metadata.isAnswer = true
-            result.metadata.contentType = 'answer'
-            return
-        }
-
-        const prof = profileRegex.exec(url)
-        if (prof) {
-            result.username = prof[1]
+        // Profile
+        const profileMatch = url.match(this.patterns.profile)
+        if (profileMatch) {
+            result.username = profileMatch[1]
             result.metadata.isProfile = true
-            result.metadata.contentType = 'profile'
             return
         }
 
-        const q = questionRegex.exec(url)
-        if (q) {
-            result.ids.questionSlug = q[1]
-            result.metadata.isQuestion = true
-            result.metadata.contentType = 'question'
-            return
+        // Space
+        if (this.patterns.content?.space) {
+            const spaceMatch = url.match(this.patterns.content.space)
+            if (spaceMatch) {
+                result.ids.spaceId = spaceMatch[1]
+                result.metadata.contentType = 'space'
+                return
+            }
+        }
+
+        // Question (catch-all for Quora URLs)
+        if (this.patterns.content?.question) {
+            const questionMatch = url.match(this.patterns.content.question)
+            if (questionMatch) {
+                result.ids.questionId = questionMatch[1]
+                result.metadata.contentType = 'question'
+            }
         }
     },
 
     validateHandle(handle: string): boolean {
-        return /^[A-Za-z0-9._-]{2,60}$/.test(handle)
+        return this.patterns.handle.test(handle)
     },
 
     buildProfileUrl(username: string): string {
         return `https://www.quora.com/profile/${username}`
     },
 
-    buildContentUrl(type: string, id: string): string {
-        // For Quora, id represents the path after domain. Caller constructs accordingly.
+    buildContentUrl(_type: string, id: string): string {
         return `https://www.quora.com/${id}`
     },
 
     normalizeUrl(url: string): string {
-        // remove tracking params and anchors
-        return normalize(url.replace(/\?.*$/, '').replace(/#.*$/, ''))
+        return url.split('?')[0]
     },
 } 

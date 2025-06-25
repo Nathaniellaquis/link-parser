@@ -1,6 +1,6 @@
-# link-parser
+# social-link-parser
 
-Extract usernames, IDs, and metadata from social media URLs.
+🔗 Extract usernames, IDs, and metadata from social media URLs across 100+ platforms.
 
 ```typescript
 // Turn any social media URL into structured data
@@ -11,11 +11,11 @@ parse('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
 ## Installation
 
 ```bash
-npm install link-parser
+npm install social-link-parser
 # or
-yarn add link-parser
+yarn add social-link-parser
 # or  
-pnpm add link-parser
+pnpm add social-link-parser
 ```
 
 ## What It Does
@@ -23,7 +23,7 @@ pnpm add link-parser
 This library extracts structured data from URLs across 100+ platforms. It handles all URL variations (with/without protocol, www, mobile domains, short URLs) and validates usernames according to each platform's rules.
 
 ```typescript
-import { parse } from 'link-parser'
+import { parse } from 'social-link-parser'
 
 // Extract username from any Instagram URL format
 parse('instagram.com/nasa')

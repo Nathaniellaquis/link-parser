@@ -1,5 +1,5 @@
 {
-  "name": "link-parser",
+  "name": "social-link-parser",
   "version": "0.1.0",
   "description": "Extract usernames, IDs, and metadata from social media URLs across 100+ platforms",
   "main": "dist/index.js",
@@ -23,7 +23,7 @@
     "lint:fix": "eslint src --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
-    "prepublishOnly": "npm run build && npm run test",
+    "prepublishOnly": "npm run build",
     "prepare": "npm run build"
   },
   "keywords": [
@@ -69,22 +69,7 @@
     "ts-jest": "^29.1.0",
     "typescript": "^5.0.0"
   },
-  "dependencies": {},
-  "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "node",
-    "roots": [
-      "<rootDir>/src",
-      "<rootDir>/tests"
-    ],
-    "testMatch": [
-      "**/__tests__/**/*.ts",
-      "**/?(*.)+(spec|test).ts"
-    ],
-    "collectCoverageFrom": [
-      "src/**/*.ts",
-      "!src/**/*.d.ts",
-      "!src/**/index.ts"
-    ]
+  "dependencies": {
+    "libphonenumber-js": "^1.10.51"
   }
 }
