@@ -1,0 +1,59 @@
+import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+
+export const poshmark: PlatformModule = {
+    id: Platforms.Poshmark,
+    name: 'Poshmark',
+    color: '#C03838',
+
+    domains: ['poshmark.com'],
+
+    patterns: {
+        profile: /^https?:\/\/(?:www\.)?poshmark\.com\/closet\/([A-Za-z0-9_.-]{3,40})\/?$/i,
+        handle: /^[A-Za-z0-9_.-]{3,40}$/,
+        content: {
+            listing: /^https?:\/\/(?:www\.)?poshmark\.com\/listing\/([A-Za-z0-9_-]+)-(\d+)\/?$/i,
+        },
+    },
+
+    detect(url: string): boolean {
+        if (!url.includes('poshmark.com')) return false
+        return (
+            this.patterns.profile.test(url) ||
+            !!this.patterns.content?.listing?.test(url)
+        )
+    },
+
+    extract(url: string, res: ParsedUrl): void {
+        const lst = this.patterns.content?.listing?.exec(url)
+        if (lst) {
+            res.ids.listingSlug = lst[1]
+            res.ids.listingId = lst[2]
+            res.metadata.isListing = true
+            res.metadata.contentType = 'listing'
+            return
+        }
+        const prof = this.patterns.profile.exec(url)
+        if (prof) {
+            res.username = prof[1]
+            res.metadata.isCloset = true
+            res.metadata.contentType = 'closet'
+        }
+    },
+
+    validateHandle(handle: string): boolean {
+        return this.patterns.handle.test(handle)
+    },
+
+    buildProfileUrl(username: string): string {
+        return `https://poshmark.com/closet/${username}`
+    },
+
+    buildContentUrl(contentType: string, id: string): string {
+        if (contentType === 'listing') return `https://poshmark.com/listing/${id}`
+        return ''
+    },
+
+    normalizeUrl(url: string): string {
+        return url.replace(/^http:\/\//, 'https://').replace(/www\./, '').replace(/\/$/, '')
+    },
+} 

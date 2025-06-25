@@ -1,0 +1,46 @@
+# Source files
+src/
+tests/
+
+# Config files
+.eslintrc.json
+.prettierrc.json
+.prettierignore
+jest.config.js
+tsconfig.json
+tsconfig.*.json
+
+# Development files
+coverage/
+.nyc_output/
+*.log
+*.tgz
+
+# CI/CD
+.github/
+.circleci/
+.travis.yml
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation source
+docs/
+*.md
+!README.md
+
+# Examples
+examples/
+
+# Build artifacts that shouldn't be published
+*.map
+*.tsbuildinfo 
