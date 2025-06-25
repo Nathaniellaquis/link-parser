@@ -11,33 +11,71 @@ export const tiktok: PlatformModule = {
   shortDomains: ['vm.tiktok.com'],
 
   patterns: {
-    profile: /tiktok\.com\/@([A-Za-z0-9._]+)/i,
-    handle: /^@[A-Za-z0-9._]{2,24}$/,
+    profile: /^https?:\/\/(?:www\.)?tiktok\.com\/@([A-Za-z0-9._]{2,24})$/i,
+    handle: /^@?[A-Za-z0-9._]{2,24}$/,
     content: {
-      video: /tiktok\.com\/@[\w.-]+\/video\/(\d+)/i,
-      short: /vm\.tiktok\.com\/([A-Za-z0-9]+)/i,
+      video: /^https?:\/\/(?:www\.)?tiktok\.com\/@([A-Za-z0-9._]{2,24})\/video\/(\d{10,20})$/i,
+      live: /^https?:\/\/(?:www\.)?tiktok\.com\/@([A-Za-z0-9._]{2,24})\/live$/i,
+      short: /^https?:\/\/vm\.tiktok\.com\/([A-Za-z0-9]+)$/i,
+      embed: /^https?:\/\/(?:www\.)?tiktok\.com\/embed\/v2\/(\d{10,20})$/i,
     },
   },
 
   detect(url: string): boolean {
-    return this.domains.some(d => url.includes(d)) || this.shortDomains?.some(sd => url.includes(sd)) || false
-  },
+    if (!this.domains.some(d => url.includes(d)) && !this.shortDomains?.some(sd => url.includes(sd))) {
+      return false
+    }
 
-  extract(url: string, result: ParsedUrl): void {
+    // Check if it matches any valid pattern
+    if (this.patterns.profile.test(url)) return true
     if (this.patterns.content) {
-      for (const [type, patternValue] of Object.entries(this.patterns.content)) {
-        const pattern = patternValue as RegExp | undefined
-        if (!pattern) continue
-        const match = pattern.exec(url)
-        if (match) {
-          result.ids[`${type}Id`] = match[1]
-          result.metadata[`is${type.charAt(0).toUpperCase() + type.slice(1)}`] = true
-          result.metadata.contentType = 'video'
-          break
-        }
+      for (const pattern of Object.values(this.patterns.content)) {
+        if (pattern && pattern.test(url)) return true
       }
     }
 
+    return false
+  },
+
+  extract(url: string, result: ParsedUrl): void {
+    // Handle embed URLs
+    const embedMatch = this.patterns.content?.embed?.exec(url)
+    if (embedMatch) {
+      result.ids.videoId = embedMatch[1]
+      result.metadata.isEmbed = true
+      result.metadata.contentType = 'embed'
+      return
+    }
+
+    // Handle video URLs
+    const videoMatch = this.patterns.content?.video?.exec(url)
+    if (videoMatch) {
+      result.username = videoMatch[1]
+      result.ids.videoId = videoMatch[2]
+      result.metadata.isVideo = true
+      result.metadata.contentType = 'video'
+      return
+    }
+
+    // Handle live URLs
+    const liveMatch = this.patterns.content?.live?.exec(url)
+    if (liveMatch) {
+      result.username = liveMatch[1]
+      result.metadata.isLive = true
+      result.metadata.contentType = 'live'
+      return
+    }
+
+    // Handle short URLs
+    const shortMatch = this.patterns.content?.short?.exec(url)
+    if (shortMatch) {
+      result.ids.shortId = shortMatch[1]
+      result.metadata.isShort = true
+      result.metadata.contentType = 'short'
+      return
+    }
+
+    // Handle profile URLs
     const profileMatch = this.patterns.profile.exec(url)
     if (profileMatch) {
       result.username = profileMatch[1]
@@ -47,7 +85,8 @@ export const tiktok: PlatformModule = {
   },
 
   validateHandle(handle: string): boolean {
-    return this.patterns.handle.test(handle.startsWith('@') ? handle : `@${handle}`)
+    const cleaned = handle.replace('@', '')
+    return /^[A-Za-z0-9._]{2,24}$/.test(cleaned)
   },
 
   buildProfileUrl(username: string): string {
@@ -69,5 +108,17 @@ export const tiktok: PlatformModule = {
 
   async resolveShortUrl(shortUrl: string): Promise<string> {
     return shortUrl
+  },
+
+  getEmbedInfo(url: string, parsed) {
+    if (/tiktok\.com\/embed\//.test(url)) {
+      return { embedUrl: url, isEmbedAlready: true }
+    }
+    const id = parsed.ids.videoId
+    if (id) {
+      const embedUrl = `https://www.tiktok.com/embed/v2/${id}`
+      return { embedUrl, type: 'iframe' }
+    }
+    return null
   },
 }

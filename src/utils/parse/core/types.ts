@@ -16,7 +16,6 @@ export enum Platforms {
   SoundCloud = 'soundcloud',
   Threads = 'threads',
   Bluesky = 'bluesky',
-  Mastodon = 'mastodon',
   Tumblr = 'tumblr',
   GitHub = 'github',
   GitLab = 'gitlab',
@@ -26,6 +25,76 @@ export enum Platforms {
   OnlyFans = 'onlyfans',
   Substack = 'substack',
   KoFi = 'kofi',
+  ShopMy = 'shopmy',
+  Email = 'email',
+  Venmo = 'venmo',
+  CashApp = 'cashapp',
+  PayPal = 'paypal',
+  Vimeo = 'vimeo',
+  Cameo = 'cameo',
+  AppleMusic = 'applemusic',
+  Deezer = 'deezer',
+  Pandora = 'pandora',
+  Tidal = 'tidal',
+  Bandcamp = 'bandcamp',
+  Mixcloud = 'mixcloud',
+  Audiomack = 'audiomack',
+  Dailymotion = 'dailymotion',
+  Rumble = 'rumble',
+  Triller = 'triller',
+  BeReal = 'bereal',
+  VSCO = 'vsco',
+  Dispo = 'dispo',
+  Clubhouse = 'clubhouse',
+  Poshmark = 'poshmark',
+  LikeToKnowIt = 'liketoknowit',
+  Revolve = 'revolve',
+  OpenSea = 'opensea',
+  IMDb = 'imdb',
+  Ticketmaster = 'ticketmaster',
+  BandsInTown = 'bandsintown',
+  Stereo = 'stereo',
+  Fanfix = 'fanfix',
+  Slushy = 'slushy',
+  GoFundMe = 'gofundme',
+  Calendly = 'calendly',
+  MediaKits = 'mediakits',
+  Matterport = 'matterport',
+  WhatsApp = 'whatsapp',
+  VKontakte = 'vk',
+  Medium = 'medium',
+  DevTo = 'devto',
+  StackOverflow = 'stackoverflow',
+  BiliBili = 'bilibili',
+  BitChute = 'bitchute',
+  Kick = 'kick',
+  Quora = 'quora',
+  Dribbble = 'dribbble',
+  Behance = 'behance',
+  ArtStation = 'artstation',
+  Flickr = 'flickr',
+  Audius = 'audius',
+  Beatport = 'beatport',
+  BandLab = 'bandlab',
+  Phone = 'phone',
+  Etsy = 'etsy',
+  EBay = 'ebay',
+  AliExpress = 'aliexpress',
+  StockX = 'stockx',
+  Grailed = 'grailed',
+  Wish = 'wish',
+  BuyMeACoffee = 'buymeacoffee',
+  StripeLink = 'stripelink',
+  SquareCheckout = 'squarecheckout',
+  CoinbaseCommerce = 'coinbasecommerce',
+  Rarible = 'rarible',
+  Etherscan = 'etherscan',
+  LooksRare = 'looksrare',
+  SlackInvite = 'slackinvite',
+  SignalGroup = 'signalgroup',
+  MicrosoftTeams = 'microsoftteams',
+  HooBe = 'hoobe',
+  PeerTube = 'peertube',
   Unknown = 'unknown',
 }
 
@@ -118,4 +187,15 @@ export interface PlatformModule {
   extractTimestamp?(url: string): number | null
   generateEmbedUrl?(contentId: string, options?: any): string
   resolveShortUrl?(shortUrl: string): Promise<string>
+
+  /**
+   * Return canonical embed information for a parsed URL. If the passed URL is already an
+   * embed iframe src, return data with isEmbedAlready = true so the caller can flag it.
+   */
+  getEmbedInfo?(url: string, parsed: ParsedUrl): {
+    embedUrl: string
+    type?: string
+    options?: Record<string, any>
+    isEmbedAlready?: boolean
+  } | null
 }

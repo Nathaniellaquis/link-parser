@@ -6,34 +6,61 @@ export const twitch: PlatformModule = {
   name: 'Twitch',
   color: '#9146FF',
 
-  domains: ['twitch.tv'],
+  domains: ['twitch.tv', 'clips.twitch.tv'],
 
   patterns: {
-    profile: /twitch\.tv\/([A-Za-z0-9_]+)/i,
+    profile: /^https?:\/\/(?:www\.)?twitch\.tv\/([A-Za-z0-9_]{4,25})$/i,
     handle: /^[A-Za-z0-9_]{4,25}$/,
     content: {
-      video: /twitch\.tv\/videos\/(\d+)/i,
-      clip: /clips\.twitch\.tv\/([A-Za-z0-9]+)/i,
+      video: /^https?:\/\/(?:www\.)?twitch\.tv\/videos\/(\d+)$/i,
+      clip: /^https?:\/\/clips\.twitch\.tv\/([A-Za-z0-9_-]+)$/i,
+      collection: /^https?:\/\/(?:www\.)?twitch\.tv\/collections\/([A-Za-z0-9]{2,})$/i,
     },
   },
 
   detect(url: string): boolean {
-    return url.includes('twitch.tv')
-  },
+    if (!this.domains.some(d => url.includes(d))) return false
 
-  extract(url: string, result: ParsedUrl): void {
-    for (const [type, patternValue] of Object.entries(this.patterns.content || {})) {
-      const pattern = patternValue as RegExp | undefined
-      if (!pattern) continue
-      const match = pattern.exec(url)
-      if (match) {
-        result.ids[`${type}Id`] = match[1]
-        result.metadata[`is${type.charAt(0).toUpperCase() + type.slice(1)}`] = true
-        result.metadata.contentType = type
-        break
+    // Check if it matches any valid pattern
+    if (this.patterns.profile.test(url)) return true
+    if (this.patterns.content) {
+      for (const pattern of Object.values(this.patterns.content)) {
+        if (pattern && pattern.test(url)) return true
       }
     }
 
+    return false
+  },
+
+  extract(url: string, result: ParsedUrl): void {
+    // Handle video URLs
+    const videoMatch = this.patterns.content?.video?.exec(url)
+    if (videoMatch) {
+      result.ids.videoId = videoMatch[1]
+      result.metadata.isVideo = true
+      result.metadata.contentType = 'video'
+      return
+    }
+
+    // Handle clip URLs
+    const clipMatch = this.patterns.content?.clip?.exec(url)
+    if (clipMatch) {
+      result.ids.clipName = clipMatch[1]
+      result.metadata.isClip = true
+      result.metadata.contentType = 'clip'
+      return
+    }
+
+    // Handle collection URLs
+    const collectionMatch = this.patterns.content?.collection?.exec(url)
+    if (collectionMatch) {
+      result.ids.collectionId = collectionMatch[1]
+      result.metadata.isCollection = true
+      result.metadata.contentType = 'collection'
+      return
+    }
+
+    // Handle profile URLs
     const profileMatch = this.patterns.profile.exec(url)
     if (profileMatch) {
       result.username = profileMatch[1]

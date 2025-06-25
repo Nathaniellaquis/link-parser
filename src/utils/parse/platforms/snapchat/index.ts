@@ -6,34 +6,56 @@ export const snapchat: PlatformModule = {
   name: 'Snapchat',
   color: '#FFFC00',
 
-  domains: ['snapchat.com'],
+  domains: ['snapchat.com', 'story.snapchat.com'],
 
   patterns: {
-    profile: /snapchat\.com\/add\/([A-Za-z0-9._-]+)/i,
+    profile: /^https?:\/\/(?:www\.)?snapchat\.com\/add\/([A-Za-z0-9._-]{3,15})$/i,
     handle: /^[A-Za-z0-9._-]{3,15}$/,
     content: {
-      story: /snapchat\.com\/add\/([A-Za-z0-9._-]+)\?shareId=([a-f0-9-]+)/i,
+      story: /^https?:\/\/story\.snapchat\.com\/s\/([A-Za-z0-9._-]+)$/i,
+      spotlight: /^https?:\/\/(?:www\.)?snapchat\.com\/spotlight\/([A-Za-z0-9]{2,})$/i,
     },
   },
 
   detect(url: string): boolean {
-    return url.includes('snapchat.com')
+    if (!this.domains.some(d => url.includes(d))) return false
+
+    // Check if it matches any valid pattern
+    if (this.patterns.profile.test(url)) return true
+    if (this.patterns.content) {
+      for (const pattern of Object.values(this.patterns.content)) {
+        if (pattern && pattern.test(url)) return true
+      }
+    }
+
+    return false
   },
 
   extract(url: string, result: ParsedUrl): void {
+    // Handle story URLs
     const storyMatch = this.patterns.content?.story?.exec(url)
     if (storyMatch) {
-      result.username = storyMatch[1]
-      result.ids.storyId = storyMatch[2]
+      result.ids.storyId = storyMatch[1]
       result.metadata.isStory = true
       result.metadata.contentType = 'story'
-    } else {
-      const profileMatch = this.patterns.profile.exec(url)
-      if (profileMatch) {
-        result.username = profileMatch[1]
-        result.metadata.isProfile = true
-        result.metadata.contentType = 'profile'
-      }
+      return
+    }
+
+    // Handle spotlight URLs
+    const spotlightMatch = this.patterns.content?.spotlight?.exec(url)
+    if (spotlightMatch) {
+      result.ids.spotlightId = spotlightMatch[1]
+      result.metadata.isSpotlight = true
+      result.metadata.contentType = 'spotlight'
+      return
+    }
+
+    // Handle profile URLs
+    const profileMatch = this.patterns.profile.exec(url)
+    if (profileMatch) {
+      result.username = profileMatch[1]
+      result.metadata.isProfile = true
+      result.metadata.contentType = 'profile'
     }
   },
 

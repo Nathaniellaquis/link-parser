@@ -10,30 +10,65 @@ export const instagram: PlatformModule = {
   mobileSubdomains: ['m', 'mobile'],
 
   patterns: {
-    profile: /^(?:https?:\/\/)?(?:www\.|m\.|mobile\.)?(?:instagram\.com|instagr\.am)\/([a-zA-Z0-9_.]+)/i,
-    handle: /^[\w](?!.*?\.{2})[\w.]{0,28}[\w]$/i,
+    profile: /^https?:\/\/(?:www\.|m\.|mobile\.)?(?:instagram\.com|instagr\.am)\/([a-zA-Z0-9_.]{2,30})\/?$/i,
+    handle: /^[a-zA-Z0-9_](?:[a-zA-Z0-9_.]*[a-zA-Z0-9_])?$/i,
     content: {
-      post: /instagram\.com\/p\/([A-Za-z0-9_-]+)/i,
-      reel: /instagram\.com\/reel[s]?\/([A-Za-z0-9_-]+)/i,
-      story: /instagram\.com\/stories\/([a-zA-Z0-9_.]+)\/(\d+)/i,
-      tv: /instagram\.com\/tv\/([A-Za-z0-9_-]+)/i,
+      post: /^https?:\/\/(?:www\.)?instagram\.com\/p\/([A-Za-z0-9_-]+)(?:\/.*)?$/i,
+      reel: /^https?:\/\/(?:www\.)?instagram\.com\/reel[s]?\/([A-Za-z0-9_-]+)$/i,
+      story: /^https?:\/\/(?:www\.)?instagram\.com\/stories\/([a-zA-Z0-9_.]+)\/(\d+)$/i,
+      tv: /^https?:\/\/(?:www\.)?instagram\.com\/tv\/([A-Za-z0-9_-]{1,})$/i,
+      live: /^https?:\/\/(?:www\.)?instagram\.com\/([a-zA-Z0-9_.]{2,30})\/live\/?$/i,
+      embed: /^https?:\/\/(?:www\.)?instagram\.com\/p\/([A-Za-z0-9_-]+)\/embed$/i,
     },
   },
 
   detect(url: string): boolean {
-    return this.domains.some(domain => url.includes(domain))
+    if (!this.domains.some(domain => url.includes(domain))) return false
+
+    // Check if it matches any valid pattern
+    if (this.patterns.profile.test(url)) return true
+    if (this.patterns.content) {
+      for (const pattern of Object.values(this.patterns.content)) {
+        if (pattern && pattern.test(url)) return true
+      }
+    }
+
+    return false
   },
 
   extract(url: string, result: ParsedUrl): void {
-    const profileMatch = this.patterns.profile.exec(url)
-    if (profileMatch && !/\/(p|reel|tv|stories)\//.test(url)) {
-      result.username = profileMatch[1]
-      result.metadata.isProfile = true
-      result.metadata.contentType = 'profile'
+    // Handle embed URLs first
+    const embedMatch = this.patterns.content?.embed?.exec(url)
+    if (embedMatch) {
+      result.ids.postId = embedMatch[1]
+      result.metadata.isEmbed = true
+      result.metadata.contentType = 'embed'
+      return
     }
 
+    // Handle story URLs
+    const storyMatch = this.patterns.content?.story?.exec(url)
+    if (storyMatch) {
+      result.ids.storyId = storyMatch[1] // username
+      result.ids.storyItemId = storyMatch[2] // story item ID
+      result.metadata.isStory = true
+      result.metadata.contentType = 'story'
+      return
+    }
+
+    // Handle live
+    const liveMatch = this.patterns.content?.live?.exec(url)
+    if (liveMatch) {
+      result.username = liveMatch[1]
+      result.metadata.isLive = true
+      result.metadata.contentType = 'live'
+      return
+    }
+
+    // Handle other content types
     if (this.patterns.content) {
       for (const [type, patternValue] of Object.entries(this.patterns.content)) {
+        if (type === 'story' || type === 'embed') continue // already handled
         const pattern = patternValue as RegExp | undefined
         if (!pattern) continue
         const match = pattern.exec(url)
@@ -41,14 +76,25 @@ export const instagram: PlatformModule = {
           result.ids[`${type}Id`] = match[1]
           result.metadata[`is${type.charAt(0).toUpperCase() + type.slice(1)}`] = true
           result.metadata.contentType = type
-          break
+          return
         }
       }
+    }
+
+    // Handle profile URLs
+    const profileMatch = this.patterns.profile.exec(url)
+    if (profileMatch) {
+      result.username = profileMatch[1]
+      result.metadata.isProfile = true
+      result.metadata.contentType = 'profile'
     }
   },
 
   validateHandle(handle: string): boolean {
-    return this.patterns.handle.test(handle.replace('@', ''))
+    const cleaned = handle.replace('@', '')
+    // Instagram usernames: 2-30 chars, alphanumeric, underscore, period
+    // Can't start/end with period, no consecutive periods
+    return /^[a-zA-Z0-9_](?:[a-zA-Z0-9_.]{0,28}[a-zA-Z0-9_])?$/.test(cleaned)
   },
 
   buildProfileUrl(username: string): string {
@@ -64,5 +110,17 @@ export const instagram: PlatformModule = {
 
   normalizeUrl(url: string): string {
     return normalize(url.replace(/[?&](igshid|utm_[^&]+|ig_[^&]+)=[^&]+/g, ''))
+  },
+
+  getEmbedInfo(url: string, parsed) {
+    if (/instagram\.com\/.*\/embed\//.test(url)) {
+      return { embedUrl: url, isEmbedAlready: true }
+    }
+    const id = parsed.ids.postId || parsed.ids.reelId || parsed.ids.tvId
+    if (id) {
+      const embedUrl = `https://www.instagram.com/p/${id}/embed/`
+      return { embedUrl, type: 'iframe' }
+    }
+    return null
   },
 }
