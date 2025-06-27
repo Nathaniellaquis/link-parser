@@ -1,4 +1,5 @@
 import { PlatformModule, Platforms } from '../core/types'
+import { patchAllPlatforms } from '../utils/patch-patterns'
 
 // Import all platform modules
 import { amazon } from './amazon'
@@ -199,6 +200,4 @@ export const registry = new Map<Platforms, PlatformModule>([
 ])
 
 // After the registry is built, patch patterns to support optional query/hash universally
-import { patchAllPlatforms } from '../utils/patch-patterns'
-
 patchAllPlatforms(registry)

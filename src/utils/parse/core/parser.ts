@@ -21,7 +21,10 @@ export function parse(url: string): ParsedUrl {
       result.platformName = module.name
       module.extract(url, result)
       result.normalizedUrl = module.normalizeUrl(url)
-      result.isValid = true
+      // Consider valid only if extractor filled at least one identifier or username
+      if (result.username || Object.keys(result.ids).length > 0 || (result.metadata && Object.keys(result.metadata).length > 0)) {
+        result.isValid = true
+      }
 
       // Extract embed data if the platform supports it
       if (module.getEmbedInfo) {
