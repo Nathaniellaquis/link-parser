@@ -1,5 +1,6 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
 
 export const facebook: PlatformModule = {
   id: Platforms.Facebook,
@@ -10,30 +11,25 @@ export const facebook: PlatformModule = {
   mobileSubdomains: ['m', 'mobile'],
 
   patterns: {
-    profile: /^https?:\/\/(?:www\.)?(?:facebook\.com|fb\.com)\/([A-Za-z0-9.]{5,})$/i,
+    profile: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/([A-Za-z0-9.]{5,})\\/?${QUERY_HASH}$`, 'i'),
     handle: /^[A-Za-z0-9.]{5,}$/,
     content: {
-      profileId: /^https?:\/\/(?:www\.)?(?:facebook\.com|fb\.com)\/profile\.php\?id=(\d+)$/i,
-      page: /^https?:\/\/(?:www\.)?(?:facebook\.com|fb\.com)\/pages\/[^\/]+\/(\d{2,})$/i,
-      post: /^https?:\/\/(?:www\.)?(?:facebook\.com|fb\.com)\/[A-Za-z0-9.]+\/posts\/(\d+)$/i,
-      video: /^https?:\/\/(?:www\.)?(?:facebook\.com|fb\.com)\/watch\/?\?v=(\d+)$/i,
-      group: /^https?:\/\/(?:www\.)?(?:facebook\.com|fb\.com)\/groups\/([A-Za-z0-9._-]+)$/i,
-      event: /^https?:\/\/(?:www\.)?(?:facebook\.com|fb\.com)\/events\/(\d+)$/i,
-      live: /^https?:\/\/(?:www\.)?(?:facebook\.com|fb\.com)\/([A-Za-z0-9.]{5,})\/live\/?$/i,
+      profileId: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/profile\\.php\\?id=(\\d+)\\/?${QUERY_HASH}$`, 'i'),
+      page: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/pages\\/[^\\/]+\\/(\\d{2,})\\/?${QUERY_HASH}$`, 'i'),
+      post: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/[A-Za-z0-9.]+\\/posts\\/(\\d+)\\/?${QUERY_HASH}$`, 'i'),
+      video: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/watch\\/\?v=(\\d+)(?:&[^#]*)?${QUERY_HASH}$`, 'i'),
+      group: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/groups\\/([A-Za-z0-9._-]+)\\/?${QUERY_HASH}$`, 'i'),
+      event: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/events\\/(\\d+)\\/?${QUERY_HASH}$`, 'i'),
+      live: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/([A-Za-z0-9.]{5,})\\/live\\/?${QUERY_HASH}$`, 'i'),
     },
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some(d => url.includes(d))) return false
-
-    // Check if it matches any valid pattern
+    if (!this.domains.some(domain => url.includes(domain))) return false
     if (this.patterns.profile.test(url)) return true
-    if (this.patterns.content) {
-      for (const pattern of Object.values(this.patterns.content)) {
-        if (pattern && pattern.test(url)) return true
-      }
+    for (const p of Object.values(this.patterns.content || {})) {
+      if (p && p.test(url)) return true
     }
-
     return false
   },
 
