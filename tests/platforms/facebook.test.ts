@@ -128,6 +128,16 @@ describe('Facebook platform tests', () => {
       expect(invalid.isValid).toBe(false);
       expect(invalid.ids.eventId).toBeUndefined();
     });
+
+    // New negative: invalid video id letters
+    const badVideo = parse('https://facebook.com/watch/?v=abc');
+    expect(badVideo.isValid).toBe(false);
+    expect(badVideo.ids.videoId).toBeUndefined();
+
+    // New negative: empty group
+    const badGroup = parse('https://facebook.com/groups/');
+    expect(badGroup.isValid).toBe(false);
+    expect(badGroup.ids.groupName).toBeUndefined();
   });
 
   describe('profile URL building', () => {
