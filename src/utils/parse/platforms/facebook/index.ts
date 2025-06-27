@@ -17,7 +17,7 @@ export const facebook: PlatformModule = {
       profileId: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/profile\\.php\\?id=(\\d+)\\/?${QUERY_HASH}$`, 'i'),
       page: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/pages\\/[^\\/]+\\/(\\d{2,})\\/?${QUERY_HASH}$`, 'i'),
       post: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/[A-Za-z0-9.]+\\/posts\\/(\\d+)\\/?${QUERY_HASH}$`, 'i'),
-      video: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/watch\\/\?v=(\\d+)(?:&[^#]*)?${QUERY_HASH}$`, 'i'),
+      video: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/watch\\/\?v=(\\d+)(?:&[^#]*)?\\/?${QUERY_HASH}$`, 'i'),
       group: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/groups\\/([A-Za-z0-9._-]+)\\/?${QUERY_HASH}$`, 'i'),
       event: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/events\\/(\\d+)\\/?${QUERY_HASH}$`, 'i'),
       live: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/([A-Za-z0-9.]{5,})\\/live\\/?${QUERY_HASH}$`, 'i'),
