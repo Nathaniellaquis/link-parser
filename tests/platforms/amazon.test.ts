@@ -90,6 +90,12 @@ describe('Amazon platform tests', () => {
       expect(invalid.isValid).toBe(false);
       expect(invalid.ids.reviewId).toBeUndefined();
     });
+
+    test('should parse product with query: https://www.amazon.com/Example-Product/dp/B08N5WRWNW?ref_=abc123#details', () => {
+      const withQuery = parse('https://www.amazon.com/Example-Product/dp/B08N5WRWNW?ref_=abc123#details');
+      expect(withQuery.isValid).toBe(true);
+      expect(withQuery.ids.productId).toBe('B08N5WRWNW');
+    });
   });
 
   describe('profile URL building', () => {
