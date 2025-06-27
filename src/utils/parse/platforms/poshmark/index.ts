@@ -5,18 +5,18 @@ export const poshmark: PlatformModule = {
     name: 'Poshmark',
     color: '#C03838',
 
-    domains: ['poshmark.com'],
+    domains: ['poshmark.com', 'poshmark.ca', 'poshmark.in'],
 
     patterns: {
-        profile: /^https?:\/\/(?:www\.)?poshmark\.com\/closet\/([A-Za-z0-9_.-]{3,40})\/?$/i,
+        profile: /^https?:\/\/(?:www\.|m\.)?poshmark\.(?:com|ca|in)\/closet\/([A-Za-z0-9_.-]{3,40})\/?(?:\?.*)?$/i,
         handle: /^[A-Za-z0-9_.-]{3,40}$/,
         content: {
-            listing: /^https?:\/\/(?:www\.)?poshmark\.com\/listing\/([A-Za-z0-9_-]+)-(\d+)\/?$/i,
+            listing: /^https?:\/\/(?:www\.|m\.)?poshmark\.(?:com|ca|in)\/listing\/([A-Za-z0-9_-]+)-(\d+)\/?(?:\?.*)?$/i,
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('poshmark.com')) return false
+        if (!this.domains.some(d=>url.includes(d))) return false
         return (
             this.patterns.profile.test(url) ||
             !!this.patterns.content?.listing?.test(url)
