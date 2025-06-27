@@ -197,3 +197,8 @@ export const registry = new Map<Platforms, PlatformModule>([
   [Platforms.BiliBili, bilibili],
   [Platforms.BitChute, bitchute],
 ])
+
+// After the registry is built, patch patterns to support optional query/hash universally
+import { patchAllPlatforms } from '../utils/patch-patterns'
+
+patchAllPlatforms(registry)
