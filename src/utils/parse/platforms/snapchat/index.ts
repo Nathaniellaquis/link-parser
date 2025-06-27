@@ -9,11 +9,11 @@ export const snapchat: PlatformModule = {
   domains: ['snapchat.com', 'story.snapchat.com'],
 
   patterns: {
-    profile: /^https?:\/\/(?:www\.)?snapchat\.com\/add\/([A-Za-z0-9._-]{3,15})$/i,
+    profile: /^https?:\/\/(?:www\.|m\.)?snapchat\.com\/(?:add\/|@)([A-Za-z0-9._-]{3,30})\/?$/i,
     handle: /^[A-Za-z0-9._-]{3,15}$/,
     content: {
-      story: /^https?:\/\/story\.snapchat\.com\/s\/([A-Za-z0-9._-]+)$/i,
-      spotlight: /^https?:\/\/(?:www\.)?snapchat\.com\/spotlight\/([A-Za-z0-9]{2,})$/i,
+      story: /^https?:\/\/story\.snapchat\.com\/s\/([A-Za-z0-9._-]+)\/?$/i,
+      spotlight: /^https?:\/\/(?:www\.|m\.)?snapchat\.com\/spotlight\/([A-Za-z0-9]{2,})\/?$/i,
     },
   },
 
@@ -60,7 +60,7 @@ export const snapchat: PlatformModule = {
   },
 
   validateHandle(handle: string): boolean {
-    return this.patterns.handle.test(handle.replace('@', ''))
+    return this.patterns.handle.test(handle.replace(/^@/, ''))
   },
 
   buildProfileUrl(username: string): string {
