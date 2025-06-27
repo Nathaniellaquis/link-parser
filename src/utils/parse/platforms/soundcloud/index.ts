@@ -1,5 +1,6 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
 
 export const soundcloud: PlatformModule = {
   id: Platforms.SoundCloud,
@@ -9,25 +10,21 @@ export const soundcloud: PlatformModule = {
   domains: ['soundcloud.com', 'w.soundcloud.com'],
 
   patterns: {
-    profile: /^https?:\/\/(www\.)?soundcloud\.com\/([A-Za-z0-9_-]{2,25})$/i,
+    profile: new RegExp(`^https?:\/\/(?:www\.)?soundcloud\.com\/([A-Za-z0-9_-]{2,25})\/?${QUERY_HASH}$`, 'i'),
     handle: /^[A-Za-z0-9_-]{2,25}$/,
     content: {
-      track: /^https?:\/\/(www\.)?soundcloud\.com\/([A-Za-z0-9_-]{2,25})\/([A-Za-z0-9_-]+)$/i,
-      set: /^https?:\/\/(www\.)?soundcloud\.com\/([A-Za-z0-9_-]{2,25})\/sets\/([A-Za-z0-9_-]+)$/i,
-      embed: /^https?:\/\/w\.soundcloud\.com\/player\/\?url=/i,
+      track: new RegExp(`^https?:\/\/(?:www\.)?soundcloud\.com\/([A-Za-z0-9_-]{2,25})\/([A-Za-z0-9_-]+)\/?${QUERY_HASH}$`, 'i'),
+      set: new RegExp(`^https?:\/\/(?:www\.)?soundcloud\.com\/([A-Za-z0-9_-]{2,25})\/sets\/([A-Za-z0-9_-]+)\/?${QUERY_HASH}$`, 'i'),
+      embed: new RegExp(`^https?:\/\/w\.soundcloud\.com\/player\/\?url=.+`, 'i'),
     },
   },
 
   detect(url: string): boolean {
-    // Must be a valid soundcloud domain
-    if (!url.includes('soundcloud.com')) return false
-
-    // Check if it matches any valid pattern
-    if (this.patterns.content?.embed?.test(url)) return true
-    if (this.patterns.content?.set?.test(url)) return true
-    if (this.patterns.content?.track?.test(url)) return true
+    if (!this.domains.some(domain => url.includes(domain))) return false
     if (this.patterns.profile.test(url)) return true
-
+    for (const p of Object.values(this.patterns.content || {})) {
+      if (p && p.test(url)) return true
+    }
     return false
   },
 
@@ -42,25 +39,27 @@ export const soundcloud: PlatformModule = {
     // Check for set/playlist
     const setMatch = this.patterns.content?.set?.exec(url)
     if (setMatch) {
-      result.username = setMatch[2]
-      result.ids.setId = setMatch[3]
+      result.username = setMatch[1]
+      result.ids.setId = setMatch[2]
       result.metadata.contentType = 'set'
+      result.metadata.isSet = true
       return
     }
 
     // Check for track
     const trackMatch = this.patterns.content?.track?.exec(url)
     if (trackMatch) {
-      result.username = trackMatch[2]
-      result.ids.trackId = trackMatch[3]
+      result.username = trackMatch[1]
+      result.ids.trackId = trackMatch[2]
       result.metadata.contentType = 'track'
+      result.metadata.isTrack = true
       return
     }
 
     // Check for profile
     const profileMatch = this.patterns.profile.exec(url)
     if (profileMatch) {
-      result.username = profileMatch[2]
+      result.username = profileMatch[1]
       result.metadata.isProfile = true
       result.metadata.contentType = 'profile'
       return

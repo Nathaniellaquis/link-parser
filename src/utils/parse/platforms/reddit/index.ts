@@ -15,21 +15,16 @@ export const reddit: PlatformModule = {
     content: {
       subreddit: /^https?:\/\/(?:www\.)?reddit\.com\/r\/([A-Za-z0-9_]{3,21})$/i,
       post: new RegExp(`^https?:\\/\\/(?:www\\.)?reddit\\.com\\/r\\/[A-Za-z0-9_]+\\/comments\\/([a-z0-9]{2,})(?:\\/[^?#]+)?\\/?${QUERY_HASH}$`, 'i'),
-      shortPost: /^https?:\/\/redd\.it\/([a-z0-9]{2,})$/i,
+      shortPost: new RegExp(`^https?:\/\/redd\.it\/([a-z0-9]{2,})\/?${QUERY_HASH}$`, 'i'),
     },
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some(d => url.includes(d))) return false
-
-    // Check if it matches any valid pattern
+    if (!this.domains.some(domain => url.includes(domain))) return false
     if (this.patterns.profile.test(url)) return true
-    if (this.patterns.content) {
-      for (const pattern of Object.values(this.patterns.content)) {
-        if (pattern && pattern.test(url)) return true
-      }
+    for (const p of Object.values(this.patterns.content || {})) {
+      if (p && p.test(url)) return true
     }
-
     return false
   },
 

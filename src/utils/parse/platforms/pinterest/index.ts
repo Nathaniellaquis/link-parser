@@ -1,5 +1,6 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
 
 export const pinterest: PlatformModule = {
   id: Platforms.Pinterest,
@@ -9,31 +10,21 @@ export const pinterest: PlatformModule = {
   domains: ['pinterest.com', 'pin.it'],
 
   patterns: {
-    profile: /^https?:\/\/(?:www\.)?pinterest\.com\/([A-Za-z0-9_]{3,15})$/i,
+    profile: new RegExp(`^https?:\\/\\/(?:www\\.)?pinterest\\.com\\/([A-Za-z0-9_]{3,15})\\/?${QUERY_HASH}$`, 'i'),
     handle: /^[A-Za-z0-9_]{3,15}$/,
     content: {
-      pin: /^https?:\/\/(?:www\.)?pinterest\.com\/pin\/(\d+)$/i,
-      board: /^https?:\/\/(?:www\.)?pinterest\.com\/([A-Za-z0-9_]+)\/([A-Za-z0-9_-]+)$/i,
-      short: /^https?:\/\/pin\.it\/([A-Za-z0-9]+)$/i,
+      pin: new RegExp(`^https?:\\/\\/(?:www\\.)?pinterest\\.com\\/pin\\/(\\d+)\\/?${QUERY_HASH}$`, 'i'),
+      board: new RegExp(`^https?:\\/\\/(?:www\\.)?pinterest\\.com\\/([A-Za-z0-9_]+)\\/([A-Za-z0-9_-]+)\\/?${QUERY_HASH}$`, 'i'),
+      short: new RegExp(`^https?:\\/\\/pin\.it\\/([A-Za-z0-9]+)\\/?${QUERY_HASH}$`, 'i'),
     },
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some(d => url.includes(d))) return false
-
-    // Check if it matches any valid pattern
+    if (!this.domains.some(domain => url.includes(domain))) return false
     if (this.patterns.profile.test(url)) return true
-    if (this.patterns.content) {
-      // Special check for pin URLs - must be numeric
-      if (url.includes('/pin/')) {
-        return /\/pin\/\d+$/i.test(url)
-      }
-
-      for (const pattern of Object.values(this.patterns.content)) {
-        if (pattern && pattern.test(url)) return true
-      }
+    for (const p of Object.values(this.patterns.content || {})) {
+      if (p && p.test(url)) return true
     }
-
     return false
   },
 
@@ -58,7 +49,7 @@ export const pinterest: PlatformModule = {
 
     // Handle board URLs (exclude pin URLs)
     const boardMatch = this.patterns.content?.board?.exec(url)
-    if (boardMatch && !url.includes('/pin/')) {
+    if (boardMatch && boardMatch[2]) {
       result.ids.boardName = boardMatch[2]
       result.username = boardMatch[1]
       result.metadata.isBoard = true
