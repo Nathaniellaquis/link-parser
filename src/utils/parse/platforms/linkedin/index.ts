@@ -9,19 +9,22 @@ export const linkedin: PlatformModule = {
   domains: ['linkedin.com'],
 
   patterns: {
-    profile: /^https?:\/\/(?:www\.)?linkedin\.com\/in\/([A-Za-z0-9-_%]{3,100})$/i,
+    profile: /^https?:\/\/(?:[a-z]{2,3}\.)?(?:www\.)?linkedin\.com\/in\/([A-Za-z0-9-_%]{3,100})\/?$/i,
     handle: /^[A-Za-z0-9-]{3,100}$/,
     content: {
-      company: /^https?:\/\/(?:www\.)?linkedin\.com\/company\/([A-Za-z0-9-]+)$/i,
-      school: /^https?:\/\/(?:www\.)?linkedin\.com\/school\/([A-Za-z0-9-]+)$/i,
-      post: /^https?:\/\/(?:www\.)?linkedin\.com\/posts\/[A-Za-z0-9-_%]+_(.+)$/i,
-      article: /^https?:\/\/(?:www\.)?linkedin\.com\/pulse\/([A-Za-z0-9-]+)$/i,
-      feedUpdate: /^https?:\/\/(?:www\.)?linkedin\.com\/feed\/update\/urn:li:activity:(\d+)$/i,
+      company: /^https?:\/\/(?:[a-z]{2,3}\.)?(?:www\.)?linkedin\.com\/company\/([A-Za-z0-9-]+)\/?$/i,
+      companyVanity: /^https?:\/\/(?:[a-z]{2,3}\.)?(?:www\.)?linkedin\.com\/(?!in\/|school\/|posts\/|pulse\/|feed\/|jobs\/|learning\/|sales\/|legal\/|help\/|ads\/)([A-Za-z0-9-]{3,100})\/?$/i,
+      school: /^https?:\/\/(?:[a-z]{2,3}\.)?(?:www\.)?linkedin\.com\/school\/([A-Za-z0-9-]+)\/?$/i,
+      post: /^https?:\/\/(?:[a-z]{2,3}\.)?(?:www\.)?linkedin\.com\/posts\/[^_]+_(.+)$/i,
+      article: /^https?:\/\/(?:[a-z]{2,3}\.)?(?:www\.)?linkedin\.com\/pulse\/([A-Za-z0-9-]+)\/?$/i,
+      newsletter: /^https?:\/\/(?:[a-z]{2,3}\.)?(?:www\.)?linkedin\.com\/newsletter\/([A-Za-z0-9-]+-\d{6,})\/?$/i,
+      feedUpdate: /^https?:\/\/(?:[a-z]{2,3}\.)?(?:www\.)?linkedin\.com\/feed\/update\/urn:li:activity:(\d+)\/?$/i,
     },
   },
 
   detect(url: string): boolean {
     if (!url.includes('linkedin.com')) return false
+    if (/\/jobs\/|\/learning\/|\/legal\/|\/sales\/|\/ads\/|\/help\//i.test(url)) return false
 
     // Check if it matches any valid pattern
     if (this.patterns.profile.test(url)) return true
@@ -77,6 +80,24 @@ export const linkedin: PlatformModule = {
       result.ids.postId = feedMatch[1]
       result.metadata.isPost = true
       result.metadata.contentType = 'post'
+      return
+    }
+
+    // Handle newsletter URLs
+    const newsletterMatch = this.patterns.content?.newsletter?.exec(url)
+    if (newsletterMatch) {
+      result.ids.newsletterSlug = newsletterMatch[1]
+      result.metadata.isNewsletter = true
+      result.metadata.contentType = 'newsletter'
+      return
+    }
+
+    // Handle vanity company
+    const vanityMatch = this.patterns.content?.companyVanity?.exec(url)
+    if (vanityMatch) {
+      result.ids.companyName = vanityMatch[1]
+      result.metadata.isCompany = true
+      result.metadata.contentType = 'company'
       return
     }
 
