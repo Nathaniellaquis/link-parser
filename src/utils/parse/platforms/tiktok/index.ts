@@ -11,13 +11,16 @@ export const tiktok: PlatformModule = {
   shortDomains: ['vm.tiktok.com'],
 
   patterns: {
-    profile: /^https?:\/\/(?:www\.)?tiktok\.com\/@([A-Za-z0-9._]{2,24})$/i,
+    profile: /^https?:\/\/(?:www\.|m\.|vm\.)?tiktok\.[a-z.]+\/@([A-Za-z0-9._]{2,24})\/?$/i,
     handle: /^@?[A-Za-z0-9._]{2,24}$/,
     content: {
-      video: /^https?:\/\/(?:www\.)?tiktok\.com\/@([A-Za-z0-9._]{2,24})\/video\/(\d{10,20})$/i,
-      live: /^https?:\/\/(?:www\.)?tiktok\.com\/@([A-Za-z0-9._]{2,24})\/live$/i,
-      short: /^https?:\/\/vm\.tiktok\.com\/([A-Za-z0-9]+)$/i,
-      embed: /^https?:\/\/(?:www\.)?tiktok\.com\/embed\/v2\/(\d{10,20})$/i,
+      video: /^https?:\/\/(?:www\.|m\.)?tiktok\.[a-z.]+\/@([A-Za-z0-9._]{2,24})\/video\/(\d{10,20})\/?$/i,
+      videoDirect: /^https?:\/\/(?:www\.|m\.)?tiktok\.[a-z.]+\/v\/(\d{10,20})\/?$/i,
+      live: /^https?:\/\/(?:www\.|m\.)?tiktok\.[a-z.]+\/@([A-Za-z0-9._]{2,24})\/live\/?$/i,
+      nowUser: /^https?:\/\/(?:www\.|m\.)?tiktok\.[a-z.]+\/@([A-Za-z0-9._]{2,24})\/now\/?$/i,
+      nowVideo: /^https?:\/\/(?:www\.|m\.)?tiktok\.[a-z.]+\/now\/(\d{10,20})\/?$/i,
+      short: /^https?:\/\/vm\.tiktok\.com\/([A-Za-z0-9]+)\/?$/i,
+      embed: /^https?:\/\/(?:www\.|m\.)?tiktok\.[a-z.]+\/embed\/v2\/(\d{10,20})$/i,
     },
   },
 
@@ -25,6 +28,9 @@ export const tiktok: PlatformModule = {
     if (!this.domains.some(d => url.includes(d)) && !this.shortDomains?.some(sd => url.includes(sd))) {
       return false
     }
+
+    // Exclude non-UGC sections quickly
+    if (/\/(?:legal|business|press|ads)\//i.test(url)) return false
 
     // Check if it matches any valid pattern
     if (this.patterns.profile.test(url)) return true
@@ -72,6 +78,33 @@ export const tiktok: PlatformModule = {
       result.ids.shortId = shortMatch[1]
       result.metadata.isShort = true
       result.metadata.contentType = 'short'
+      return
+    }
+
+    // video direct
+    const vd = this.patterns.content?.videoDirect?.exec(url)
+    if (vd) {
+      result.ids.videoId = vd[1]
+      result.metadata.isVideo = true
+      result.metadata.contentType = 'video'
+      return
+    }
+
+    // now user page
+    const nowUser = this.patterns.content?.nowUser?.exec(url)
+    if (nowUser) {
+      result.username = nowUser[1]
+      result.metadata.isNow = true
+      result.metadata.contentType = 'now'
+      return
+    }
+
+    // now video
+    const nowVideo = this.patterns.content?.nowVideo?.exec(url)
+    if (nowVideo) {
+      result.ids.videoId = nowVideo[1]
+      result.metadata.isNow = true
+      result.metadata.contentType = 'now'
       return
     }
 
