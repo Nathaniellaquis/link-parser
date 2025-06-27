@@ -9,10 +9,10 @@ export const pinterest: PlatformModule = {
   domains: ['pinterest.com', 'pin.it'],
 
   patterns: {
-    profile: /^https?:\/\/(?:www\.|m\.|[a-z]{2,3}\.)?pinterest\.com\/([A-Za-z0-9_-]{3,30})\/?$/i,
+    profile: /^https?:\/\/(?:www\.|m\.|[a-z]{2,3}\.)?pinterest\.com\/([A-Za-z0-9_-]{3,30})$/i,
     handle: /^[A-Za-z0-9_-]{3,30}$/,
     content: {
-      pin: /^https?:\/\/(?:www\.|m\.|[a-z]{2,3}\.)?pinterest\.com\/pin\/([A-Za-z0-9]+)\/?$/i,
+      pin: /^https?:\/\/(?:www\.|m\.|[a-z]{2,3}\.)?pinterest\.com\/pin\/([A-Za-z0-9]*\d[A-Za-z0-9]*)\/?$/i,
       board: /^https?:\/\/(?:www\.|m\.|[a-z]{2,3}\.)?pinterest\.com\/([A-Za-z0-9_-]+)\/([A-Za-z0-9_-]+)\/?$/i,
       short: /^https?:\/\/pin\.it\/([A-Za-z0-9]+)\/?$/i,
     },
@@ -24,9 +24,9 @@ export const pinterest: PlatformModule = {
     // Check if it matches any valid pattern
     if (this.patterns.profile.test(url)) return true
     if (this.patterns.content) {
-      // Special check for pin URLs - must be numeric
+      // Quick early check for pin URLs - rely on regex that supports alphanumeric IDs
       if (url.includes('/pin/')) {
-        return /\/pin\/\d+$/i.test(url)
+        return !!this.patterns.content.pin?.test(url)
       }
 
       for (const pattern of Object.values(this.patterns.content)) {
