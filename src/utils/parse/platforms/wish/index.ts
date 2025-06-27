@@ -1,4 +1,5 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { QUERY_HASH } from '../../utils/constants'
 
 export const wish: PlatformModule = {
     id: Platforms.Wish,
@@ -11,12 +12,12 @@ export const wish: PlatformModule = {
         profile: /^$/,
         handle: /^$/,
         content: {
-            product: /^https?:\/\/(?:www\.)?wish\.com\/product\/([a-f0-9]{24})/i,
+            product: new RegExp(`^https?:\\/\\/(?:www\\.)?wish\\.com\\/product\\/([a-f0-9]{24})\\/?${QUERY_HASH}$`, 'i'),
         }
     },
 
     detect(url: string): boolean {
-        return url.includes('wish.com/product/')
+        return !!this.patterns.content?.product && this.patterns.content.product!.test(url)
     },
 
     extract(url: string, result: ParsedUrl): void {

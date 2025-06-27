@@ -1,4 +1,5 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { QUERY_HASH } from '../../utils/constants'
 
 export const aliexpress: PlatformModule = {
     id: Platforms.AliExpress,
@@ -8,16 +9,16 @@ export const aliexpress: PlatformModule = {
     mobileSubdomains: ['m'],
 
     patterns: {
-        profile: /^https?:\/\/([a-z]+\.)?aliexpress\.(com|us|ru)\/store\/(\d+)/i,
+        profile: /^https?:\/\/([a-z]+\.)?aliexpress\.(com|us|ru)\/store\/(\d+)\/?${QUERY_HASH}$/i,
         handle: /^[a-zA-Z0-9_-]+$/,
         content: {
-            item: /^https?:\/\/([a-z]+\.)?aliexpress\.(com|us|ru)\/item\/(\d+)\.html/i,
+            item: new RegExp(`^https?:\\/\\/([a-z]+\\.)?aliexpress\\.(com|us|ru)\\\/(?:item|i)\\/(\\d+)(?:\\.html)?\\/?${QUERY_HASH}$`, 'i'),
         }
     },
 
     detect(url: string): boolean {
         return this.patterns.profile.test(url) ||
-            (this.patterns.content?.item?.test(url) || false)
+            (!!this.patterns.content?.item && this.patterns.content.item.test(url))
     },
 
     extract(url: string, result: ParsedUrl): void {
@@ -31,8 +32,9 @@ export const aliexpress: PlatformModule = {
         if (this.patterns.content?.item) {
             const itemMatch = url.match(this.patterns.content.item)
             if (itemMatch) {
-                result.ids.itemId = itemMatch[3]
-                result.metadata.isPost = true
+                result.ids.productId = itemMatch[3]
+                result.metadata.contentType = 'product'
+                result.metadata.isProduct = true
             }
         }
     },

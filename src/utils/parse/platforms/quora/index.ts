@@ -1,4 +1,5 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { QUERY_HASH } from '../../utils/constants'
 
 export const quora: PlatformModule = {
     id: Platforms.Quora,
@@ -8,16 +9,24 @@ export const quora: PlatformModule = {
     domains: ['quora.com'],
 
     patterns: {
-        profile: /^https?:\/\/(?:www\.)?quora\.com\/profile\/([A-Za-z0-9-]+)/i,
+        profile: new RegExp(`^https?:\\/\\/(?:www\\.)?quora\\.com\\/profile\\/([A-Za-z0-9-]+)\\/?${QUERY_HASH}$`, 'i'),
         handle: /^[A-Za-z0-9-]+$/,
         content: {
-            question: /^https?:\/\/(?:www\.)?quora\.com\/([A-Za-z0-9-]+(?:-[A-Za-z0-9-]+)*)/i,
-            space: /^https?:\/\/(?:www\.)?quora\.com\/q\/([A-Za-z0-9-]+)/i
+            question: new RegExp(`^https?:\\/\\/(?:www\\.)?quora\\.com\\/([A-Za-z0-9-]+(?:-[A-Za-z0-9-]+)*)\\/?${QUERY_HASH}$`, 'i'),
+            answer: new RegExp(`^https?:\\/\\/(?:www\\.)?quora\\.com\\/([A-Za-z0-9-]+(?:-[A-Za-z0-9-]+)*)\\/answer\\/([A-Za-z0-9-]+)\\/?${QUERY_HASH}$`, 'i'),
+            space: new RegExp(`^https?:\\/\\/(?:www\\.)?quora\\.com\\/q\\/([A-Za-z0-9-]+)\\/?${QUERY_HASH}$`, 'i')
         }
     },
 
     detect(url: string): boolean {
-        return url.includes('quora.com')
+        if (!url.includes('quora.com')) return false
+        if (this.patterns.profile.test(url)) return true
+        if (this.patterns.content) {
+            for (const pattern of Object.values(this.patterns.content)) {
+                if (pattern && pattern.test(url)) return true
+            }
+        }
+        return false
     },
 
     extract(url: string, result: ParsedUrl): void {
@@ -30,22 +39,30 @@ export const quora: PlatformModule = {
         }
 
         // Space
-        if (this.patterns.content?.space) {
-            const spaceMatch = url.match(this.patterns.content.space)
-            if (spaceMatch) {
-                result.ids.spaceId = spaceMatch[1]
-                result.metadata.contentType = 'space'
-                return
-            }
+        const spaceMatch = this.patterns.content?.space?.exec(url)
+        if (spaceMatch) {
+            result.ids.spaceId = spaceMatch[1]
+            result.metadata.contentType = 'space'
+            return
         }
 
-        // Question (catch-all for Quora URLs)
-        if (this.patterns.content?.question) {
-            const questionMatch = url.match(this.patterns.content.question)
-            if (questionMatch) {
-                result.ids.questionId = questionMatch[1]
-                result.metadata.contentType = 'question'
-            }
+        // Answer URL
+        const answerMatch = this.patterns.content?.answer?.exec(url)
+        if (answerMatch) {
+            result.ids.questionSlug = answerMatch[1]
+            result.username = answerMatch[2]
+            result.metadata.isAnswer = true
+            result.metadata.contentType = 'answer'
+            return
+        }
+
+        // Question
+        const questionMatch = this.patterns.content?.question?.exec(url)
+        if (questionMatch) {
+            result.ids.questionSlug = questionMatch[1]
+            result.metadata.isQuestion = true
+            result.metadata.contentType = 'question'
+            return
         }
     },
 
