@@ -8,10 +8,10 @@ export const fanfix: PlatformModule = {
     domains: ['fanfix.io'],
 
     patterns: {
-        profile: /^https?:\/\/(?:www\.)?fanfix\.io\/@([A-Za-z0-9_.-]{3,30})\/?$/i,
+        profile: /^https?:\/\/(?:www\.|app\.)?fanfix\.io\/(?:@)?([A-Za-z0-9_.-]{3,30})\/?$/i,
         handle: /^@?[A-Za-z0-9_.-]{3,30}$/,
         content: {
-            post: /^https?:\/\/(?:www\.)?fanfix\.io\/post\/(\d+)\/?$/i,
+            post: /^https?:\/\/(?:www\.|app\.)?fanfix\.io\/post\/([A-Za-z0-9_-]+)\/?$/i,
         },
     },
 
