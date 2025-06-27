@@ -10,21 +10,24 @@ export const facebook: PlatformModule = {
   mobileSubdomains: ['m', 'mobile'],
 
   patterns: {
-    profile: /^https?:\/\/(?:www\.)?(?:facebook\.com|fb\.com)\/([A-Za-z0-9.]{5,})$/i,
+    profile: /^https?:\/\/(?:www\.|m\.|l\.|lm\.|mbasic\.|[a-z]{2}\-[a-z]{2}\.)?(?:facebook\.com|fb\.com)\/(?!pages\/|groups\/|events\/|watch\/|help\/|policies\/|about\/|privacy\/|profile\.php|story\.php)([A-Za-z0-9.]{5,})\/?$/i,
     handle: /^[A-Za-z0-9.]{5,}$/,
     content: {
-      profileId: /^https?:\/\/(?:www\.)?(?:facebook\.com|fb\.com)\/profile\.php\?id=(\d+)$/i,
-      page: /^https?:\/\/(?:www\.)?(?:facebook\.com|fb\.com)\/pages\/[^\/]+\/(\d{2,})$/i,
-      post: /^https?:\/\/(?:www\.)?(?:facebook\.com|fb\.com)\/[A-Za-z0-9.]+\/posts\/(\d+)$/i,
-      video: /^https?:\/\/(?:www\.)?(?:facebook\.com|fb\.com)\/watch\/?\?v=(\d+)$/i,
-      group: /^https?:\/\/(?:www\.)?(?:facebook\.com|fb\.com)\/groups\/([A-Za-z0-9._-]+)$/i,
-      event: /^https?:\/\/(?:www\.)?(?:facebook\.com|fb\.com)\/events\/(\d+)$/i,
-      live: /^https?:\/\/(?:www\.)?(?:facebook\.com|fb\.com)\/([A-Za-z0-9.]{5,})\/live\/?$/i,
+      profileId: /^https?:\/\/(?:www\.|m\.|l\.|lm\.|mbasic\.|[a-z]{2}\-[a-z]{2}\.)?(?:facebook\.com|fb\.com)\/profile\.php\?id=(\d+)$/i,
+      page: /^https?:\/\/(?:www\.|m\.)?(?:facebook\.com|fb\.com)\/pages\/(?:[^\/]+\/)?(\d{2,})\/?$/i,
+      post: /^https?:\/\/(?:www\.|m\.)?(?:facebook\.com|fb\.com)\/[A-Za-z0-9.]+\/posts\/(\d+)\/?$/i,
+      storyPost: /^https?:\/\/(?:www\.|m\.)?(?:facebook\.com|fb\.com)\/story\.php\?story_fbid=(\d+)&id=\d+/i,
+      video: /^https?:\/\/(?:www\.|m\.)?(?:facebook\.com|fb\.com)\/watch\/\?v=(\d+)$/i,
+      videoPath: /^https?:\/\/(?:www\.|m\.)?(?:facebook\.com|fb\.com)\/[A-Za-z0-9.]+\/videos\/(\d+)\/?/i,
+      videoShort: /^https?:\/\/fb\.watch\/([A-Za-z0-9_-]{5,11})\/?$/i,
+      group: /^https?:\/\/(?:www\.|m\.)?(?:facebook\.com|fb\.com)\/groups\/([A-Za-z0-9._-]+)\/?$/i,
+      event: /^https?:\/\/(?:www\.|m\.)?(?:facebook\.com|fb\.com)\/events\/(\d+)\/?$/i,
+      live: /^https?:\/\/(?:www\.|m\.)?(?:facebook\.com|fb\.com)\/([A-Za-z0-9.]{5,})\/live\/?$/i,
     },
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some(d => url.includes(d))) return false
+    if (!this.domains.some(d => url.includes(d)) && !url.includes('fb.watch')) return false
 
     // Check if it matches any valid pattern
     if (this.patterns.profile.test(url)) return true
@@ -32,6 +35,11 @@ export const facebook: PlatformModule = {
       for (const pattern of Object.values(this.patterns.content)) {
         if (pattern && pattern.test(url)) return true
       }
+    }
+
+    // Skip non-UGC paths like help, policy, about
+    if (/\/(?:help|about|policies|privacy|legal|marketing|business)(?:\/|$)/i.test(url)) {
+      return false
     }
 
     return false
@@ -98,6 +106,33 @@ export const facebook: PlatformModule = {
       result.username = liveMatch[1]
       result.metadata.isLive = true
       result.metadata.contentType = 'live'
+      return
+    }
+
+    // Handle story post
+    const storyMatch = this.patterns.content?.storyPost?.exec(url)
+    if (storyMatch) {
+      result.ids.postId = storyMatch[1]
+      result.metadata.isPost = true
+      result.metadata.contentType = 'post'
+      return
+    }
+
+    // Handle video path
+    const videoPathMatch = this.patterns.content?.videoPath?.exec(url)
+    if (videoPathMatch) {
+      result.ids.videoId = videoPathMatch[1]
+      result.metadata.isVideo = true
+      result.metadata.contentType = 'video'
+      return
+    }
+
+    // Handle video short
+    const videoShortMatch = this.patterns.content?.videoShort?.exec(url)
+    if (videoShortMatch) {
+      result.ids.shortCode = videoShortMatch[1]
+      result.metadata.isVideo = true
+      result.metadata.contentType = 'video'
       return
     }
 
