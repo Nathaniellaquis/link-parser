@@ -8,11 +8,11 @@ export const cashapp: PlatformModule = {
     domains: ['cash.app'],
 
     patterns: {
-        profile: /^https?:\/\/(?:www\.)?cash\.app\/\$([A-Za-z][A-Za-z0-9_]{1,20})\/?$/i,
+        profile: /^https?:\/\/(?:www\.)?cash\.app\/(?:\$)?([A-Za-z][A-Za-z0-9_]{1,20})\/?$/i,
         handle: /^\$?[A-Za-z][A-Za-z0-9_]{1,20}$/,
         content: {
-            payment: /^https?:\/\/(?:www\.)?cash\.app\/\$([A-Za-z][A-Za-z0-9_]{1,20})\/(?:\d+(?:\.\d{2})?)$/i, // amount in cents or dollars
-            amountQuery: /^https?:\/\/(?:www\.)?cash\.app\/\$([A-Za-z][A-Za-z0-9_]{1,20})\/?\?amount=(\d+(?:\.\d{2})?)$/i,
+            payment: /^https?:\/\/(?:www\.)?cash\.app\/(?:\$)?([A-Za-z][A-Za-z0-9_]{1,20})\/(?:\d+(?:\.\d{1,2})?)$/i,
+            amountQuery: /^https?:\/\/(?:www\.)?cash\.app\/(?:\$)?([A-Za-z][A-Za-z0-9_]{1,20})\/?\?amount=(\d+(?:\.\d{1,2})?)$/i,
         },
     },
 
