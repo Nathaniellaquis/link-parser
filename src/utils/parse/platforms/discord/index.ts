@@ -12,10 +12,10 @@ export const discord: PlatformModule = {
     profile: /^https?:\/\/(www\.)?(discord\.com|discordapp\.com)\/users\/(\d+)$/i,
     handle: /^\d+$/,
     content: {
-      invite: /^https?:\/\/(www\.)?discord\.gg\/([A-Za-z0-9]{2,10})$/i,
-      inviteFull: /^https?:\/\/(www\.)?(discord\.com|discordapp\.com)\/invite\/([A-Za-z0-9]{2,10})$/i,
-      channel: /^https?:\/\/(www\.)?(discord\.com|discordapp\.com)\/channels\/(\d+)\/(\d+)$/i,
-      server: /^https?:\/\/(www\.)?(discord\.com|discordapp\.com)\/servers\/([A-Za-z0-9-]+)$/i,
+      invite: /^https?:\/\/(?:www\.)?discord\.gg\/([A-Za-z0-9-]{2,})\/?(?:\?.*)?$/i,
+      inviteFull: /^https?:\/\/(?:www\.)?(discord\.com|discordapp\.com)\/invite\/([A-Za-z0-9-]{2,})\/?(?:\?.*)?$/i,
+      channel: /^https?:\/\/(?:www\.)?(discord\.com|discordapp\.com)\/channels\/(\d+)\/(\d+)(?:\/(\d+))?\/?$/i,
+      server: /^https?:\/\/(?:www\.)?(discord\.com|discordapp\.com)\/servers\/([A-Za-z0-9-]+)$/i,
     },
   },
 
@@ -36,7 +36,7 @@ export const discord: PlatformModule = {
     // Check for invite link (discord.gg)
     const inviteMatch = this.patterns.content?.invite?.exec(url)
     if (inviteMatch) {
-      result.ids.inviteCode = inviteMatch[2]
+      result.ids.inviteCode = inviteMatch[1]
       result.metadata.contentType = 'invite'
       return
     }
@@ -44,7 +44,7 @@ export const discord: PlatformModule = {
     // Check for invite link (discord.com/invite)
     const inviteFullMatch = this.patterns.content?.inviteFull?.exec(url)
     if (inviteFullMatch) {
-      result.ids.inviteCode = inviteFullMatch[3]
+      result.ids.inviteCode = inviteFullMatch[2]
       result.metadata.contentType = 'invite'
       return
     }
@@ -52,8 +52,9 @@ export const discord: PlatformModule = {
     // Check for channel link
     const channelMatch = this.patterns.content?.channel?.exec(url)
     if (channelMatch) {
-      result.ids.serverId = channelMatch[3]
-      result.ids.channelId = channelMatch[4]
+      result.ids.serverId = channelMatch[2]
+      result.ids.channelId = channelMatch[3]
+      if (channelMatch[4]) result.ids.messageId = channelMatch[4]
       result.metadata.contentType = 'channel'
       return
     }
@@ -61,7 +62,7 @@ export const discord: PlatformModule = {
     // Check for server link
     const serverMatch = this.patterns.content?.server?.exec(url)
     if (serverMatch) {
-      result.ids.serverName = serverMatch[3]
+      result.ids.serverName = serverMatch[2]
       result.metadata.contentType = 'server'
       return
     }
