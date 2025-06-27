@@ -9,12 +9,12 @@ export const pinterest: PlatformModule = {
   domains: ['pinterest.com', 'pin.it'],
 
   patterns: {
-    profile: /^https?:\/\/(?:www\.)?pinterest\.com\/([A-Za-z0-9_]{3,15})$/i,
-    handle: /^[A-Za-z0-9_]{3,15}$/,
+    profile: /^https?:\/\/(?:www\.|m\.|[a-z]{2,3}\.)?pinterest\.com\/([A-Za-z0-9_-]{3,30})\/?$/i,
+    handle: /^[A-Za-z0-9_-]{3,30}$/,
     content: {
-      pin: /^https?:\/\/(?:www\.)?pinterest\.com\/pin\/(\d+)$/i,
-      board: /^https?:\/\/(?:www\.)?pinterest\.com\/([A-Za-z0-9_]+)\/([A-Za-z0-9_-]+)$/i,
-      short: /^https?:\/\/pin\.it\/([A-Za-z0-9]+)$/i,
+      pin: /^https?:\/\/(?:www\.|m\.|[a-z]{2,3}\.)?pinterest\.com\/pin\/([A-Za-z0-9]+)\/?$/i,
+      board: /^https?:\/\/(?:www\.|m\.|[a-z]{2,3}\.)?pinterest\.com\/([A-Za-z0-9_-]+)\/([A-Za-z0-9_-]+)\/?$/i,
+      short: /^https?:\/\/pin\.it\/([A-Za-z0-9]+)\/?$/i,
     },
   },
 
