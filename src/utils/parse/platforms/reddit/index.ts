@@ -1,5 +1,6 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
 
 export const reddit: PlatformModule = {
   id: Platforms.Reddit,
@@ -13,7 +14,7 @@ export const reddit: PlatformModule = {
     handle: /^[A-Za-z0-9_-]{3,20}$/,
     content: {
       subreddit: /^https?:\/\/(?:www\.)?reddit\.com\/r\/([A-Za-z0-9_]{3,21})$/i,
-      post: /^https?:\/\/(?:www\.)?reddit\.com\/r\/[A-Za-z0-9_]+\/comments\/([a-z0-9]{2,})(?:\/|$)/i,
+      post: new RegExp(`^https?:\\/\\/(?:www\\.)?reddit\\.com\\/r\\/[A-Za-z0-9_]+\\/comments\\/([a-z0-9]{2,})(?:\\/[^?#]+)?\\/?${QUERY_HASH}$`, 'i'),
       shortPost: /^https?:\/\/redd\.it\/([a-z0-9]{2,})$/i,
     },
   },
