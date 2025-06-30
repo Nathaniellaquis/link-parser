@@ -5,10 +5,9 @@ import { QUERY_HASH } from '../../utils/constants'
 
 // Define the config values first
 const domains = ['bandsintown.com']
-const subdomains: string[] = []
 
 // Create the domain pattern using the config values
-const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
+const DOMAIN_PATTERN = createDomainPattern(domains)
 
 export const bandsintown: PlatformModule = {
     id: Platforms.BandsInTown,
@@ -16,7 +15,6 @@ export const bandsintown: PlatformModule = {
     color: '#00B4B3',
 
     domains: domains,
-    subdomains: subdomains,
 
     patterns: {
         profile: new RegExp(`^https?://${DOMAIN_PATTERN}/a/(\\d+)/?${QUERY_HASH}$`, 'i'),
