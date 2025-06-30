@@ -1,14 +1,14 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
-import { createDomainPattern } from '../../utils/url'
+// import { createDomainPattern } from '../../utils/url' // Not used - Spotify requires open. subdomain
 import { QUERY_HASH } from '../../utils/constants'
 
 // Define the config values first
 const domains = ['spotify.com']
 const subdomains = ['open']
 
-// Create the domain pattern using the config values
-const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
+// Spotify REQUIRES open.spotify.com - no other subdomain variations allowed
+const DOMAIN_PATTERN = 'open\\.spotify\\.com'
 
 export const spotify: PlatformModule = {
   id: Platforms.Spotify,
@@ -31,7 +31,11 @@ export const spotify: PlatformModule = {
   },
 
   detect(url: string): boolean {
+    // First check if it's a Spotify domain
     if (!this.domains.some(d => url.includes(d))) return false
+
+    // Spotify requires open.spotify.com specifically - reject www or bare domain
+    if (!url.includes('open.spotify.com')) return false
 
     // Check if it matches any valid pattern
     if (this.patterns.content?.embed?.test(url)) return true

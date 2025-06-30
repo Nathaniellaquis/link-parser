@@ -1,8 +1,7 @@
 {
   "name": "social-link-parser",
-  "version": "0.3.1",
+  "version": "0.3.5",
   "description": "Extract usernames, IDs, and metadata from social media URLs across 100+ platforms",
-  "type": "module",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/index.d.ts",
@@ -19,10 +18,11 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "npm run clean && npm run build:cjs && npm run build:esm && npm run build:types",
+    "build": "npm run clean && npm run build:cjs && npm run build:esm && npm run fix:esm && npm run build:types",
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "build:esm": "tsc -p tsconfig.esm.json",
     "build:types": "tsc -p tsconfig.types.json",
+    "fix:esm": "node scripts/fix-esm-imports.js",
     "clean": "rimraf dist",
     "test": "jest",
     "test:watch": "jest --watch",
