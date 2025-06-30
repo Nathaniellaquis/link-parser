@@ -1,26 +1,34 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
 import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['facebook.com', 'fb.com']
+const subdomains = ['m', 'mobile']
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const facebook: PlatformModule = {
   id: Platforms.Facebook,
   name: 'Facebook',
   color: '#1877F2',
 
-  domains: ['facebook.com', 'fb.com'],
-  mobileSubdomains: ['m', 'mobile'],
+  domains: domains,
+  subdomains: subdomains,
 
   patterns: {
-    profile: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/([A-Za-z0-9.]{5,})\\/?${QUERY_HASH}$`, 'i'),
+    profile: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9.]{5,})/?${QUERY_HASH}$`, 'i'),
     handle: /^[A-Za-z0-9.]{5,}$/,
     content: {
-      profileId: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/profile\\.php\\?id=(\\d+)\\/?${QUERY_HASH}$`, 'i'),
-      page: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/pages\\/[^\\/]+\\/(\\d{2,})\\/?${QUERY_HASH}$`, 'i'),
-      post: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/[A-Za-z0-9.]+\\/posts\\/(\\d+)\\/?${QUERY_HASH}$`, 'i'),
-      video: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/watch\\/\\?v=(\\d+)(?:&[^#]*)?\\/?${QUERY_HASH}$`, 'i'),
-      group: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/groups\\/([A-Za-z0-9._-]{3,})\\/?${QUERY_HASH}$`, 'i'),
-      event: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/events\\/(\\d+)\\/?${QUERY_HASH}$`, 'i'),
-      live: new RegExp(`^https?:\\/\\/(?:www\\.)?(?:facebook\\.com|fb\\.com)\\/([A-Za-z0-9.]{5,})\\/live\\/?${QUERY_HASH}$`, 'i'),
+      profileId: new RegExp(`^https?://${DOMAIN_PATTERN}/profile\\.php\\?id=(\\d+)(?:&.*)?${QUERY_HASH}$`, 'i'),
+      page: new RegExp(`^https?://${DOMAIN_PATTERN}/pages/[^/]+/(\\d{2,})/?${QUERY_HASH}$`, 'i'),
+      post: new RegExp(`^https?://${DOMAIN_PATTERN}/[A-Za-z0-9.]+/posts/(\\d+)/?${QUERY_HASH}$`, 'i'),
+      video: new RegExp(`^https?://${DOMAIN_PATTERN}/watch/\\?v=(\\d+)(?:&.*)?${QUERY_HASH}$`, 'i'),
+      group: new RegExp(`^https?://${DOMAIN_PATTERN}/groups/([A-Za-z0-9._-]{3,})/?${QUERY_HASH}$`, 'i'),
+      event: new RegExp(`^https?://${DOMAIN_PATTERN}/events/(\\d+)/?${QUERY_HASH}$`, 'i'),
+      live: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9.]{5,})/live/?${QUERY_HASH}$`, 'i'),
     },
   },
 

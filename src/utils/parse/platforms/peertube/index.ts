@@ -1,20 +1,21 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
 
 // Handle pattern: channel/account slug 3-40 chars
 const handlePattern = /^[A-Za-z0-9_-]{3,40}$/
 
 // Profile URLs – two common forms
 // https://<instance>/a/<username>
-const profileA = /^https?:\/\/([A-Za-z0-9.-]+)\/a\/([A-Za-z0-9_-]{3,40})\/?$/i
+const profileA = new RegExp(`^https?://([A-Za-z0-9.-]+)/a/([A-Za-z0-9_-]{3,40})/?${QUERY_HASH}$`, 'i')
 // https://<instance>/video-channels/<channel>
-const profileChannel = /^https?:\/\/([A-Za-z0-9.-]+)\/video-channels\/([A-Za-z0-9_-]{3,40})\/?$/i
+const profileChannel = new RegExp(`^https?://([A-Za-z0-9.-]+)/video-channels/([A-Za-z0-9_-]{3,40})/?${QUERY_HASH}$`, 'i')
 
 // Video URLs
 // Standard watch
-const videoWatch = /^https?:\/\/([A-Za-z0-9.-]+)\/videos\/watch\/([A-Za-z0-9_-]{8,})\/?$/i
+const videoWatch = new RegExp(`^https?://([A-Za-z0-9.-]+)/videos/watch/([A-Za-z0-9_-]{8,})/?${QUERY_HASH}$`, 'i')
 // Embedded player
-const videoEmbed = /^https?:\/\/([A-Za-z0-9.-]+)\/videos\/embed\/([A-Za-z0-9_-]{8,})\/?$/i
+const videoEmbed = new RegExp(`^https?://([A-Za-z0-9.-]+)/videos/embed/([A-Za-z0-9_-]{8,})/?${QUERY_HASH}$`, 'i')
 
 export const peertube: PlatformModule = {
     id: Platforms.PeerTube,
@@ -80,7 +81,6 @@ export const peertube: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        // Strip query params and hash fragments for canonical form
-        return normalize(url.replace(/\?.*$/, '').replace(/#.*/, ''))
+        return normalize(url)
     },
 } 

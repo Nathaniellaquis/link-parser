@@ -1,40 +1,47 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['etsy.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 const shopPattern = /^[A-Za-z0-9][A-Za-z0-9-]{1,30}$/
 const listingId = '\\d{9,12}'
-
-const shopRegex = /^https?:\/\/(?:www\.)?etsy\.com\/shop\/([A-Za-z0-9-]{2,32})\/?$/i
-const listingRegex = new RegExp(`^https?:\\/\\/(?:www\\.)?etsy\\.com\\/listing\\/(${listingId})(?:\\/[A-Za-z0-9-]+)?\\/?$`, 'i')
 
 export const etsy: PlatformModule = {
     id: Platforms.Etsy,
     name: 'Etsy',
     color: '#F56400',
 
-    domains: ['etsy.com'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: shopRegex,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/shop/([A-Za-z0-9-]{2,32})/?${QUERY_HASH}$`, 'i'),
         handle: shopPattern,
         content: {
-            listing: listingRegex,
+            listing: new RegExp(`^https?://${DOMAIN_PATTERN}/listing/(${listingId})(?:/[A-Za-z0-9-]+)?/?${QUERY_HASH}$`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('etsy.com')) return false
-        return shopRegex.test(url) || listingRegex.test(url)
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) || !!(this.patterns.content?.listing?.test(url))
     },
 
     extract(url: string, result: ParsedUrl): void {
-        const l = listingRegex.exec(url)
+        const l = this.patterns.content?.listing?.exec(url)
         if (l) {
             result.ids.listingId = l[1]
             result.metadata.contentType = 'listing'
             return
         }
-        const s = shopRegex.exec(url)
+        const s = this.patterns.profile.exec(url)
         if (s) {
             result.username = s[1]
             result.metadata.isProfile = true
@@ -56,6 +63,6 @@ export const etsy: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        return normalize(url.replace(/\?.*$/, '').replace(/#.*/, ''))
+        return normalize(url)
     },
 } 

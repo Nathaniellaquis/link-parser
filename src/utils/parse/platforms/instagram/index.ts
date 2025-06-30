@@ -1,24 +1,33 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['instagram.com', 'instagr.am']
+const subdomains = ['m', 'mobile']
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const instagram: PlatformModule = {
   id: Platforms.Instagram,
   name: 'Instagram',
   color: '#E1306C',
 
-  domains: ['instagram.com', 'instagr.am'],
-  mobileSubdomains: ['m', 'mobile'],
+  domains: domains,
+  subdomains: subdomains,
 
   patterns: {
-    profile: /^https?:\/\/(?:www\.|m\.|mobile\.)?(?:instagram\.com|instagr\.am)\/([a-zA-Z0-9_.]{2,30})\/?$/i,
+    profile: new RegExp(`^https?://${DOMAIN_PATTERN}/([a-zA-Z0-9_.]{2,30})/?${QUERY_HASH}$`, 'i'),
     handle: /^[a-zA-Z0-9_](?:[a-zA-Z0-9_.]*[a-zA-Z0-9_])?$/i,
     content: {
-      post: /^https?:\/\/(?:www\.)?instagram\.com\/p\/([A-Za-z0-9_-]+)(?:\/.*)?$/i,
-      reel: /^https?:\/\/(?:www\.)?instagram\.com\/reel[s]?\/([A-Za-z0-9_-]+)$/i,
-      story: /^https?:\/\/(?:www\.)?instagram\.com\/stories\/([a-zA-Z0-9_.]+)\/(\d+)$/i,
-      tv: /^https?:\/\/(?:www\.)?instagram\.com\/tv\/([A-Za-z0-9_-]{1,})$/i,
-      live: /^https?:\/\/(?:www\.)?instagram\.com\/([a-zA-Z0-9_.]{2,30})\/live\/?$/i,
-      embed: /^https?:\/\/(?:www\.)?instagram\.com\/p\/([A-Za-z0-9_-]+)\/embed$/i,
+      post: new RegExp(`^https?://${DOMAIN_PATTERN}/(?:[a-zA-Z0-9_.]{2,30}/)?p/([A-Za-z0-9_-]+)(?:/.*)?${QUERY_HASH}$`, 'i'),
+      reel: new RegExp(`^https?://${DOMAIN_PATTERN}/(?:[a-zA-Z0-9_.]{2,30}/)?reel[s]?/([A-Za-z0-9_-]+)/?${QUERY_HASH}$`, 'i'),
+      story: new RegExp(`^https?://${DOMAIN_PATTERN}/stories/([a-zA-Z0-9_.]+)(?:/(\\d+))?/?${QUERY_HASH}$`, 'i'),
+      tv: new RegExp(`^https?://${DOMAIN_PATTERN}/tv/([A-Za-z0-9_-]{1,})/?${QUERY_HASH}$`, 'i'),
+      live: new RegExp(`^https?://${DOMAIN_PATTERN}/([a-zA-Z0-9_.]{2,30})/live/?${QUERY_HASH}$`, 'i'),
+      embed: new RegExp(`^https?://${DOMAIN_PATTERN}/p/([A-Za-z0-9_-]+)/embed/?${QUERY_HASH}$`, 'i'),
     },
   },
 

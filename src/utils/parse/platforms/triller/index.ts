@@ -1,24 +1,34 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['triller.co']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const triller: PlatformModule = {
     id: Platforms.Triller,
     name: 'Triller',
     color: '#FF006E',
 
-    domains: ['triller.co'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: /^https?:\/\/(?:www\.)?triller\.co\/@([A-Za-z0-9_.]{3,30})\/?$/i,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/@([A-Za-z0-9_.]{3,30})/?${QUERY_HASH}$`, 'i'),
         handle: /^@?[A-Za-z0-9_.]{3,30}$/,
         content: {
-            video: /^https?:\/\/(?:www\.)?triller\.co\/watch\?v=([A-Za-z0-9_-]{8,})/i,
+            video: new RegExp(`^https?://${DOMAIN_PATTERN}/watch\\?v=([A-Za-z0-9_-]{8,})${QUERY_HASH}`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('triller.co')) return false
-        const { patterns } = this
-        return patterns.profile.test(url) || !!patterns.content?.video?.test(url)
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) || !!(this.patterns.content?.video?.test(url))
     },
 
     extract(url: string, res: ParsedUrl): void {
@@ -53,8 +63,6 @@ export const triller: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        url = url.replace(/^http:\/\//, 'https://')
-        url = url.replace(/www\./, '')
-        return url.replace(/\/$/, '')
+        return normalize(url)
     },
 } 

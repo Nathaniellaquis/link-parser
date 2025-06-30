@@ -1,29 +1,37 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['opensea.io']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const opensea: PlatformModule = {
     id: Platforms.OpenSea,
     name: 'OpenSea',
     color: '#2081E2',
 
-    domains: ['opensea.io'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: /^https?:\/\/(?:www\.)?opensea\.io\/([A-Za-z0-9_.-]{3,40})\/?$/i,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_.-]{3,40})/?${QUERY_HASH}$`, 'i'),
         handle: /^[A-Za-z0-9_.-]{3,40}$/,
         content: {
-            collection: /^https?:\/\/(?:www\.)?opensea\.io\/collection\/([A-Za-z0-9_-]+)\/?$/i,
-            asset: /^https?:\/\/(?:www\.)?opensea\.io\/assets\/([^/]+)\/([^/]+)\/([^/]+)\/?$/i,
+            collection: new RegExp(`^https?://${DOMAIN_PATTERN}/collection/([A-Za-z0-9_-]+)/?${QUERY_HASH}$`, 'i'),
+            asset: new RegExp(`^https?://${DOMAIN_PATTERN}/assets/([^/]+)/([^/]+)/([^/]+)/?${QUERY_HASH}$`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('opensea.io')) return false
-        const { patterns } = this
-        return (
-            patterns.profile.test(url) ||
-            !!patterns.content?.collection?.test(url) ||
-            !!patterns.content?.asset?.test(url)
-        )
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) ||
+            !!(this.patterns.content?.collection?.test(url)) ||
+            !!(this.patterns.content?.asset?.test(url))
     },
 
     extract(url: string, res: ParsedUrl): void {
@@ -65,6 +73,6 @@ export const opensea: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        return url.replace(/^http:\/\//, 'https://').replace(/www\./, '').replace(/\/$/, '')
+        return normalize(url)
     },
 } 

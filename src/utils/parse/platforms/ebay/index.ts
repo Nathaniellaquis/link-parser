@@ -1,34 +1,41 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['ebay.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 const itemIdPattern = '\\d{9,12}'
-
-const itemRegex = new RegExp(`^https?:\\/\\/(?:www\\.)?ebay\\.com\\/itm(?:\\/[A-Za-z0-9-]+)?\\/(${itemIdPattern})(?:\\?.*)?$`, 'i')
-const shortItemRegex = new RegExp(`^https?:\\/\\/(?:www\\.)?ebay\\.com\\/itm\\/(${itemIdPattern})(?:\\?.*)?$`, 'i')
 
 export const ebay: PlatformModule = {
     id: Platforms.EBay,
     name: 'eBay',
     color: '#E53238',
 
-    domains: ['ebay.com'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
         profile: /^$/, // not implemented
         handle: /^$/, // no handle validation
         content: {
-            item: itemRegex,
-            itemShort: shortItemRegex,
+            item: new RegExp(`^https?://${DOMAIN_PATTERN}/itm(?:/[A-Za-z0-9-]+)?/(${itemIdPattern})/?${QUERY_HASH}$`, 'i'),
+            itemShort: new RegExp(`^https?://${DOMAIN_PATTERN}/itm/(${itemIdPattern})/?${QUERY_HASH}$`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('ebay.com')) return false
-        return itemRegex.test(url) || shortItemRegex.test(url)
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return !!(this.patterns.content?.item?.test(url) || this.patterns.content?.itemShort?.test(url))
     },
 
     extract(url: string, result: ParsedUrl): void {
-        const m = itemRegex.exec(url) || shortItemRegex.exec(url)
+        const m = this.patterns.content?.item?.exec(url) || this.patterns.content?.itemShort?.exec(url)
         if (m) {
             result.ids.itemId = m[1]
             result.metadata.contentType = 'item'
@@ -49,6 +56,6 @@ export const ebay: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        return normalize(url.replace(/\?.*$/, '').replace(/#.*/, ''))
+        return normalize(url)
     },
 } 

@@ -1,29 +1,37 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['imdb.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const imdb: PlatformModule = {
     id: Platforms.IMDb,
     name: 'IMDb',
     color: '#F5C518',
 
-    domains: ['imdb.com'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: /^https?:\/\/(?:www\.)?imdb\.com\/name\/(nm\d{7,8})\/?$/i,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/name/(nm\\d{7,8})/?${QUERY_HASH}$`, 'i'),
         handle: /^nm\d{7,8}$/,
         content: {
-            title: /^https?:\/\/(?:www\.)?imdb\.com\/title\/(tt\d{7,8})\/?$/i,
-            company: /^https?:\/\/(?:www\.)?imdb\.com\/company\/(co\d{7,8})\/?$/i,
+            title: new RegExp(`^https?://${DOMAIN_PATTERN}/title/(tt\\d{7,8})/?${QUERY_HASH}$`, 'i'),
+            company: new RegExp(`^https?://${DOMAIN_PATTERN}/company/(co\\d{7,8})/?${QUERY_HASH}$`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('imdb.com')) return false
-        const { patterns } = this
-        return (
-            patterns.profile.test(url) ||
-            !!patterns.content?.title?.test(url) ||
-            !!patterns.content?.company?.test(url)
-        )
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) ||
+            !!(this.patterns.content?.title?.test(url)) ||
+            !!(this.patterns.content?.company?.test(url))
     },
 
     extract(url: string, res: ParsedUrl): void {
@@ -64,6 +72,6 @@ export const imdb: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        return url.replace(/^http:\/\//, 'https://').replace(/www\./, '').replace(/\/$/, '')
+        return normalize(url)
     },
 } 

@@ -1,33 +1,40 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['kick.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 const usernamePattern = /^[A-Za-z0-9_]{3,25}$/
-
-const profileRegex = /^https?:\/\/(?:www\.)?kick\.com\/([A-Za-z0-9_]{3,25})\/?$/i
-const videoRegex = /^https?:\/\/(?:www\.)?kick\.com\/video\/(\d{5,})\/?$/i
 
 export const kick: PlatformModule = {
     id: Platforms.Kick,
     name: 'Kick',
     color: '#52FF00',
 
-    domains: ['kick.com'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: profileRegex,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_]{3,25})/?${QUERY_HASH}$`, 'i'),
         handle: usernamePattern,
         content: {
-            video: videoRegex,
+            video: new RegExp(`^https?://${DOMAIN_PATTERN}/video/(\\d{5,})/?${QUERY_HASH}$`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('kick.com')) return false
-        return profileRegex.test(url) || videoRegex.test(url)
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) || !!(this.patterns.content?.video?.test(url))
     },
 
     extract(url: string, result: ParsedUrl): void {
-        const vid = videoRegex.exec(url)
+        const vid = this.patterns.content?.video?.exec(url)
         if (vid) {
             result.ids.videoId = vid[1]
             result.metadata.isVideo = true
@@ -35,7 +42,7 @@ export const kick: PlatformModule = {
             return
         }
 
-        const prof = profileRegex.exec(url)
+        const prof = this.patterns.profile.exec(url)
         if (prof) {
             result.username = prof[1]
             result.metadata.isProfile = true
@@ -58,6 +65,6 @@ export const kick: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        return normalize(url.replace(/\?.*$/, '').replace(/#.*$/, ''))
+        return normalize(url)
     },
 } 

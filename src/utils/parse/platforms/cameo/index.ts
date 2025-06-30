@@ -1,36 +1,45 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['cameo.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const cameo: PlatformModule = {
     id: Platforms.Cameo,
     name: 'Cameo',
     color: '#EB1C2D',
 
-    domains: ['cameo.com'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: /^https?:\/\/(?:www\.)?cameo\.com\/([A-Za-z0-9_.]{3,40})\/?$/i,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_.]{3,40})/?${QUERY_HASH}$`, 'i'),
         handle: /^[A-Za-z0-9_.]{3,40}$/,
         content: {
-            category: /^https?:\/\/(?:www\.)?cameo\.com\/c\/([A-Za-z0-9_-]{3,40})\/?$/i,
+            category: new RegExp(`^https?://${DOMAIN_PATTERN}/c/([A-Za-z0-9_-]{3,40})/?${QUERY_HASH}$`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('cameo.com')) return false
-        const { patterns } = this
-        return patterns.profile.test(url) || !!patterns.content?.category?.test(url)
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) || !!(this.patterns.content?.category?.test(url))
     },
 
     extract(url: string, res: ParsedUrl): void {
-        const { patterns } = this
-        const cat = patterns.content?.category?.exec(url)
+        const cat = this.patterns.content?.category?.exec(url)
         if (cat) {
             res.username = cat[1]
             res.metadata.isCategory = true
             res.metadata.contentType = 'category'
             return
         }
-        const prof = patterns.profile.exec(url)
+        const prof = this.patterns.profile.exec(url)
         if (prof) {
             res.username = prof[1]
             res.metadata.isProfile = true
@@ -47,6 +56,6 @@ export const cameo: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        return url.replace(/^http:\/\//, 'https://').replace(/www\./, '').replace(/\/$/, '')
+        return normalize(url)
     },
 } 

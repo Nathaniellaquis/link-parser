@@ -51,3 +51,38 @@ export function removeTrailingSlash(url: string): string {
 export function normalize(url: string): string {
   return removeTrailingSlash(stripTrackingParams(ensureHttps(url)))
 }
+
+export function cleanURL(url: string): string {
+  return url.trim().toLowerCase();
+}
+
+/**
+ * Creates a regex pattern string that matches any of the provided domains
+ * with optional subdomains (www, mobile, open, etc.) and proper escaping
+ * 
+ * @param domains - Array of domain strings (e.g., ['youtube.com', 'youtu.be'])
+ * @param subdomains - Optional array of allowed subdomains (e.g., ['m', 'mobile', 'open']). Always includes 'www' by default.
+ * @returns Regex pattern string (e.g., '(?:(?:www\\.|m\\.|mobile\\.)?(?:youtube\\.com|youtu\\.be))')
+ */
+export function createDomainPattern(
+  domains: string[],
+  subdomains: string[] = []
+): string {
+  if (!domains || domains.length === 0) {
+    throw new Error('At least one domain must be provided');
+  }
+
+  // Escape special regex characters in domains and join with |
+  const escapedDomains = domains
+    .map(domain => domain.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('|');
+
+  // Build subdomain pattern - always include www
+  const allSubdomains = ['www', ...subdomains];
+  const escapedSubdomains = allSubdomains
+    .map(sub => sub.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('|');
+
+  // Return pattern with optional subdomain prefix
+  return `(?:(?:(?:${escapedSubdomains})\\.)?(?:${escapedDomains}))`;
+}

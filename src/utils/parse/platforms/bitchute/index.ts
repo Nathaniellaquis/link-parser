@@ -1,40 +1,47 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['bitchute.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 const channelSlug = /^[A-Za-z0-9_-]{3,40}$/
-
-const channelRegex = /^https?:\/\/(?:www\.)?bitchute\.com\/channel\/([A-Za-z0-9_-]{3,40})\/?$/i
-const videoRegex = /^https?:\/\/(?:www\.)?bitchute\.com\/(?:video|embed)\/([A-Za-z0-9]+)\/?$/i
 
 export const bitchute: PlatformModule = {
     id: Platforms.BitChute,
     name: 'BitChute',
     color: '#D90207',
 
-    domains: ['bitchute.com'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: channelRegex,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/channel/([A-Za-z0-9_-]{3,40})/?${QUERY_HASH}$`, 'i'),
         handle: channelSlug,
         content: {
-            video: videoRegex,
+            video: new RegExp(`^https?://${DOMAIN_PATTERN}/(?:video|embed)/([A-Za-z0-9]+)/?${QUERY_HASH}$`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('bitchute.com')) return false
-        return channelRegex.test(url) || videoRegex.test(url)
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) || !!(this.patterns.content?.video?.test(url))
     },
 
     extract(url: string, result: ParsedUrl): void {
-        const v = videoRegex.exec(url)
+        const v = this.patterns.content?.video?.exec(url)
         if (v) {
             result.ids.videoId = v[1]
             result.metadata.isVideo = true
             result.metadata.contentType = 'video'
             return
         }
-        const c = channelRegex.exec(url)
+        const c = this.patterns.profile.exec(url)
         if (c) {
             result.username = c[1]
             result.metadata.isProfile = true
@@ -56,6 +63,6 @@ export const bitchute: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        return normalize(url.replace(/\?.*$/, '').replace(/#.*$/, ''))
+        return normalize(url)
     },
 } 

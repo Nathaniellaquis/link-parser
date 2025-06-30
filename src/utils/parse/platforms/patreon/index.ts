@@ -1,29 +1,34 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['patreon.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const patreon: PlatformModule = {
   id: Platforms.Patreon,
   name: 'Patreon',
   color: '#F96854',
 
-  domains: ['patreon.com'],
+  domains: domains,
+  subdomains: subdomains,
 
   patterns: {
-    profile: /^https?:\/\/(?:www\.)?patreon\.com\/(?:c\/)?([A-Za-z0-9_-]{3,50})$/i,
+    profile: new RegExp(`^https?://${DOMAIN_PATTERN}/(?:c/)?([A-Za-z0-9_-]{3,50})/?${QUERY_HASH}$`, 'i'),
     handle: /^[A-Za-z0-9_-]{3,50}$/,
     content: {
-      post: /^https?:\/\/(?:www\.)?patreon\.com\/posts\/([A-Za-z0-9-]{2,})$/i,
+      post: new RegExp(`^https?://${DOMAIN_PATTERN}/posts/([A-Za-z0-9-]{2,})/?${QUERY_HASH}$`, 'i'),
     },
   },
 
   detect(url: string): boolean {
-    if (!url.includes('patreon.com')) return false
-
-    // Check if it matches any valid pattern
-    if (this.patterns.profile.test(url)) return true
-    if (this.patterns.content?.post?.test(url)) return true
-
-    return false
+    if (!this.domains.some(domain => url.includes(domain))) return false
+    return this.patterns.profile.test(url) || !!(this.patterns.content?.post?.test(url))
   },
 
   extract(url: string, result: ParsedUrl): void {

@@ -1,26 +1,34 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['poshmark.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const poshmark: PlatformModule = {
     id: Platforms.Poshmark,
     name: 'Poshmark',
     color: '#C03838',
 
-    domains: ['poshmark.com'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: /^https?:\/\/(?:www\.)?poshmark\.com\/closet\/([A-Za-z0-9_.-]{3,40})\/?$/i,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/closet/([A-Za-z0-9_.-]{3,40})/?${QUERY_HASH}$`, 'i'),
         handle: /^[A-Za-z0-9_.-]{3,40}$/,
         content: {
-            listing: /^https?:\/\/(?:www\.)?poshmark\.com\/listing\/([A-Za-z0-9_-]+)-(\d+)\/?$/i,
+            listing: new RegExp(`^https?://${DOMAIN_PATTERN}/listing/([A-Za-z0-9_-]+)-(\\d+)/?${QUERY_HASH}$`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('poshmark.com')) return false
-        return (
-            this.patterns.profile.test(url) ||
-            !!this.patterns.content?.listing?.test(url)
-        )
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) || !!(this.patterns.content?.listing?.test(url))
     },
 
     extract(url: string, res: ParsedUrl): void {
@@ -54,6 +62,6 @@ export const poshmark: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        return url.replace(/^http:\/\//, 'https://').replace(/www\./, '').replace(/\/$/, '')
+        return normalize(url)
     },
 } 

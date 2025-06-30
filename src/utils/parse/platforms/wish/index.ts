@@ -1,32 +1,40 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { createDomainPattern } from '../../utils/url'
 import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['wish.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const wish: PlatformModule = {
     id: Platforms.Wish,
     name: 'Wish',
     color: '#2FB7EC',
 
-    domains: ['wish.com'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
         profile: /^$/,
         handle: /^$/,
         content: {
-            product: new RegExp(`^https?:\\/\\/(?:www\\.)?wish\\.com\\/product\\/([a-f0-9]{24})\\/?${QUERY_HASH}$`, 'i'),
+            product: new RegExp(`^https?://${DOMAIN_PATTERN}/product/([a-f0-9]{24})/?${QUERY_HASH}$`, 'i'),
         }
     },
 
     detect(url: string): boolean {
-        return !!this.patterns.content?.product && this.patterns.content.product!.test(url)
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return !!(this.patterns.content?.product?.test(url))
     },
 
     extract(url: string, result: ParsedUrl): void {
-        if (this.patterns.content?.product) {
-            const match = url.match(this.patterns.content.product)
-            if (match) {
-                result.ids.productId = match[1]
-                result.metadata.contentType = 'product'
-            }
+        const match = this.patterns.content?.product?.exec(url)
+        if (match) {
+            result.ids.productId = match[1]
+            result.metadata.contentType = 'product'
         }
     },
 

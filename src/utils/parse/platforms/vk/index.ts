@@ -1,42 +1,46 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['vk.com']
+const subdomains = ['m', 'new']
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 // Username: letters, digits, dot, underscore, 5-32 chars (VK rules are looser, but this is safe)
 const usernamePattern = /^[a-zA-Z0-9_.]{3,32}$/
 const numericIdPattern = /^id\d{1,15}$/
-
-const profileRegex = /^https?:\/\/(?:www\.|m\.|new\.)?vk\.com\/(?:([a-zA-Z0-9_.]{3,32})|(id\d{1,15}))(?:\/)?$/i
-// Post links: https://vk.com/wall-12345_678 or wall12345_678 or <user>?w=wall-12345_678
-const postRegex = /^https?:\/\/(?:www\.|m\.)?vk\.com\/(wall-?\d+_\d+)(?:\?.*)?$/i
-const postQueryRegex = /^https?:\/\/(?:www\.|m\.)?vk\.com\/[^?]+\?w=(wall-?\d+_\d+)/i
 
 export const vk: PlatformModule = {
     id: Platforms.VKontakte,
     name: 'VK',
     color: '#4C75A3',
 
-    domains: ['vk.com'],
-    mobileSubdomains: ['m', 'new'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: profileRegex,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/(?:([a-zA-Z0-9_.]{3,32})|(id\\d{1,15}))(?:/)?/?${QUERY_HASH}$`, 'i'),
         handle: usernamePattern,
         content: {
-            post: postRegex,
-            postQuery: postQueryRegex,
+            post: new RegExp(`^https?://${DOMAIN_PATTERN}/(wall-?\\d+_\\d+)/?${QUERY_HASH}$`, 'i'),
+            postQuery: new RegExp(`^https?://${DOMAIN_PATTERN}/[^?]+\\?w=(wall-?\\d+_\\d+)${QUERY_HASH}`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('vk.com')) return false
-        if (profileRegex.test(url)) return true
-        if (postRegex.test(url) || postQueryRegex.test(url)) return true
-        return false
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) ||
+            !!(this.patterns.content?.post?.test(url)) ||
+            !!(this.patterns.content?.postQuery?.test(url))
     },
 
     extract(url: string, result: ParsedUrl): void {
         // Posts first
-        const pMatch = postRegex.exec(url) || postQueryRegex.exec(url)
+        const pMatch = this.patterns.content?.post?.exec(url) || this.patterns.content?.postQuery?.exec(url)
         if (pMatch) {
             result.ids.postId = pMatch[1]
             result.metadata.isPost = true
@@ -45,7 +49,7 @@ export const vk: PlatformModule = {
         }
 
         // Profiles
-        const prof = profileRegex.exec(url)
+        const prof = this.patterns.profile.exec(url)
         if (prof) {
             result.username = prof[1] || prof[2]
             result.metadata.isProfile = true
@@ -67,7 +71,6 @@ export const vk: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        // Remove common query params like &from=copy etc.
-        return normalize(url.replace(/[?&](utm_[^&]+|ref=[^&]+|from=[^&]+)/g, ''))
+        return normalize(url)
     },
 } 

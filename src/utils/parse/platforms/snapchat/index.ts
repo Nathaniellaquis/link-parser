@@ -1,19 +1,29 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['snapchat.com']
+const subdomains = ['story']  // story.snapchat.com
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const snapchat: PlatformModule = {
   id: Platforms.Snapchat,
   name: 'Snapchat',
   color: '#FFFC00',
 
-  domains: ['snapchat.com', 'story.snapchat.com'],
+  domains: domains,
+  subdomains: subdomains,
 
   patterns: {
-    profile: /^https?:\/\/(?:www\.)?snapchat\.com\/add\/([A-Za-z0-9._-]{3,15})$/i,
+    profile: new RegExp(`^https?://${DOMAIN_PATTERN}/add/([A-Za-z0-9._-]{3,15})/?${QUERY_HASH}$`, 'i'),
     handle: /^[A-Za-z0-9._-]{3,15}$/,
     content: {
-      story: /^https?:\/\/story\.snapchat\.com\/s\/([A-Za-z0-9._-]+)$/i,
-      spotlight: /^https?:\/\/(?:www\.)?snapchat\.com\/spotlight\/([A-Za-z0-9]{2,})$/i,
+      story: new RegExp(`^https?://${DOMAIN_PATTERN}/s/([A-Za-z0-9._-]+)/?${QUERY_HASH}$`, 'i'),
+      spotlight: new RegExp(`^https?://${DOMAIN_PATTERN}/spotlight/([A-Za-z0-9]{2,})/?${QUERY_HASH}$`, 'i'),
     },
   },
 

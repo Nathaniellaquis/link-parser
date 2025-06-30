@@ -1,24 +1,34 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['vsco.co']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const vsco: PlatformModule = {
     id: Platforms.VSCO,
     name: 'VSCO',
     color: '#000000',
 
-    domains: ['vsco.co'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: /^https?:\/\/(?:www\.)?vsco\.co\/([A-Za-z0-9_.-]{3,40})\/?$/i,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_.-]{3,40})/?${QUERY_HASH}$`, 'i'),
         handle: /^@?[A-Za-z0-9_.-]{3,40}$/,
         content: {
-            image: /^https?:\/\/(?:www\.)?vsco\.co\/([A-Za-z0-9_.-]{3,40})\/media\/(\d+)\/?$/i,
+            image: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_.-]{3,40})/media/(\\d+)/?${QUERY_HASH}$`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('vsco.co')) return false
-        const { patterns } = this
-        return patterns.profile.test(url) || !!patterns.content?.image?.test(url)
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) || !!(this.patterns.content?.image?.test(url))
     },
 
     extract(url: string, res: ParsedUrl): void {
@@ -54,6 +64,6 @@ export const vsco: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        return url.replace(/^http:\/\//, 'https://').replace(/www\./, '').replace(/\/$/, '')
+        return normalize(url)
     },
 } 

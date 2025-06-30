@@ -46,9 +46,9 @@ twitter.validateHandle('jack') // => true
 twitter.validateHandle('this_is_way_too_long_for_twitter') // => false
 ```
 
-## Supported Platforms (97 total)
+## Supported Platforms (100+ total)
 
-### Social Media (26)
+### Social Media (25)
 - **Instagram** - Profiles, posts, stories, reels
 - **Twitter** - Profiles, tweets, spaces  
 - **TikTok** - Profiles, videos
@@ -72,7 +72,6 @@ twitter.validateHandle('this_is_way_too_long_for_twitter') // => false
 - **Dev.to** - Profiles, articles
 - **Quora** - Profiles, questions, spaces
 - **StackOverflow** - Users, questions
-- **Mastodon** - Profiles (via Hoo.be)
 - **Signal** - Group invites
 - **Slack** - Workspace invites
 
@@ -88,7 +87,7 @@ twitter.validateHandle('this_is_way_too_long_for_twitter') // => false
 - **Kick** - Channels, videos
 - **PeerTube** - Channels, videos
 
-### Music & Audio (11)
+### Music & Audio (12)
 - **Spotify** - Artists, albums, tracks, playlists
 - **SoundCloud** - Artists, tracks, playlists
 - **Apple Music** - Artists, albums, songs
@@ -127,6 +126,9 @@ twitter.validateHandle('this_is_way_too_long_for_twitter') // => false
 - **ArtStation** - Artists, artworks
 - **Flickr** - Users, photos
 
+### Publishing & Newsletters (1)
+- **Substack** - Writers, newsletters, posts
+
 ### Payment & Support (8)
 - **PayPal** - Profiles, payment links
 - **Venmo** - Profiles
@@ -137,7 +139,7 @@ twitter.validateHandle('this_is_way_too_long_for_twitter') // => false
 - **Stripe** - Payment links
 - **Square** - Checkout links
 
-### Crypto & NFT (4)
+### Crypto & NFT (5)
 - **OpenSea** - Collections, assets
 - **Rarible** - Users, items
 - **LooksRare** - Collections, tokens
@@ -152,13 +154,17 @@ twitter.validateHandle('this_is_way_too_long_for_twitter') // => false
 - **Fanfix** - Creators
 - **Slushy** - Creators
 
+### Creator Economy & Adult Content (1)
+- **Hoo.be** - Profile links, link shortening
+- **OnlyFans** - Creator profiles
+
 ### Professional & Productivity (4)
 - **Calendly** - Users, event types
 - **Microsoft Teams** - Meeting links
 - **Matterport** - Spaces
 - **MediaKits** - Profiles
 
-### Other (4)
+### Other (6)
 - **Email** - Email addresses
 - **Phone** - Phone numbers
 - **GoFundMe** - Campaigns

@@ -1,24 +1,34 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['dispo.fun']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const dispo: PlatformModule = {
     id: Platforms.Dispo,
     name: 'Dispo',
     color: '#FFCC00',
 
-    domains: ['dispo.fun'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: /^https?:\/\/(?:www\.)?dispo\.fun\/@([A-Za-z0-9_.]{3,30})\/?$/i,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/@([A-Za-z0-9_.]{3,30})/?${QUERY_HASH}$`, 'i'),
         handle: /^@?[A-Za-z0-9_.]{3,30}$/,
         content: {
-            roll: /^https?:\/\/(?:www\.)?dispo\.fun\/r\/([A-Za-z0-9_-]{3,40})\/?$/i,
+            roll: new RegExp(`^https?://${DOMAIN_PATTERN}/r/([A-Za-z0-9_-]{3,40})/?${QUERY_HASH}$`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('dispo.fun')) return false
-        const { patterns } = this
-        return patterns.profile.test(url) || !!patterns.content?.roll?.test(url)
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) || !!(this.patterns.content?.roll?.test(url))
     },
 
     extract(url: string, res: ParsedUrl): void {
@@ -53,6 +63,6 @@ export const dispo: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        return url.replace(/^http:\/\//, 'https://').replace(/www\./, '').replace(/\/$/, '')
+        return normalize(url)
     },
 } 

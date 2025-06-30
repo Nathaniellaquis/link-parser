@@ -1,35 +1,54 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
 
-// Example: https://rarible.com/token/ETHEREUM:0xabc123:12345
-const tokenRegex = /^https?:\/\/rarible\.com\/token\/[A-Z]+:([0-9a-fA-Fx]+):([0-9]+)\/?$/i
-// User: https://rarible.com/user/0xabc...
-const userRegex = /^https?:\/\/rarible\.com\/user\/([0-9a-fA-Fx]{4,})\/?$/i
+// Define the config values first
+const domains = ['rarible.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const rarible: PlatformModule = {
     id: Platforms.Rarible,
     name: 'Rarible',
     color: '#FADA5E',
 
-    domains: ['rarible.com'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: userRegex,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/user/([0-9a-fA-Fx]{4,})/?${QUERY_HASH}$`, 'i'),
         handle: /^[0-9a-fA-Fx]{4,}$/,
-        content: { token: tokenRegex },
+        content: {
+            token: new RegExp(`^https?://${DOMAIN_PATTERN}/token/[A-Z]+:([0-9a-fA-Fx]+):([0-9]+)/?${QUERY_HASH}$`, 'i')
+        },
     },
 
-    detect(url) { return url.includes('rarible.com') && (tokenRegex.test(url) || userRegex.test(url)) },
-
-    extract(url, result: ParsedUrl) {
-        const t = tokenRegex.exec(url)
-        if (t) { result.ids.contract = t[1]; result.ids.tokenId = t[2]; result.metadata.contentType = 'token'; return }
-        const u = userRegex.exec(url)
-        if (u) { result.userId = u[1]; result.metadata.isProfile = true; result.metadata.contentType = 'profile' }
+    detect(url: string): boolean {
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) || !!(this.patterns.content?.token?.test(url))
     },
 
-    validateHandle(h) { return /^[0-9a-fA-Fx]{4,}$/.test(h) },
-    buildProfileUrl(addr: string) { return `https://rarible.com/user/${addr}` },
-    buildContentUrl(_, id) { return `https://rarible.com/token/${id}` },
-    normalizeUrl: url => normalize(url),
+    extract(url: string, result: ParsedUrl): void {
+        const t = this.patterns.content?.token?.exec(url)
+        if (t) {
+            result.ids.contract = t[1]
+            result.ids.tokenId = t[2]
+            result.metadata.contentType = 'token'
+            return
+        }
+        const u = this.patterns.profile.exec(url)
+        if (u) {
+            result.userId = u[1]
+            result.metadata.isProfile = true
+            result.metadata.contentType = 'profile'
+        }
+    },
+
+    validateHandle(h: string): boolean { return /^[0-9a-fA-Fx]{4,}$/.test(h) },
+    buildProfileUrl(addr: string): string { return `https://rarible.com/user/${addr}` },
+    buildContentUrl(_: string, id: string): string { return `https://rarible.com/token/${id}` },
+    normalizeUrl(url: string): string { return normalize(url) },
 } 

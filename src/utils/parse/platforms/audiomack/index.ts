@@ -1,35 +1,41 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['audiomack.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const audiomack: PlatformModule = {
     id: Platforms.Audiomack,
     name: 'Audiomack',
     color: '#ff8800',
 
-    domains: ['audiomack.com'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: /^https?:\/\/(?:www\.)?audiomack\.com\/([a-z0-9_-]{3,30})\/?$/i,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/([a-z0-9_-]{3,30})/?${QUERY_HASH}$`, 'i'),
         handle: /^[a-z0-9_-]{3,30}$/i,
         content: {
-            song: /^https?:\/\/(?:www\.)?audiomack\.com\/([a-z0-9_-]{3,30})\/song\/([a-z0-9_-]{3,120})\/?$/i,
-            album: /^https?:\/\/(?:www\.)?audiomack\.com\/([a-z0-9_-]{3,30})\/album\/([a-z0-9_-]{3,120})\/?$/i,
+            song: new RegExp(`^https?://${DOMAIN_PATTERN}/([a-z0-9_-]{3,30})/song/([a-z0-9_-]{3,120})/?${QUERY_HASH}$`, 'i'),
+            album: new RegExp(`^https?://${DOMAIN_PATTERN}/([a-z0-9_-]{3,30})/album/([a-z0-9_-]{3,120})/?${QUERY_HASH}$`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('audiomack.com')) return false
-        const p = this.patterns
-        return (
-            p.profile.test(url) ||
-            !!p.content?.song?.test(url) ||
-            !!p.content?.album?.test(url)
-        )
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) ||
+            !!(this.patterns.content?.song?.test(url)) ||
+            !!(this.patterns.content?.album?.test(url))
     },
 
     extract(url: string, res: ParsedUrl): void {
-        const { patterns } = this
-
-        const prof = patterns.profile.exec(url)
+        const prof = this.patterns.profile.exec(url)
         if (prof) {
             res.username = prof[1]
             res.metadata.isProfile = true
@@ -37,7 +43,7 @@ export const audiomack: PlatformModule = {
             return
         }
 
-        const song = patterns.content?.song?.exec(url)
+        const song = this.patterns.content?.song?.exec(url)
         if (song) {
             res.username = song[1]
             res.ids.trackSlug = song[2]
@@ -46,7 +52,7 @@ export const audiomack: PlatformModule = {
             return
         }
 
-        const album = patterns.content?.album?.exec(url)
+        const album = this.patterns.content?.album?.exec(url)
         if (album) {
             res.username = album[1]
             res.ids.albumSlug = album[2]
@@ -64,6 +70,6 @@ export const audiomack: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        return url.replace(/^http:\/\//, 'https://').replace(/\/$/, '')
+        return normalize(url)
     },
 } 

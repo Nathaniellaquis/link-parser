@@ -1,22 +1,32 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['spotify.com']
+const subdomains = ['open']
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const spotify: PlatformModule = {
   id: Platforms.Spotify,
   name: 'Spotify',
   color: '#1DB954',
 
-  domains: ['spotify.com', 'open.spotify.com'],
+  domains: domains,
+  subdomains: subdomains,
 
   patterns: {
-    profile: /^https?:\/\/open\.spotify\.com\/user\/([A-Za-z0-9._-]{2,32})$/i,
+    profile: new RegExp(`^https?://${DOMAIN_PATTERN}/user/([A-Za-z0-9._-]{2,32})/?${QUERY_HASH}$`, 'i'),
     handle: /^[A-Za-z0-9._-]{2,32}$/,
     content: {
-      artist: /^https?:\/\/open\.spotify\.com\/artist\/([A-Za-z0-9]{20,22})$/i,
-      track: /^https?:\/\/open\.spotify\.com\/track\/([A-Za-z0-9]{20,22})$/i,
-      album: /^https?:\/\/open\.spotify\.com\/album\/([A-Za-z0-9]{20,22})$/i,
-      playlist: /^https?:\/\/open\.spotify\.com\/playlist\/([A-Za-z0-9]{20,22})$/i,
-      embed: /^https?:\/\/open\.spotify\.com\/embed\/(track|album|playlist|artist)\/([A-Za-z0-9]{20,22})$/i,
+      artist: new RegExp(`^https?://${DOMAIN_PATTERN}/artist/([A-Za-z0-9]{20,22})/?${QUERY_HASH}$`, 'i'),
+      track: new RegExp(`^https?://${DOMAIN_PATTERN}/track/([A-Za-z0-9]{20,22})/?${QUERY_HASH}$`, 'i'),
+      album: new RegExp(`^https?://${DOMAIN_PATTERN}/album/([A-Za-z0-9]{20,22})/?${QUERY_HASH}$`, 'i'),
+      playlist: new RegExp(`^https?://${DOMAIN_PATTERN}/playlist/([A-Za-z0-9]{20,22})/?${QUERY_HASH}$`, 'i'),
+      embed: new RegExp(`^https?://${DOMAIN_PATTERN}/embed/(track|album|playlist|artist)/([A-Za-z0-9]{20,22})/?${QUERY_HASH}$`, 'i'),
     },
   },
 

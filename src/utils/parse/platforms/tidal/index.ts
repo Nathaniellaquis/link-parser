@@ -1,60 +1,64 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
 
-const BASE = 'https?:\\/\\/(?:www\\.)?tidal\\.com'
+// Define the config values first
+const domains = ['tidal.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const tidal: PlatformModule = {
     id: Platforms.Tidal,
     name: 'Tidal',
     color: '#000000',
 
-    domains: ['tidal.com'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: new RegExp(`${BASE}\\/browse\\/artist\\/(\\d+)\\/?$`, 'i'),
-        handle: /^\\d+$/,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/browse/artist/(\\d+)/?${QUERY_HASH}$`, 'i'),
+        handle: /^\d+$/,
         content: {
-            album: new RegExp(`${BASE}\\/browse\\/album\\/(\\d+)\\/?$`, 'i'),
-            track: new RegExp(`${BASE}\\/browse\\/track\\/(\\d+)\\/?$`, 'i'),
-            playlist: new RegExp(`${BASE}\\/browse\\/playlist\\/([A-Za-z0-9-]{36})\\/?$`, 'i'),
+            album: new RegExp(`^https?://${DOMAIN_PATTERN}/browse/album/(\\d+)/?${QUERY_HASH}$`, 'i'),
+            track: new RegExp(`^https?://${DOMAIN_PATTERN}/browse/track/(\\d+)/?${QUERY_HASH}$`, 'i'),
+            playlist: new RegExp(`^https?://${DOMAIN_PATTERN}/browse/playlist/([A-Za-z0-9-]{36})/?${QUERY_HASH}$`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('tidal.com')) return false
-        const p = this.patterns
-        return (
-            p.profile.test(url) ||
-            !!p.content?.album?.test(url) ||
-            !!p.content?.track?.test(url) ||
-            !!p.content?.playlist?.test(url)
-        )
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) ||
+            !!(this.patterns.content?.album?.test(url)) ||
+            !!(this.patterns.content?.track?.test(url)) ||
+            !!(this.patterns.content?.playlist?.test(url))
     },
 
     extract(url: string, res: ParsedUrl): void {
-        const { patterns } = this
-
-        const art = patterns.profile.exec(url)
+        const art = this.patterns.profile.exec(url)
         if (art) {
             res.ids.artistId = art[1]
             res.metadata.isProfile = true
             res.metadata.contentType = 'artist'
             return
         }
-        const alb = patterns.content?.album?.exec(url)
+        const alb = this.patterns.content?.album?.exec(url)
         if (alb) {
             res.ids.albumId = alb[1]
             res.metadata.isAlbum = true
             res.metadata.contentType = 'album'
             return
         }
-        const tr = patterns.content?.track?.exec(url)
+        const tr = this.patterns.content?.track?.exec(url)
         if (tr) {
             res.ids.trackId = tr[1]
             res.metadata.isSingle = true
             res.metadata.contentType = 'track'
             return
         }
-        const pl = patterns.content?.playlist?.exec(url)
+        const pl = this.patterns.content?.playlist?.exec(url)
         if (pl) {
             res.ids.playlistId = pl[1]
             res.metadata.isPlaylist = true
@@ -71,6 +75,6 @@ export const tidal: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        return url.replace(/^http:\/\//, 'https://').replace(/\/$/, '')
+        return normalize(url)
     },
 } 

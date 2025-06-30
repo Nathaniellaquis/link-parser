@@ -1,39 +1,46 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['buymeacoffee.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 const usernamePattern = /^[A-Za-z0-9_-]{3,32}$/
-
-const profileRegex = /^https?:\/\/(?:www\.)?buymeacoffee\.com\/([A-Za-z0-9_-]{3,32})\/?$/i
-const postRegex = /^https?:\/\/(?:www\.)?buymeacoffee\.com\/p\/([A-Za-z0-9_-]+)\/?$/i
 
 export const buymeacoffee: PlatformModule = {
     id: Platforms.BuyMeACoffee,
     name: 'BuyMeACoffee',
     color: '#FFDD00',
 
-    domains: ['buymeacoffee.com'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: profileRegex,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_-]{3,32})/?${QUERY_HASH}$`, 'i'),
         handle: usernamePattern,
         content: {
-            post: postRegex,
+            post: new RegExp(`^https?://${DOMAIN_PATTERN}/p/([A-Za-z0-9_-]+)/?${QUERY_HASH}$`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('buymeacoffee.com')) return false
-        return profileRegex.test(url) || postRegex.test(url)
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) || !!(this.patterns.content?.post?.test(url))
     },
 
     extract(url: string, result: ParsedUrl): void {
-        const m = postRegex.exec(url)
+        const m = this.patterns.content?.post?.exec(url)
         if (m) {
             result.ids.postSlug = m[1]
             result.metadata.contentType = 'post'
             return
         }
-        const p = profileRegex.exec(url)
+        const p = this.patterns.profile.exec(url)
         if (p) {
             result.username = p[1]
             result.metadata.isProfile = true
@@ -55,6 +62,6 @@ export const buymeacoffee: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        return normalize(url.replace(/\?.*$/, '').replace(/#.*/, ''))
+        return normalize(url)
     },
 } 

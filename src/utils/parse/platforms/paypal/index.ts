@@ -1,29 +1,48 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['paypal.me', 'paypal.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values - this automatically handles www
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const paypal: PlatformModule = {
     id: Platforms.PayPal,
     name: 'PayPal',
     color: '#003087',
 
-    domains: ['paypal.me', 'paypal.com'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: /^https?:\/\/(?:www\.)?(?:paypal\.me|paypal\.com\/paypalme)\/([A-Za-z0-9]{1,20})\/?$/i,
+        // Use DOMAIN_PATTERN which automatically handles www.paypal.com and paypal.me
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/(?:paypalme/)?([A-Za-z0-9]{1,20})/?${QUERY_HASH}$`, 'i'),
         handle: /^[A-Za-z0-9]{1,20}$/,
         content: {
-            payment: /^https?:\/\/(?:www\.)?(?:paypal\.me|paypal\.com\/paypalme)\/([A-Za-z0-9]{1,20})\/(\d+(?:\.?\d{1,2})?)([A-Za-z]{3})?\/?$/i,
+            payment: new RegExp(`^https?://${DOMAIN_PATTERN}/(?:paypalme/)?([A-Za-z0-9]{1,20})/(\\d+(?:\\.?\\d{1,2})?)([A-Za-z]{3})?/?${QUERY_HASH}$`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('paypal.')) return false
-        const { patterns } = this
-        return patterns.profile.test(url) || !!patterns.content?.payment?.test(url)
+        if (!this.domains.some(domain => url.includes(domain))) return false
+
+        // Check if it matches any valid pattern
+        if (this.patterns.profile.test(url)) return true
+        if (this.patterns.content) {
+            for (const pattern of Object.values(this.patterns.content)) {
+                if (pattern && pattern.test(url)) return true
+            }
+        }
+
+        return false
     },
 
     extract(url: string, res: ParsedUrl): void {
-        const { patterns } = this
-        const pay = patterns.content?.payment?.exec(url)
+        const pay = this.patterns.content?.payment?.exec(url)
         if (pay) {
             res.username = pay[1]
             res.ids.amount = pay[2]
@@ -33,7 +52,7 @@ export const paypal: PlatformModule = {
             return
         }
 
-        const prof = patterns.profile.exec(url)
+        const prof = this.patterns.profile.exec(url)
         if (prof) {
             res.username = prof[1]
             res.metadata.isProfile = true
@@ -50,11 +69,10 @@ export const paypal: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        url = url.replace(/^http:\/\//, 'https://')
-        url = url.replace(/www\./, '')
-        if (url.includes('paypal.com/paypalme/')) {
-            url = url.replace('paypal.com/paypalme/', 'paypal.me/')
+        let normalized = normalize(url)
+        if (normalized.includes('paypal.com/paypalme/')) {
+            normalized = normalized.replace('paypal.com/paypalme/', 'paypal.me/')
         }
-        return url.replace(/\/$/, '')
+        return normalized
     },
 } 

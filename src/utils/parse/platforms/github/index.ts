@@ -1,21 +1,26 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['github.com', 'gist.github.com', 'raw.githubusercontent.com']
 
 export const github: PlatformModule = {
   id: Platforms.GitHub,
   name: 'GitHub',
-  domains: ['github.com', 'gist.github.com', 'raw.githubusercontent.com'],
+  domains: domains,
   patterns: {
-    profile: /^https?:\/\/github\.com\/([A-Za-z0-9-]{2,39})$/i,
+    profile: new RegExp(`^https?://github\\.com/([A-Za-z0-9-]{2,39})/?${QUERY_HASH}$`, 'i'),
     handle: /^[A-Za-z0-9-]{1,39}$/,
     content: {
-      repo: /^https?:\/\/github\.com\/([A-Za-z0-9-]{2,39})\/([A-Za-z0-9._-]+)$/i,
-      gist: /^https?:\/\/gist\.github\.com\/([A-Za-z0-9-]{2,39})\/([a-fA-F0-9]{2,})$/i,
-      raw: /^https?:\/\/raw\.githubusercontent\.com\/([A-Za-z0-9-]{2,39})\/([A-Za-z0-9._-]+)\/(.+)$/i,
+      repo: new RegExp(`^https?://github\\.com/([A-Za-z0-9-]{2,39})/([A-Za-z0-9._-]+)/?${QUERY_HASH}$`, 'i'),
+      gist: new RegExp(`^https?://gist\\.github\\.com/([A-Za-z0-9-]{2,39})/([a-fA-F0-9]{8,})/?${QUERY_HASH}$`, 'i'),
+      raw: new RegExp(`^https?://raw\\.githubusercontent\\.com/([A-Za-z0-9-]{2,39})/([A-Za-z0-9._-]+)/(.+)${QUERY_HASH}$`, 'i'),
     },
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some(d => url.includes(d))) return false
+    if (!this.domains.some(domain => url.includes(domain))) return false
 
     // Check if it matches any valid pattern
     if (this.patterns.profile.test(url)) return true
@@ -77,6 +82,6 @@ export const github: PlatformModule = {
   },
 
   normalizeUrl(url: string): string {
-    return url.replace(/^http:\/\//, 'https://').replace(/\/$/, '')
+    return normalize(url.replace(/^http:\/\//, 'https://'))
   },
 }

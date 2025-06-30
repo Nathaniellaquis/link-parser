@@ -1,27 +1,36 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['bitbucket.org']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const bitbucket: PlatformModule = {
   id: Platforms.Bitbucket,
   name: 'Bitbucket',
-  domains: ['bitbucket.org'],
+
+  domains: domains,
+  subdomains: subdomains,
+
   patterns: {
-    profile: /^https?:\/\/bitbucket\.org\/([A-Za-z0-9_-]{2,30})$/i,
+    profile: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_-]{2,30})/?${QUERY_HASH}$`, 'i'),
     handle: /^[A-Za-z0-9_-]{2,30}$/,
     content: {
-      repo: /^https?:\/\/bitbucket\.org\/([A-Za-z0-9_-]{2,30})\/([A-Za-z0-9._-]+)$/i,
-      snippet: /^https?:\/\/bitbucket\.org\/snippets\/([A-Za-z0-9_-]{2,30})\/([A-Za-z0-9]{2,})$/i,
+      repo: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_-]{2,30})/([A-Za-z0-9._-]+)/?${QUERY_HASH}$`, 'i'),
+      snippet: new RegExp(`^https?://${DOMAIN_PATTERN}/snippets/([A-Za-z0-9_-]{2,30})/([A-Za-z0-9]{2,})/?${QUERY_HASH}$`, 'i'),
     },
   },
 
   detect(url: string): boolean {
-    if (!url.includes('bitbucket.org')) return false
-
-    // Check if it matches any valid pattern
-    if (this.patterns.profile.test(url)) return true
-    if (this.patterns.content?.repo?.test(url)) return true
-    if (this.patterns.content?.snippet?.test(url)) return true
-
-    return false
+    if (!this.domains.some(domain => url.includes(domain))) return false
+    return this.patterns.profile.test(url) ||
+      !!(this.patterns.content?.repo?.test(url)) ||
+      !!(this.patterns.content?.snippet?.test(url))
   },
 
   extract(url: string, result: ParsedUrl): void {
@@ -63,6 +72,6 @@ export const bitbucket: PlatformModule = {
   },
 
   normalizeUrl(url: string): string {
-    return url.replace(/^http:\/\//, 'https://').replace(/\/$/, '')
+    return normalize(url)
   },
 }

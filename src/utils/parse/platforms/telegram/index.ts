@@ -1,35 +1,39 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['t.me', 'telegram.me']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const telegram: PlatformModule = {
   id: Platforms.Telegram,
   name: 'Telegram',
   color: '#0088CC',
 
-  domains: ['t.me', 'telegram.me'],
+  domains: domains,
+  subdomains: subdomains,
 
   patterns: {
-    profile: /^https?:\/\/(?:t\.me|telegram\.me)\/([A-Za-z0-9_]{5,32})$/i,
+    profile: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_]{5,32})/?${QUERY_HASH}$`, 'i'),
     handle: /^[A-Za-z0-9_]{5,32}$/,
     content: {
-      channel: /^https?:\/\/(?:t\.me|telegram\.me)\/s\/([A-Za-z0-9_]{5,32})$/i,
-      post: /^https?:\/\/(?:t\.me|telegram\.me)\/([A-Za-z0-9_]{5,32})\/(\d+)$/i,
-      join: /^https?:\/\/(?:t\.me|telegram\.me)\/joinchat\/([A-Za-z0-9_-]{10,})$/i,
+      channel: new RegExp(`^https?://${DOMAIN_PATTERN}/s/([A-Za-z0-9_]{5,32})/?${QUERY_HASH}$`, 'i'),
+      post: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_]{5,32})/(\\d+)/?${QUERY_HASH}$`, 'i'),
+      join: new RegExp(`^https?://${DOMAIN_PATTERN}/joinchat/([A-Za-z0-9_-]{10,})/?${QUERY_HASH}$`, 'i'),
     },
   },
 
   detect(url: string): boolean {
     if (!this.domains.some(d => url.includes(d))) return false
-
-    // Check if it matches any valid pattern
-    if (this.patterns.profile.test(url)) return true
-    if (this.patterns.content) {
-      for (const pattern of Object.values(this.patterns.content)) {
-        if (pattern && pattern.test(url)) return true
-      }
-    }
-
-    return false
+    return this.patterns.profile.test(url) ||
+      !!(this.patterns.content?.channel?.test(url)) ||
+      !!(this.patterns.content?.post?.test(url)) ||
+      !!(this.patterns.content?.join?.test(url))
   },
 
   extract(url: string, result: ParsedUrl): void {

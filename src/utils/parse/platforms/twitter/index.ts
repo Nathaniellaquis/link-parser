@@ -1,20 +1,29 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['twitter.com', 'x.com', 'platform.twitter.com']
+const subdomains = ['m', 'mobile']
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const twitter: PlatformModule = {
   id: Platforms.Twitter,
   name: 'Twitter',
   color: '#1DA1F2',
 
-  domains: ['twitter.com', 'x.com', 'platform.twitter.com'],
-  mobileSubdomains: ['m', 'mobile'],
+  domains: domains,
+  subdomains: subdomains,
 
   patterns: {
-    profile: /^https?:\/\/(?:www\.)?(twitter\.com|x\.com)\/([A-Za-z0-9_]{2,15})$/i,
+    profile: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_]{2,15})/?${QUERY_HASH}$`, 'i'),
     handle: /^@?[A-Za-z0-9_]{1,15}$/,
     content: {
-      post: /^https?:\/\/(?:www\.)?(twitter\.com|x\.com)\/([A-Za-z0-9_]{2,15})\/status\/(\d{10,20})$/i,
-      embed: /^https?:\/\/platform\.twitter\.com\/embed\/Tweet\.html\?id=(\d{10,20})$/i,
+      post: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_]{2,15})/status/(\\d{10,20})/?${QUERY_HASH}$`, 'i'),
+      embed: new RegExp(`^https?://${DOMAIN_PATTERN}/embed/Tweet\\.html\\?id=(\\d{10,20})(?:&.*)?${QUERY_HASH}$`, 'i'),
     },
   },
 
@@ -42,8 +51,8 @@ export const twitter: PlatformModule = {
     // Handle post/status URLs
     const postMatch = this.patterns.content?.post?.exec(url)
     if (postMatch) {
-      result.username = postMatch[2]
-      result.ids.tweetId = postMatch[3]
+      result.username = postMatch[1]
+      result.ids.tweetId = postMatch[2]
       result.metadata.isPost = true
       result.metadata.contentType = 'post'
       return
@@ -52,7 +61,7 @@ export const twitter: PlatformModule = {
     // Handle profile URLs
     const profileMatch = this.patterns.profile.exec(url)
     if (profileMatch) {
-      result.username = profileMatch[2]
+      result.username = profileMatch[1]
       result.metadata.isProfile = true
       result.metadata.contentType = 'profile'
     }

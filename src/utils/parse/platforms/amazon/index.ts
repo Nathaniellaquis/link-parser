@@ -1,22 +1,31 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
 import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['amazon.com']
+const subdomains = ['smile']
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const amazon: PlatformModule = {
   id: Platforms.Amazon,
   name: 'Amazon',
   color: '#FF9900',
 
-  domains: ['amazon.com', 'www.amazon.com', 'smile.amazon.com'],
+  domains: domains,
+  subdomains: subdomains,
 
   patterns: {
-    profile: new RegExp(`^https?:\/\/(?:www\.)?amazon\.com\/shop\/([A-Za-z0-9_-]+)\/?${QUERY_HASH}$`, 'i'),
+    profile: new RegExp(`^https?://${DOMAIN_PATTERN}/shop/([A-Za-z0-9_-]+)/?${QUERY_HASH}$`, 'i'),
     handle: /^[A-Za-z0-9_-]+$/,
     content: {
-      product: new RegExp(`^https?:\/\/(?:www\.)?amazon\.com\/.+\/dp\/([A-Z0-9]{10})\/?${QUERY_HASH}$`, 'i'),
-      productShort: new RegExp(`^https?:\/\/(?:www\.)?amazon\.com\/dp\/([A-Z0-9]{10})\/?${QUERY_HASH}$`, 'i'),
-      store: new RegExp(`^https?:\/\/(?:www\.)?amazon\.com\/stores\/page\/([A-Z0-9]{2,})\/?${QUERY_HASH}$`, 'i'),
-      review: new RegExp(`^https?:\/\/(?:www\.)?amazon\.com\/review\/(R[A-Z0-9]+)\/?${QUERY_HASH}$`, 'i'),
+      product: new RegExp(`^https?://${DOMAIN_PATTERN}/.+/dp/([A-Z0-9]{10})/?${QUERY_HASH}$`, 'i'),
+      productShort: new RegExp(`^https?://${DOMAIN_PATTERN}/dp/([A-Z0-9]{10})/?${QUERY_HASH}$`, 'i'),
+      store: new RegExp(`^https?://${DOMAIN_PATTERN}/stores/page/([A-Z0-9]{2,})/?${QUERY_HASH}$`, 'i'),
+      review: new RegExp(`^https?://${DOMAIN_PATTERN}/review/(R[A-Z0-9]+)/?${QUERY_HASH}$`, 'i'),
     },
   },
 

@@ -1,41 +1,48 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { createDomainPattern } from '../../utils/url'
 import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['aliexpress.com', 'aliexpress.us', 'aliexpress.ru']
+const subdomains = ['m']
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const aliexpress: PlatformModule = {
     id: Platforms.AliExpress,
     name: 'AliExpress',
     color: '#FF4747',
-    domains: ['aliexpress.com', 'aliexpress.us', 'aliexpress.ru'],
-    mobileSubdomains: ['m'],
+
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: /^https?:\/\/([a-z]+\.)?aliexpress\.(com|us|ru)\/store\/(\d+)\/?${QUERY_HASH}$/i,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/store/(\\d+)/?${QUERY_HASH}$`, 'i'),
         handle: /^[a-zA-Z0-9_-]+$/,
         content: {
-            item: new RegExp(`^https?:\\/\\/([a-z]+\\.)?aliexpress\\.(com|us|ru)\\\/(?:item|i)\\/(\\d+)(?:\\.html)?\\/?${QUERY_HASH}$`, 'i'),
+            item: new RegExp(`^https?://${DOMAIN_PATTERN}/(?:item|i)/(\\d+)(?:\\.html)?/?${QUERY_HASH}$`, 'i'),
         }
     },
 
     detect(url: string): boolean {
-        return this.patterns.profile.test(url) ||
-            (!!this.patterns.content?.item && this.patterns.content.item.test(url))
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) || !!(this.patterns.content?.item?.test(url))
     },
 
     extract(url: string, result: ParsedUrl): void {
-        const profileMatch = url.match(this.patterns.profile)
+        const profileMatch = this.patterns.profile.exec(url)
         if (profileMatch) {
-            result.ids.storeId = profileMatch[3]
+            result.ids.storeId = profileMatch[1]
             result.metadata.isProfile = true
             return
         }
 
-        if (this.patterns.content?.item) {
-            const itemMatch = url.match(this.patterns.content.item)
-            if (itemMatch) {
-                result.ids.productId = itemMatch[3]
-                result.metadata.contentType = 'product'
-                result.metadata.isProduct = true
-            }
+        const itemMatch = this.patterns.content?.item?.exec(url)
+        if (itemMatch) {
+            result.ids.productId = itemMatch[1]
+            result.metadata.contentType = 'product'
+            result.metadata.isProduct = true
         }
     },
 

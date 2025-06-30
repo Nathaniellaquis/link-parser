@@ -1,21 +1,28 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
 import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['reddit.com', 'redd.it']
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains)
 
 export const reddit: PlatformModule = {
   id: Platforms.Reddit,
   name: 'Reddit',
   color: '#FF4500',
 
-  domains: ['reddit.com', 'redd.it'],
+  domains: domains,
 
   patterns: {
-    profile: /^https?:\/\/(?:www\.)?reddit\.com\/(?:user|u)\/([A-Za-z0-9_-]{3,20})$/i,
+    profile: new RegExp(`^https?://${DOMAIN_PATTERN}/(?:user|u)/([A-Za-z0-9_-]{3,20})/?${QUERY_HASH}$`, 'i'),
     handle: /^[A-Za-z0-9_-]{3,20}$/,
     content: {
-      subreddit: /^https?:\/\/(?:www\.)?reddit\.com\/r\/([A-Za-z0-9_]{3,21})$/i,
-      post: new RegExp(`^https?:\\/\\/(?:www\\.)?reddit\\.com\\/r\\/[A-Za-z0-9_]+\\/comments\\/([a-z0-9]{2,})(?:\\/[^?#]+)?\\/?${QUERY_HASH}$`, 'i'),
-      shortPost: new RegExp(`^https?:\/\/redd\.it\/([a-z0-9]{2,})\/?${QUERY_HASH}$`, 'i'),
+      subreddit: new RegExp(`^https?://${DOMAIN_PATTERN}/r/([A-Za-z0-9_]{3,21})/?${QUERY_HASH}$`, 'i'),
+      post: new RegExp(`^https?://${DOMAIN_PATTERN}/r/[A-Za-z0-9_]+/comments/([a-z0-9]{2,})(?:/[^?#]+)?/?${QUERY_HASH}$`, 'i'),
+      shortPost: new RegExp(`^https?://${DOMAIN_PATTERN}/([a-z0-9]{2,})/?${QUERY_HASH}$`, 'i'),
     },
   },
 

@@ -1,38 +1,45 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
 
-const userRegex = /^https?:\/\/(?:www\.)?stackoverflow\.com\/users\/(\d+)(?:\/([A-Za-z0-9_-]+))?\/?$/i
-const questionRegex = /^https?:\/\/(?:www\.)?stackoverflow\.com\/(?:questions|q)\/(\d+)(?:\/([A-Za-z0-9_-]+))?\/?$/i
+// Define the config values first
+const domains = ['stackoverflow.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const stackoverflow: PlatformModule = {
     id: Platforms.StackOverflow,
     name: 'Stack Overflow',
     color: '#F48024',
 
-    domains: ['stackoverflow.com'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: userRegex,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/users/(\\d+)(?:/([A-Za-z0-9_-]+))?/?${QUERY_HASH}$`, 'i'),
         handle: /^\d+$/, // userId only (StackOverflow has numeric IDs)
         content: {
-            question: questionRegex,
+            question: new RegExp(`^https?://${DOMAIN_PATTERN}/(?:questions|q)/(\\d+)(?:/([A-Za-z0-9_-]+))?/?${QUERY_HASH}$`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('stackoverflow.com')) return false
-        return userRegex.test(url) || questionRegex.test(url)
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) || !!(this.patterns.content?.question?.test(url))
     },
 
     extract(url: string, result: ParsedUrl): void {
-        const q = questionRegex.exec(url)
+        const q = this.patterns.content?.question?.exec(url)
         if (q) {
             result.ids.questionId = q[1]
             result.metadata.isQuestion = true
             result.metadata.contentType = 'question'
             return
         }
-        const u = userRegex.exec(url)
+        const u = this.patterns.profile.exec(url)
         if (u) {
             result.userId = u[1]
             result.username = u[2]
@@ -55,7 +62,6 @@ export const stackoverflow: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        // remove tracking params and anchors
-        return normalize(url.replace(/#.*$/, '').replace(/[?&](utm_[^&]+|ref)=[^&]+/g, ''))
+        return normalize(url)
     },
 } 

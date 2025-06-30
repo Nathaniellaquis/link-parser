@@ -1,23 +1,34 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['fanfix.io']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const fanfix: PlatformModule = {
     id: Platforms.Fanfix,
     name: 'Fanfix',
     color: '#FF6F61',
 
-    domains: ['fanfix.io'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: /^https?:\/\/(?:www\.)?fanfix\.io\/@([A-Za-z0-9_.-]{3,30})\/?$/i,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/@([A-Za-z0-9_.-]{3,30})/?${QUERY_HASH}$`, 'i'),
         handle: /^@?[A-Za-z0-9_.-]{3,30}$/,
         content: {
-            post: /^https?:\/\/(?:www\.)?fanfix\.io\/post\/(\d+)\/?$/i,
+            post: new RegExp(`^https?://${DOMAIN_PATTERN}/post/(\\d+)/?${QUERY_HASH}$`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('fanfix.io')) return false
-        return this.patterns.profile.test(url) || !!this.patterns.content?.post?.test(url)
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) || !!(this.patterns.content?.post?.test(url))
     },
 
     extract(url: string, res: ParsedUrl): void {
@@ -50,6 +61,6 @@ export const fanfix: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        return url.replace(/^http:\/\//, 'https://').replace(/www\./, '').replace(/\/$/, '')
+        return normalize(url)
     },
 } 

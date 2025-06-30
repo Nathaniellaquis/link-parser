@@ -1,31 +1,49 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
+// import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['myshopify.com']
+// Universal subdomain support for any shopify store name
+const subdomains = ['*']
+
+// Create the domain pattern using the config values  
+// const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const shopify: PlatformModule = {
   id: Platforms.Shopify,
   name: 'Shopify Store',
-  domains: ['myshopify.com'],
+
+  domains: domains,
+  subdomains: subdomains,
+
   patterns: {
-    profile: /^https?:\/\/([a-z0-9-]+)\.myshopify\.com$/i,
+    // Note: Shopify patterns need to capture specific subdomain names (store names), so we can't use DOMAIN_PATTERN directly
+    // Each pattern captures the store name from the subdomain
+    profile: new RegExp(`^https?://([a-z0-9-]+)\\.myshopify\\.com/?${QUERY_HASH}$`, 'i'),
     handle: /^[a-z0-9-]+$/i,
     content: {
-      product: /^https?:\/\/([a-z0-9-]+)\.myshopify\.com\/products\/([a-z0-9-]+)$/i,
-      collection: /^https?:\/\/([a-z0-9-]+)\.myshopify\.com\/collections\/([a-z0-9-]+)$/i,
-      page: /^https?:\/\/([a-z0-9-]+)\.myshopify\.com\/pages\/([a-z0-9-]+)$/i,
+      product: new RegExp(`^https?://([a-z0-9-]+)\\.myshopify\\.com/products/([a-z0-9-]+)/?${QUERY_HASH}$`, 'i'),
+      collection: new RegExp(`^https?://([a-z0-9-]+)\\.myshopify\\.com/collections/([a-z0-9-]+)/?${QUERY_HASH}$`, 'i'),
+      page: new RegExp(`^https?://([a-z0-9-]+)\\.myshopify\\.com/pages/([a-z0-9-]+)/?${QUERY_HASH}$`, 'i'),
     },
   },
-  detect: (url: string): boolean => {
-    if (!url.includes('myshopify.com')) return false
 
-    // Check if it matches any valid pattern
-    if (/^https?:\/\/[a-z0-9-]+\.myshopify\.com(?:\/(?:products|collections|pages)\/[a-z0-9-]+)?$/i.test(url)) {
-      return true
-    }
+  detect(url: string): boolean {
+    if (!this.domains.some(domain => url.includes(domain))) return false
 
-    return false
+    return !!(
+      this.patterns.profile.test(url) ||
+      this.patterns.content?.product?.test(url) ||
+      this.patterns.content?.collection?.test(url) ||
+      this.patterns.content?.page?.test(url)
+    )
   },
-  extract: (url: string, res: ParsedUrl) => {
+
+  extract(url: string, res: ParsedUrl): void {
     // Handle product URLs
-    const productMatch = /^https?:\/\/([a-z0-9-]+)\.myshopify\.com\/products\/([a-z0-9-]+)$/i.exec(url)
+    const productMatch = this.patterns.content?.product?.exec(url)
     if (productMatch) {
       res.ids.storeName = productMatch[1]
       res.ids.productHandle = productMatch[2]
@@ -35,7 +53,7 @@ export const shopify: PlatformModule = {
     }
 
     // Handle collection URLs
-    const collectionMatch = /^https?:\/\/([a-z0-9-]+)\.myshopify\.com\/collections\/([a-z0-9-]+)$/i.exec(url)
+    const collectionMatch = this.patterns.content?.collection?.exec(url)
     if (collectionMatch) {
       res.ids.storeName = collectionMatch[1]
       res.ids.collectionName = collectionMatch[2]
@@ -45,7 +63,7 @@ export const shopify: PlatformModule = {
     }
 
     // Handle page URLs
-    const pageMatch = /^https?:\/\/([a-z0-9-]+)\.myshopify\.com\/pages\/([a-z0-9-]+)$/i.exec(url)
+    const pageMatch = this.patterns.content?.page?.exec(url)
     if (pageMatch) {
       res.ids.storeName = pageMatch[1]
       res.ids.pageSlug = pageMatch[2]
@@ -55,14 +73,15 @@ export const shopify: PlatformModule = {
     }
 
     // Handle store URLs
-    const storeMatch = /^https?:\/\/([a-z0-9-]+)\.myshopify\.com$/i.exec(url)
+    const storeMatch = this.patterns.profile.exec(url)
     if (storeMatch) {
       res.ids.storeName = storeMatch[1]
       res.metadata.isProfile = true
       res.metadata.contentType = 'storefront'
     }
   },
-  validateHandle: (h: string): boolean => /^[a-z0-9-]+$/i.test(h),
-  buildProfileUrl: (u: string): string => `https://${u}.myshopify.com`,
-  normalizeUrl: (u: string): string => u.replace(/^http:\/\//, 'https://').replace(/\/$/, ''),
+
+  validateHandle(h: string): boolean { return /^[a-z0-9-]+$/i.test(h) },
+  buildProfileUrl(u: string): string { return `https://${u}.myshopify.com` },
+  normalizeUrl(u: string): string { return normalize(u) },
 }

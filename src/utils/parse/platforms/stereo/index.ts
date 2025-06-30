@@ -1,23 +1,34 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['stereo.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const stereo: PlatformModule = {
     id: Platforms.Stereo,
     name: 'Stereo',
     color: '#FF6F61',
 
-    domains: ['stereo.com'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: /^https?:\/\/(?:www\.)?stereo\.com\/([A-Za-z0-9_.-]{3,30})\/?$/i,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_.-]{3,30})/?${QUERY_HASH}$`, 'i'),
         handle: /^[A-Za-z0-9_.-]{3,30}$/,
         content: {
-            show: /^https?:\/\/(?:www\.)?stereo\.com\/s\/([A-Za-z0-9]+)\/?$/i,
+            show: new RegExp(`^https?://${DOMAIN_PATTERN}/s/([A-Za-z0-9]+)/?${QUERY_HASH}$`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('stereo.com')) return false
-        return this.patterns.profile.test(url) || !!this.patterns.content?.show?.test(url)
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) || !!(this.patterns.content?.show?.test(url))
     },
 
     extract(url: string, res: ParsedUrl): void {
@@ -50,6 +61,6 @@ export const stereo: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        return url.replace(/^http:\/\//, 'https://').replace(/www\./, '').replace(/\/$/, '')
+        return normalize(url)
     },
 } 

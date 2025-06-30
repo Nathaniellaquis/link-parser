@@ -1,30 +1,44 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
 import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['soundcloud.com']
+const subdomains = ['w']
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const soundcloud: PlatformModule = {
   id: Platforms.SoundCloud,
   name: 'SoundCloud',
   color: '#FF5500',
 
-  domains: ['soundcloud.com', 'w.soundcloud.com'],
+  domains: domains,
+  subdomains: subdomains,
 
   patterns: {
-    profile: new RegExp(`^https?:\/\/(?:www\.)?soundcloud\.com\/([A-Za-z0-9_-]{2,25})\/?${QUERY_HASH}$`, 'i'),
+    profile: new RegExp(`^https?://(?:(?:www\\.)?soundcloud\\.com)/([A-Za-z0-9_-]{2,25})/?${QUERY_HASH}$`, 'i'),
     handle: /^[A-Za-z0-9_-]{2,25}$/,
     content: {
-      track: new RegExp(`^https?:\/\/(?:www\.)?soundcloud\.com\/([A-Za-z0-9_-]{2,25})\/([A-Za-z0-9_-]+)\/?${QUERY_HASH}$`, 'i'),
-      set: new RegExp(`^https?:\/\/(?:www\.)?soundcloud\.com\/([A-Za-z0-9_-]{2,25})\/sets\/([A-Za-z0-9_-]+)\/?${QUERY_HASH}$`, 'i'),
-      embed: new RegExp(`^https?:\/\/w\.soundcloud\.com\/player\/\?url=.+`, 'i'),
+      track: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_-]{2,25})/(?!sets/)([A-Za-z0-9_-]+)/?${QUERY_HASH}$`, 'i'),
+      set: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_-]{2,25})/sets/([A-Za-z0-9_-]{1,})/?${QUERY_HASH}$`, 'i'),
+      embed: new RegExp(`^https?://w\\.soundcloud\\.com/player/\\?url=.+`, 'i'),
     },
   },
 
   detect(url: string): boolean {
     if (!this.domains.some(domain => url.includes(domain))) return false
+
+    // Check if it matches any valid pattern
     if (this.patterns.profile.test(url)) return true
-    for (const p of Object.values(this.patterns.content || {})) {
-      if (p && p.test(url)) return true
+    if (this.patterns.content) {
+      for (const pattern of Object.values(this.patterns.content)) {
+        if (pattern && pattern.test(url)) return true
+      }
     }
+
     return false
   },
 

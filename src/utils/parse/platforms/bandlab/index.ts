@@ -1,33 +1,40 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['bandlab.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 const usernamePattern = /^[A-Za-z0-9_-]{3,32}$/
-
-const profileRegex = /^https?:\/\/(?:www\.)?bandlab\.com\/([A-Za-z0-9_-]{3,32})\/?$/i
-const songRegex = /^https?:\/\/(?:www\.)?bandlab\.com\/([A-Za-z0-9_-]{3,32})\/([A-Za-z0-9_-]+)\/?$/i
 
 export const bandlab: PlatformModule = {
     id: Platforms.BandLab,
     name: 'BandLab',
     color: '#DC2027',
 
-    domains: ['bandlab.com'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: profileRegex,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_-]{3,32})/?${QUERY_HASH}$`, 'i'),
         handle: usernamePattern,
         content: {
-            song: songRegex,
+            song: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_-]{3,32})/([A-Za-z0-9_-]+)/?${QUERY_HASH}$`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('bandlab.com')) return false
-        return profileRegex.test(url) || songRegex.test(url)
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) || !!(this.patterns.content?.song?.test(url))
     },
 
     extract(url: string, result: ParsedUrl): void {
-        const s = songRegex.exec(url)
+        const s = this.patterns.content?.song?.exec(url)
         if (s) {
             result.username = s[1]
             result.ids.songSlug = s[2]
@@ -35,7 +42,7 @@ export const bandlab: PlatformModule = {
             result.metadata.contentType = 'song'
             return
         }
-        const p = profileRegex.exec(url)
+        const p = this.patterns.profile.exec(url)
         if (p) {
             result.username = p[1]
             result.metadata.isProfile = true
@@ -57,6 +64,6 @@ export const bandlab: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        return normalize(url.replace(/\?.*$/, '').replace(/#.*/, ''))
+        return normalize(url)
     },
 } 

@@ -1,28 +1,36 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['youtube.com', 'youtu.be', 'youtube-nocookie.com']
+const subdomains = ['m', 'mobile']
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const youtube: PlatformModule = {
   id: Platforms.YouTube,
   name: 'YouTube',
   color: '#FF0000',
 
-  domains: ['youtube.com', 'youtu.be', 'youtube-nocookie.com'],
-  mobileSubdomains: ['m', 'mobile'],
-  shortDomains: ['youtu.be'],
+  domains: domains,
+  subdomains: subdomains,
 
   patterns: {
-    profile: /^https?:\/\/(?:www\.)?youtube\.com\/(?:c\/|user\/|@)([a-zA-Z0-9_-]{2,30})$/i,
+    profile: new RegExp(`^https?://${DOMAIN_PATTERN}/(?:c/|user/|@)([a-zA-Z0-9_-]{2,30})/?${QUERY_HASH}$`, 'i'),
     handle: /^[a-zA-Z0-9][a-zA-Z0-9._-]{2,29}$/,
     content: {
-      channel: /^https?:\/\/(?:www\.)?youtube\.com\/channel\/(UC[a-zA-Z0-9_-]{17,22})$/i,
-      video: /^https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})(?:&.*)?$/i,
-      videoShort: /^https?:\/\/youtu\.be\/([a-zA-Z0-9_-]{11})(?:\?.*)?$/i,
-      short: /^https?:\/\/(?:www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})$/i,
-      playlist: /^https?:\/\/(?:www\.)?youtube\.com\/playlist\?list=([a-zA-Z0-9_-]+)$/i,
-      live: /^https?:\/\/(?:www\.)?youtube\.com\/live\/([a-zA-Z0-9_-]{11})$/i,
-      liveWatch: /^https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})&.*\blive=1/i,
-      channelLive: /^https?:\/\/(?:www\.)?youtube\.com\/@([a-zA-Z0-9_-]+)\/live$/i,
-      embed: /^https?:\/\/(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})$/i,
+      channel: new RegExp(`^https?://${DOMAIN_PATTERN}/channel/(UC[a-zA-Z0-9_-]{17,22})/?${QUERY_HASH}$`, 'i'),
+      video: new RegExp(`^https?://${DOMAIN_PATTERN}/watch\\?v=([a-zA-Z0-9_-]{11})(?:&.*)?${QUERY_HASH}$`, 'i'),
+      videoShort: new RegExp(`^https?://${DOMAIN_PATTERN}/([a-zA-Z0-9_-]{11})/?${QUERY_HASH}$`, 'i'),
+      short: new RegExp(`^https?://${DOMAIN_PATTERN}/shorts/([a-zA-Z0-9_-]{11})/?${QUERY_HASH}$`, 'i'),
+      playlist: new RegExp(`^https?://${DOMAIN_PATTERN}/playlist\\?list=([a-zA-Z0-9_-]+)(?:&.*)?${QUERY_HASH}$`, 'i'),
+      live: new RegExp(`^https?://${DOMAIN_PATTERN}/live/([a-zA-Z0-9_-]{11})/?${QUERY_HASH}$`, 'i'),
+      liveWatch: new RegExp(`^https?://${DOMAIN_PATTERN}/watch\\?v=([a-zA-Z0-9_-]{11})&.*\\blive=1(?:&.*)?${QUERY_HASH}$`, 'i'),
+      channelLive: new RegExp(`^https?://${DOMAIN_PATTERN}/@([a-zA-Z0-9_-]+)/live/?${QUERY_HASH}$`, 'i'),
+      embed: new RegExp(`^https?://${DOMAIN_PATTERN}/embed/([a-zA-Z0-9_-]{11})/?${QUERY_HASH}$`, 'i'),
     },
   },
 

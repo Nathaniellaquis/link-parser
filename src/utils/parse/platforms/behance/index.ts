@@ -1,40 +1,47 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['behance.net']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 const usernamePattern = /^[A-Za-z0-9_-]{3,32}$/
-
-const profileRegex = /^https?:\/\/(?:www\.)?behance\.net\/([A-Za-z0-9_-]{3,32})\/?$/i
-const projectRegex = /^https?:\/\/(?:www\.)?behance\.net\/gallery\/(\d{6,})\/[A-Za-z0-9-]+\/?$/i
 
 export const behance: PlatformModule = {
     id: Platforms.Behance,
     name: 'Behance',
     color: '#1769FF',
 
-    domains: ['behance.net'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: profileRegex,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_-]{3,32})/?${QUERY_HASH}$`, 'i'),
         handle: usernamePattern,
         content: {
-            project: projectRegex,
+            project: new RegExp(`^https?://${DOMAIN_PATTERN}/gallery/(\\d{6,})/[A-Za-z0-9-]+/?${QUERY_HASH}$`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('behance.net')) return false
-        return profileRegex.test(url) || projectRegex.test(url)
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) || !!(this.patterns.content?.project?.test(url))
     },
 
     extract(url: string, result: ParsedUrl): void {
-        const pr = projectRegex.exec(url)
+        const pr = this.patterns.content?.project?.exec(url)
         if (pr) {
             result.ids.projectId = pr[1]
             result.metadata.isProject = true
             result.metadata.contentType = 'project'
             return
         }
-        const p = profileRegex.exec(url)
+        const p = this.patterns.profile.exec(url)
         if (p) {
             result.username = p[1]
             result.metadata.isProfile = true
@@ -56,6 +63,6 @@ export const behance: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        return normalize(url.replace(/\?.*$/, '').replace(/#.*/, ''))
+        return normalize(url)
     },
 } 

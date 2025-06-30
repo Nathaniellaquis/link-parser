@@ -1,34 +1,38 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
 
-// Validation constants
-const MIN = 3
-const MAX = 70
-// regex pieces per validation rules
-const startPattern = '[A-Za-z0-9]'
-const middlePattern = '[A-Za-z0-9.-]'
-const handleRegex = new RegExp(`^${startPattern}${middlePattern}{${MIN - 1},${MAX - 1}}$`)
+// Define the config values first
+const domains = ['hoo.be']
+const subdomains: string[] = []
 
-const profileRegex = /^https?:\/\/(?:www\.)?hoo\.be\/([A-Za-z0-9][A-Za-z0-9.-]{1,68}[A-Za-z0-9-])\/?$/i
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
+
+// Constants for validation
+const MIN = 3, MAX = 70
 
 export const hoobe: PlatformModule = {
     id: Platforms.HooBe,
     name: 'Hoo.be',
     color: '#000000',
 
-    domains: ['hoo.be'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: profileRegex,
-        handle: handleRegex,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9][A-Za-z0-9.-]{1,68}[A-Za-z0-9-])/?${QUERY_HASH}$`, 'i'),
+        handle: /^[A-Za-z0-9][A-Za-z0-9.-]{1,68}[A-Za-z0-9-]$/,
     },
 
-    detect(url: string) {
-        return url.includes('hoo.be/') && profileRegex.test(url)
+    detect(url: string): boolean {
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url)
     },
 
     extract(url: string, result: ParsedUrl): void {
-        const m = profileRegex.exec(url)
+        const m = this.patterns.profile.exec(url)
         if (m) {
             result.username = m[1]
             result.metadata.isProfile = true

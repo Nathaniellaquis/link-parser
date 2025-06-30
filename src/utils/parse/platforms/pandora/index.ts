@@ -1,29 +1,37 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['pandora.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const pandora: PlatformModule = {
     id: Platforms.Pandora,
     name: 'Pandora',
     color: '#005483',
 
-    domains: ['pandora.com'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
         // Artist or podcast pages
-        profile: /^https?:\/\/(?:www\.)?pandora\.com\/(artist|podcast)\/([A-Za-z0-9_-]{3,100})(?:\/.*)?$/i,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/(artist|podcast)/([A-Za-z0-9_-]{3,100})(?:/.*)?${QUERY_HASH}$`, 'i'),
         // Not commonly used publicly, but keep simple rules
         handle: /^[A-Za-z0-9_-]{3,100}$/,
         content: {
             // Station play URLs: /station/play/12345
-            station: /^https?:\/\/(?:www\.)?pandora\.com\/station\/play\/(\d+)/i,
+            station: new RegExp(`^https?://${DOMAIN_PATTERN}/station/play/(\\d+)${QUERY_HASH}`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('pandora.com')) return false
-        const { patterns } = this
-        if (patterns.profile.test(url)) return true
-        if (patterns.content?.station?.test(url)) return true
-        return false
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) || !!(this.patterns.content?.station?.test(url))
     },
 
     extract(url: string, res: ParsedUrl): void {
@@ -59,10 +67,6 @@ export const pandora: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        url = url.replace(/^http:\/\//, 'https://')
-        url = url.replace(/www\./, '')
-        // Remove trailing slash
-        url = url.replace(/\/$/, '')
-        return url
+        return normalize(url)
     },
 } 

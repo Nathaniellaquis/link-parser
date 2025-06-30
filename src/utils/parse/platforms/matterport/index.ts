@@ -1,23 +1,34 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['matterport.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const matterport: PlatformModule = {
     id: Platforms.Matterport,
     name: 'Matterport',
     color: '#000000',
 
-    domains: ['matterport.com'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: /^https?:\/\/(?:www\.)?matterport\.com\/users\/([A-Za-z0-9]+)\/?$/i,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/users/([A-Za-z0-9]+)/?${QUERY_HASH}$`, 'i'),
         handle: /^[A-Za-z0-9]+$/,
         content: {
-            space: /^https?:\/\/(?:www\.)?matterport\.com\/show\/\?m=([A-Za-z0-9]+)\/?$/i,
+            space: new RegExp(`^https?://${DOMAIN_PATTERN}/show/\\?m=([A-Za-z0-9]+)${QUERY_HASH}$`, 'i'),
         }
     },
 
     detect(url: string): boolean {
-        if (!url.includes('matterport.com')) return false
-        return this.patterns.profile.test(url) || !!this.patterns.content?.space?.test(url)
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) || !!(this.patterns.content?.space?.test(url))
     },
 
     extract(url: string, res: ParsedUrl): void {
@@ -40,7 +51,10 @@ export const matterport: PlatformModule = {
 
     buildProfileUrl(id: string): string { return `https://matterport.com/users/${id}` },
 
-    buildContentUrl(contentType: string, id: string): string { if (contentType === 'space') return `https://matterport.com/show/?m=${id}`; return '' },
+    buildContentUrl(contentType: string, id: string): string {
+        if (contentType === 'space') return `https://matterport.com/show/?m=${id}`
+        return ''
+    },
 
-    normalizeUrl(url: string): string { return url.replace(/^http:\/\//, 'https://').replace(/www\./, '').replace(/\/$/, '') },
+    normalizeUrl(url: string): string { return normalize(url) },
 } 

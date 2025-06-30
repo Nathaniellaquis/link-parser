@@ -156,8 +156,7 @@ export interface PlatformModule {
 
   // Domains & Detection
   domains: string[]
-  mobileSubdomains?: string[]
-  shortDomains?: string[]
+  subdomains?: string[]
 
   // Pattern Collection
   patterns: {

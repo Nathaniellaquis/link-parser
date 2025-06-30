@@ -1,31 +1,40 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['stockx.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 const slugPattern = '[a-z0-9-]+'
-
-const productRegex = new RegExp(`^https?:\\/\\/(?:www\\.)?stockx\\.com\\/(${slugPattern})\\/?$`, 'i')
 
 export const stockx: PlatformModule = {
     id: Platforms.StockX,
     name: 'StockX',
     color: '#136F63',
 
-    domains: ['stockx.com'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
         profile: /^$/, // N/A
         handle: /^$/,
         content: {
-            product: productRegex,
+            product: new RegExp(`^https?://${DOMAIN_PATTERN}/(${slugPattern})/?${QUERY_HASH}$`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        return url.includes('stockx.com') && productRegex.test(url)
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return !!(this.patterns.content?.product?.test(url))
     },
 
     extract(url: string, result: ParsedUrl): void {
-        const m = productRegex.exec(url)
+        const m = this.patterns.content?.product?.exec(url)
         if (m) {
             result.ids.productSlug = m[1]
             result.metadata.contentType = 'product'
@@ -46,6 +55,6 @@ export const stockx: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        return normalize(url.replace(/\?.*$/, '').replace(/#.*/, ''))
+        return normalize(url)
     },
 } 

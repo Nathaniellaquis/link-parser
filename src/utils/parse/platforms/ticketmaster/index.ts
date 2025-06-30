@@ -1,25 +1,37 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['ticketmaster.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const ticketmaster: PlatformModule = {
     id: Platforms.Ticketmaster,
     name: 'Ticketmaster',
     color: '#003087',
 
-    domains: ['ticketmaster.com'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: /^https?:\/\/(?:www\.)?ticketmaster\.com\/artist\/([A-Za-z0-9]+)\/?$/i,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/artist/([A-Za-z0-9]+)/?${QUERY_HASH}$`, 'i'),
         handle: /^[A-Za-z0-9]+$/,
         content: {
-            event: /^https?:\/\/(?:www\.)?ticketmaster\.com\/event\/([A-Za-z0-9]+)\/?$/i,
-            venue: /^https?:\/\/(?:www\.)?ticketmaster\.com\/venue\/([A-Za-z0-9]+)\/?$/i,
+            event: new RegExp(`^https?://${DOMAIN_PATTERN}/event/([A-Za-z0-9]+)/?${QUERY_HASH}$`, 'i'),
+            venue: new RegExp(`^https?://${DOMAIN_PATTERN}/venue/([A-Za-z0-9]+)/?${QUERY_HASH}$`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('ticketmaster.com')) return false
-        const p = this.patterns
-        return p.profile.test(url) || !!p.content?.event?.test(url) || !!p.content?.venue?.test(url)
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) ||
+            !!(this.patterns.content?.event?.test(url)) ||
+            !!(this.patterns.content?.venue?.test(url))
     },
 
     extract(url: string, res: ParsedUrl): void {
@@ -60,6 +72,6 @@ export const ticketmaster: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        return url.replace(/^http:\/\//, 'https://').replace(/www\./, '').replace(/\/$/, '')
+        return normalize(url)
     },
 } 

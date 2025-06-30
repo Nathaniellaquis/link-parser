@@ -1,35 +1,50 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
+// import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['tumblr.com']
+const subdomains: string[] = []
+
+// Note: DOMAIN_PATTERN not used for Tumblr due to complex dual URL format requirements
 
 export const tumblr: PlatformModule = {
   id: Platforms.Tumblr,
   name: 'Tumblr',
-  domains: ['tumblr.com'],
+
+  domains: domains,
+  subdomains: subdomains,
+
   patterns: {
-    profile: /^https?:\/\/([a-zA-Z0-9-]{3,})\.tumblr\.com$/i,
+    // Subdomain format: https://username.tumblr.com
+    profile: new RegExp(`^https?://([a-zA-Z0-9-]{3,})\\.tumblr\\.com/?${QUERY_HASH}$`, 'i'),
     handle: /^[a-zA-Z0-9-]{3,}$/,
     content: {
-      post: /^https?:\/\/([a-zA-Z0-9-]+)\.tumblr\.com\/post\/(\d+)/i,
+      // Subdomain post format: https://username.tumblr.com/post/123456789/optional-title
+      post: new RegExp(`^https?://([a-zA-Z0-9-]+)\\.tumblr\\.com/post/(\\d+)(?:/[^?#]*)?/?${QUERY_HASH}$`, 'i'),
+      // Path format: https://tumblr.com/username
+      profileBlog: new RegExp(`^https?://(?:www\\.)?tumblr\\.com/([a-zA-Z0-9-]{3,})/?${QUERY_HASH}$`, 'i'),
     },
   },
-  detect: (url: string): boolean => {
-    if (!url.includes('tumblr.com')) return false
 
-    // Check subdomain pattern with numeric post ID
-    if (/^https?:\/\/[a-zA-Z0-9-]{3,}\.tumblr\.com(?:\/post\/\d+)?/i.test(url)) {
-      // If it has /post/, ensure it's followed by digits
-      if (url.includes('/post/') && !/\/post\/\d+/i.test(url)) {
-        return false
+  detect(url: string): boolean {
+    if (!domains.some((domain: string) => url.includes(domain))) return false
+
+    // Check if it matches any valid pattern
+    if (this.patterns.profile.test(url)) return true
+    if (this.patterns.content) {
+      for (const pattern of Object.values(this.patterns.content)) {
+        if (pattern && pattern.test(url)) return true
       }
-      return true
     }
-    // Check path pattern
-    if (/^https?:\/\/(?:www\.)?tumblr\.com\/[a-zA-Z0-9-]{3,}$/i.test(url)) return true
 
     return false
   },
-  extract: (url: string, res: ParsedUrl) => {
-    // Handle post URLs
-    const postMatch = /^https?:\/\/([a-zA-Z0-9-]+)\.tumblr\.com\/post\/(\d+)/i.exec(url)
+
+  extract(url: string, res: ParsedUrl): void {
+    // Handle post URLs first
+    const postMatch = this.patterns.content?.post?.exec(url)
     if (postMatch) {
       res.username = postMatch[1]
       res.ids.postId = postMatch[2]
@@ -39,7 +54,7 @@ export const tumblr: PlatformModule = {
     }
 
     // Handle subdomain profile URLs
-    const subdomainMatch = /^https?:\/\/([a-zA-Z0-9-]{3,})\.tumblr\.com$/i.exec(url)
+    const subdomainMatch = this.patterns.profile.exec(url)
     if (subdomainMatch) {
       res.username = subdomainMatch[1]
       res.metadata.isProfile = true
@@ -47,15 +62,24 @@ export const tumblr: PlatformModule = {
       return
     }
 
-    // Handle path profile URLs
-    const pathMatch = /^https?:\/\/(?:www\.)?tumblr\.com\/([a-zA-Z0-9-]{3,})$/i.exec(url)
+    // Handle path profile URLs: https://tumblr.com/username
+    const pathMatch = this.patterns.content?.profileBlog?.exec(url)
     if (pathMatch) {
       res.username = pathMatch[1]
       res.metadata.isProfile = true
       res.metadata.contentType = 'profile'
     }
   },
-  validateHandle: (h: string): boolean => /^[a-zA-Z0-9-]{3,}$/.test(h),
-  buildProfileUrl: (u: string): string => `https://${u}.tumblr.com`,
-  normalizeUrl: (u: string): string => u.replace(/^http:\/\//, 'https://').replace(/\/$/, ''),
+
+  validateHandle(h: string): boolean {
+    return /^[a-zA-Z0-9-]{3,}$/.test(h)
+  },
+
+  buildProfileUrl(u: string): string {
+    return `https://${u}.tumblr.com`
+  },
+
+  normalizeUrl(u: string): string {
+    return normalize(u)
+  },
 }

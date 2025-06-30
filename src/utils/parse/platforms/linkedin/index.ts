@@ -1,22 +1,30 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
 import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['linkedin.com']
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains)
 
 export const linkedin: PlatformModule = {
   id: Platforms.LinkedIn,
   name: 'LinkedIn',
   color: '#0A66C2',
 
-  domains: ['linkedin.com'],
+  domains: domains,
 
   patterns: {
-    profile: /^https?:\/\/(?:www\.)?linkedin\.com\/in\/([A-Za-z0-9-_%]{3,100})$/i,
+    profile: new RegExp(`^https?://${DOMAIN_PATTERN}/in/([A-Za-z0-9-_%]{3,100})/?${QUERY_HASH}$`, 'i'),
     handle: /^[A-Za-z0-9-]{3,100}$/,
     content: {
-      company: /^https?:\/\/(?:www\.)?linkedin\.com\/company\/([A-Za-z0-9-]+)$/i,
-      school: /^https?:\/\/(?:www\.)?linkedin\.com\/school\/([A-Za-z0-9-]+)$/i,
-      post: /^https?:\/\/(?:www\.)?linkedin\.com\/posts\/[A-Za-z0-9-_%]+_(.+)$/i,
-      article: /^https?:\/\/(?:www\.)?linkedin\.com\/pulse\/([A-Za-z0-9-]+)$/i,
-      feedUpdate: /^https?:\/\/(?:www\.)?linkedin\.com\/feed\/update\/urn:li:activity:(\d+)$/i,
+      company: new RegExp(`^https?://${DOMAIN_PATTERN}/company/([A-Za-z0-9-]+)/?${QUERY_HASH}$`, 'i'),
+      school: new RegExp(`^https?://${DOMAIN_PATTERN}/school/([A-Za-z0-9-]+)/?${QUERY_HASH}$`, 'i'),
+      post: new RegExp(`^https?://${DOMAIN_PATTERN}/posts/[A-Za-z0-9-_%]+_(.+?)/?${QUERY_HASH}$`, 'i'),
+      article: new RegExp(`^https?://${DOMAIN_PATTERN}/pulse/([A-Za-z0-9-]+)/?${QUERY_HASH}$`, 'i'),
+      feedUpdate: new RegExp(`^https?://${DOMAIN_PATTERN}/feed/update/urn:li:activity:(\\d+)/?${QUERY_HASH}$`, 'i'),
     },
   },
 

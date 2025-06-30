@@ -1,25 +1,35 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
 import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['quora.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const quora: PlatformModule = {
     id: Platforms.Quora,
     name: 'Quora',
     color: '#B92B27',
 
-    domains: ['quora.com'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: new RegExp(`^https?:\\/\\/(?:www\\.)?quora\\.com\\/profile\\/([A-Za-z0-9-]+)\\/?${QUERY_HASH}$`, 'i'),
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/profile/([A-Za-z0-9-]+)/?${QUERY_HASH}$`, 'i'),
         handle: /^[A-Za-z0-9-]+$/,
         content: {
-            question: new RegExp(`^https?:\\/\\/(?:www\\.)?quora\\.com\\/([A-Za-z0-9-]+(?:-[A-Za-z0-9-]+)*)\\/?${QUERY_HASH}$`, 'i'),
-            answer: new RegExp(`^https?:\\/\\/(?:www\\.)?quora\\.com\\/([A-Za-z0-9-]+(?:-[A-Za-z0-9-]+)*)\\/answer\\/([A-Za-z0-9-]+)\\/?${QUERY_HASH}$`, 'i'),
-            space: new RegExp(`^https?:\\/\\/(?:www\\.)?quora\\.com\\/q\\/([A-Za-z0-9-]+)\\/?${QUERY_HASH}$`, 'i')
+            question: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9-]+(?:-[A-Za-z0-9-]+)*)/?${QUERY_HASH}$`, 'i'),
+            answer: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9-]+(?:-[A-Za-z0-9-]+)*)/answer/([A-Za-z0-9-]+)/?${QUERY_HASH}$`, 'i'),
+            space: new RegExp(`^https?://${DOMAIN_PATTERN}/q/([A-Za-z0-9-]+)/?${QUERY_HASH}$`, 'i')
         }
     },
 
     detect(url: string): boolean {
-        if (!url.includes('quora.com')) return false
+        if (!this.domains.some(domain => url.includes(domain))) return false
         if (this.patterns.profile.test(url)) return true
         if (this.patterns.content) {
             for (const pattern of Object.values(this.patterns.content)) {
@@ -31,7 +41,7 @@ export const quora: PlatformModule = {
 
     extract(url: string, result: ParsedUrl): void {
         // Profile
-        const profileMatch = url.match(this.patterns.profile)
+        const profileMatch = this.patterns.profile.exec(url)
         if (profileMatch) {
             result.username = profileMatch[1]
             result.metadata.isProfile = true
@@ -79,6 +89,6 @@ export const quora: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        return url.split('?')[0]
+        return normalize(url)
     },
 } 

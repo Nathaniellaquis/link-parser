@@ -1,27 +1,36 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['gitlab.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const gitlab: PlatformModule = {
   id: Platforms.GitLab,
   name: 'GitLab',
-  domains: ['gitlab.com'],
+
+  domains: domains,
+  subdomains: subdomains,
+
   patterns: {
-    profile: /^https?:\/\/gitlab\.com\/([A-Za-z0-9-]{2,255})$/i,
+    profile: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9-]{2,255})/?${QUERY_HASH}$`, 'i'),
     handle: /^[A-Za-z0-9-]{1,255}$/,
     content: {
-      project: /^https?:\/\/gitlab\.com\/([A-Za-z0-9-]{2,255})\/([A-Za-z0-9._-]+)$/i,
-      snippet: /^https?:\/\/gitlab\.com\/[A-Za-z0-9-]+\/[A-Za-z0-9._-]+\/-\/snippets\/(\d+)$/i,
+      project: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9-]{2,255})/([A-Za-z0-9._-]+)/?${QUERY_HASH}$`, 'i'),
+      snippet: new RegExp(`^https?://${DOMAIN_PATTERN}/[A-Za-z0-9-]+/[A-Za-z0-9._-]+/-/snippets/(\\d+)/?${QUERY_HASH}$`, 'i'),
     },
   },
 
   detect(url: string): boolean {
-    if (!url.includes('gitlab.com')) return false
-
-    // Check if it matches any valid pattern
-    if (this.patterns.profile.test(url)) return true
-    if (this.patterns.content?.project?.test(url)) return true
-    if (this.patterns.content?.snippet?.test(url)) return true
-
-    return false
+    if (!this.domains.some(domain => url.includes(domain))) return false
+    return this.patterns.profile.test(url) ||
+      !!(this.patterns.content?.project?.test(url)) ||
+      !!(this.patterns.content?.snippet?.test(url))
   },
 
   extract(url: string, result: ParsedUrl): void {
@@ -62,6 +71,6 @@ export const gitlab: PlatformModule = {
   },
 
   normalizeUrl(url: string): string {
-    return url.replace(/^http:\/\//, 'https://').replace(/\/$/, '')
+    return normalize(url)
   },
 }

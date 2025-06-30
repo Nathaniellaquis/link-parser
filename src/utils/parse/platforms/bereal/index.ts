@@ -1,19 +1,30 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
+import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['bereal.com']
+const subdomains: string[] = []
+
+// Create the domain pattern using the config values
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const bereal: PlatformModule = {
     id: Platforms.BeReal,
     name: 'BeReal',
     color: '#000000',
 
-    domains: ['bereal.com'],
+    domains: domains,
+    subdomains: subdomains,
 
     patterns: {
-        profile: /^https?:\/\/(?:www\.)?bereal\.com\/([A-Za-z0-9_.-]{3,40})\/?$/i,
+        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_.-]{3,40})/?${QUERY_HASH}$`, 'i'),
         handle: /^@?[A-Za-z0-9_.-]{3,40}$/,
     },
 
     detect(url: string): boolean {
-        if (!url.includes('bereal.com')) return false
+        if (!this.domains.some(domain => url.includes(domain))) return false
         return this.patterns.profile.test(url)
     },
 
@@ -35,6 +46,6 @@ export const bereal: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        return url.replace(/^http:\/\//, 'https://').replace(/www\./, '').replace(/\/$/, '')
+        return normalize(url)
     },
 } 

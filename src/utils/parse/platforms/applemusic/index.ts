@@ -1,4 +1,13 @@
 import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
+import { normalize } from '../../utils/url'
+// import { createDomainPattern } from '../../utils/url'
+import { QUERY_HASH } from '../../utils/constants'
+
+// Define the config values first
+const domains = ['music.apple.com']
+
+// Create the domain pattern using the config values
+// const DOMAIN_PATTERN = createDomainPattern(domains)
 
 const LOCALE = '[a-z]{2}(?:-[a-z]{2})?'
 
@@ -7,44 +16,41 @@ export const applemusic: PlatformModule = {
     name: 'Apple Music',
     color: '#fa243c',
 
-    domains: ['music.apple.com'],
+    domains: domains,
 
     patterns: {
-        profile: new RegExp(`^https?:\\/\\/music\\.apple\\.com\\/${LOCALE}\\/artist\\/[^/]+\\/(\\d+)\\/?$`, 'i'),
+        // Note: Apple Music patterns need locale capturing and can't use DOMAIN_PATTERN due to complex path structure
+        profile: new RegExp(`^https?://music\\.apple\\.com/${LOCALE}/artist/[^/]+/(\\d+)/?${QUERY_HASH}$`, 'i'),
         handle: /^\d+$/, // artist id
         content: {
-            album: new RegExp(`^https?:\\/\\/music\\.apple\\.com\\/${LOCALE}\\/album\\/[^/]+\\/(\\d+)\\/?$`, 'i'),
-            playlist: new RegExp(`^https?:\\/\\/music\\.apple\\.com\\/${LOCALE}\\/playlist\\/[^/]+\\/(pl\\..+)$`, 'i'),
+            album: new RegExp(`^https?://music\\.apple\\.com/${LOCALE}/album/[^/]+/(\\d+)/?${QUERY_HASH}$`, 'i'),
+            playlist: new RegExp(`^https?://music\\.apple\\.com/${LOCALE}/playlist/[^/]+/(pl\\..+)${QUERY_HASH}$`, 'i'),
         },
     },
 
     detect(url: string): boolean {
-        if (!url.includes('music.apple.com')) return false
-        const p = this.patterns
-        return (
-            p.profile.test(url) ||
-            !!p.content?.album?.test(url) ||
-            !!p.content?.playlist?.test(url)
-        )
+        if (!this.domains.some(domain => url.includes(domain))) return false
+        return this.patterns.profile.test(url) ||
+            !!(this.patterns.content?.album?.test(url)) ||
+            !!(this.patterns.content?.playlist?.test(url))
     },
 
     extract(url: string, res: ParsedUrl): void {
-        const { patterns } = this
-        const art = patterns.profile.exec(url)
+        const art = this.patterns.profile.exec(url)
         if (art) {
             res.ids.artistId = art[1]
             res.metadata.contentType = 'artist'
             res.metadata.isProfile = true
             return
         }
-        const alb = patterns.content?.album?.exec(url)
+        const alb = this.patterns.content?.album?.exec(url)
         if (alb) {
             res.ids.albumId = alb[1]
             res.metadata.contentType = 'album'
             res.metadata.isAlbum = true
             return
         }
-        const pl = patterns.content?.playlist?.exec(url)
+        const pl = this.patterns.content?.playlist?.exec(url)
         if (pl) {
             res.ids.playlistId = pl[1]
             res.metadata.contentType = 'playlist'
@@ -62,6 +68,6 @@ export const applemusic: PlatformModule = {
     },
 
     normalizeUrl(url: string): string {
-        return url.replace(/^http:\/\//, 'https://').replace(/\/$/, '')
+        return normalize(url)
     },
 } 
