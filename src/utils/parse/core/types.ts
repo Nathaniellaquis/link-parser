@@ -157,6 +157,8 @@ export interface PlatformModule {
   // Domains & Detection
   domains: string[]
   subdomains?: string[]
+  /** domainsRegexp is used to detect if a URL is a valid platform URL. It is a regular expression that matches the domains and subdomains of the platform. */
+  domainsRegexp?: RegExp
 
   // Pattern Collection
   patterns: {

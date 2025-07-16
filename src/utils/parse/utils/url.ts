@@ -46,6 +46,20 @@ export function removeTrailingSlash(url: string): string {
 }
 
 /**
+ * Safely create a URL object from a string with proper error handling
+ * @param urlString - The URL string to parse
+ * @returns URL object or null if invalid
+ */
+export function getUrlSafe(urlString: string): URL | null {
+  try {
+    const normalizedUrl = ensureHttps(urlString)
+    return new URL(normalizedUrl)
+  } catch (error) {
+    return null
+  }
+}
+
+/**
  * Normalize a URL using standard rules: https enforcement, strip tracking, remove trailing slash
  */
 export function normalize(url: string): string {
