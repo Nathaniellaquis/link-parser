@@ -7,26 +7,22 @@ const mod = registry.get(id)!;
 
 describe('Bluesky platform tests', () => {
   const samples = {
-    profile: "https://bsky.app/profile/sampleuser.bsky.social",
-    profileDid: "https://bsky.app/profile/did:plc:abc123def456",
-    post: "https://bsky.app/profile/sampleuser.bsky.social/post/abc123"
+    profile: 'https://bsky.app/profile/sampleuser.bsky.social',
+    profileDid: 'https://bsky.app/profile/did:plc:abc123def456',
+    post: 'https://bsky.app/profile/sampleuser.bsky.social/post/abc123',
   };
 
   describe('detection', () => {
     test('should detect all Bluesky URLs', () => {
-      Object.values(samples).forEach(url => {
+      Object.values(samples).forEach((url) => {
         expect(mod.detect(url)).toBe(true);
       });
     });
 
     test('should not detect non-Bluesky URLs', () => {
-      const nonPlatformUrls = [
-        'https://example.com/test',
-        'https://google.com',
-        'not-a-url',
-      ];
+      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
 
-      nonPlatformUrls.forEach(url => {
+      nonPlatformUrls.forEach((url) => {
         expect(mod.detect(url)).toBe(false);
       });
     });
@@ -66,7 +62,9 @@ describe('Bluesky platform tests', () => {
       const result = parse('https://bsky.app/profile/sampleuser.bsky.social/post/abc123');
       expect(result.isValid).toBe(true);
       expect(result.platform).toBe(id);
-      expect(result.originalUrl).toBe('https://bsky.app/profile/sampleuser.bsky.social/post/abc123');
+      expect(result.originalUrl).toBe(
+        'https://bsky.app/profile/sampleuser.bsky.social/post/abc123',
+      );
 
       // Platform-specific assertions
       expect(result.ids.postId).toBe('abc123');

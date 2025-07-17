@@ -1,1 +1,1 @@
-import './platforms' 
+import './platforms';

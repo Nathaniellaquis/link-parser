@@ -7,27 +7,23 @@ const mod = registry.get(id)!;
 
 describe('SoundCloud platform tests', () => {
   const samples = {
-    profile: "https://soundcloud.com/sampleuser",
-    track: "https://soundcloud.com/sampleuser/sample-track",
-    set: "https://soundcloud.com/sampleuser/sets/sample-playlist",
-    embed: "https://w.soundcloud.com/player/?url=https://soundcloud.com/sampleuser/sample-track"
+    profile: 'https://soundcloud.com/sampleuser',
+    track: 'https://soundcloud.com/sampleuser/sample-track',
+    set: 'https://soundcloud.com/sampleuser/sets/sample-playlist',
+    embed: 'https://w.soundcloud.com/player/?url=https://soundcloud.com/sampleuser/sample-track',
   };
 
   describe('detection', () => {
     test('should detect all SoundCloud URLs', () => {
-      Object.values(samples).forEach(url => {
+      Object.values(samples).forEach((url) => {
         expect(mod.detect(url)).toBe(true);
       });
     });
 
     test('should not detect non-SoundCloud URLs', () => {
-      const nonPlatformUrls = [
-        'https://example.com/test',
-        'https://google.com',
-        'not-a-url',
-      ];
+      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
 
-      nonPlatformUrls.forEach(url => {
+      nonPlatformUrls.forEach((url) => {
         expect(mod.detect(url)).toBe(false);
       });
     });
@@ -75,10 +71,14 @@ describe('SoundCloud platform tests', () => {
     });
 
     test('should parse embed: https://w.soundcloud.com/player/?url=https://soundcloud.com/sampleuser/sample-track', () => {
-      const result = parse('https://w.soundcloud.com/player/?url=https://soundcloud.com/sampleuser/sample-track');
+      const result = parse(
+        'https://w.soundcloud.com/player/?url=https://soundcloud.com/sampleuser/sample-track',
+      );
       expect(result.isValid).toBe(true);
       expect(result.platform).toBe(id);
-      expect(result.originalUrl).toBe('https://w.soundcloud.com/player/?url=https://soundcloud.com/sampleuser/sample-track');
+      expect(result.originalUrl).toBe(
+        'https://w.soundcloud.com/player/?url=https://soundcloud.com/sampleuser/sample-track',
+      );
       // Platform-specific assertions
       expect(result.embedData?.embedUrl).toContain('soundcloud.com/sampleuser/sample-track');
       // Negative: invalid embed url (missing url param)

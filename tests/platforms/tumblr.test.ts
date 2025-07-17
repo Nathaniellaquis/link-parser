@@ -7,26 +7,22 @@ const mod = registry.get(id)!;
 
 describe('Tumblr platform tests', () => {
   const samples = {
-    profile: "https://sampleuser.tumblr.com",
-    profileBlog: "https://tumblr.com/sampleuser",
-    post: "https://sampleuser.tumblr.com/post/1234567890/sample-post"
+    profile: 'https://sampleuser.tumblr.com',
+    profileBlog: 'https://tumblr.com/sampleuser',
+    post: 'https://sampleuser.tumblr.com/post/1234567890/sample-post',
   };
 
   describe('detection', () => {
     test('should detect all Tumblr URLs', () => {
-      Object.values(samples).forEach(url => {
+      Object.values(samples).forEach((url) => {
         expect(mod.detect(url)).toBe(true);
       });
     });
 
     test('should not detect non-Tumblr URLs', () => {
-      const nonPlatformUrls = [
-        'https://example.com/test',
-        'https://google.com',
-        'not-a-url',
-      ];
+      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
 
-      nonPlatformUrls.forEach(url => {
+      nonPlatformUrls.forEach((url) => {
         expect(mod.detect(url)).toBe(false);
       });
     });

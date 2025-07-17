@@ -7,26 +7,22 @@ const mod = registry.get(id)!;
 
 describe('Snapchat platform tests', () => {
   const samples = {
-    profile: "https://snapchat.com/add/sampleuser",
-    story: "https://story.snapchat.com/s/sampleuser",
-    spotlight: "https://www.snapchat.com/spotlight/ABC123DEF456"
+    profile: 'https://snapchat.com/add/sampleuser',
+    story: 'https://story.snapchat.com/s/sampleuser',
+    spotlight: 'https://www.snapchat.com/spotlight/ABC123DEF456',
   };
 
   describe('detection', () => {
     test('should detect all Snapchat URLs', () => {
-      Object.values(samples).forEach(url => {
+      Object.values(samples).forEach((url) => {
         expect(mod.detect(url)).toBe(true);
       });
     });
 
     test('should not detect non-Snapchat URLs', () => {
-      const nonPlatformUrls = [
-        'https://example.com/test',
-        'https://google.com',
-        'not-a-url',
-      ];
+      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
 
-      nonPlatformUrls.forEach(url => {
+      nonPlatformUrls.forEach((url) => {
         expect(mod.detect(url)).toBe(false);
       });
     });

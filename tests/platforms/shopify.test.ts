@@ -7,29 +7,68 @@ const mod = registry.get(id)!;
 
 describe('Shopify platform tests', () => {
   const samples = {
-    store: "https://samplestore.myshopify.com",
-    product: "https://samplestore.myshopify.com/products/sample-product",
-    collection: "https://samplestore.myshopify.com/collections/all",
-    page: "https://samplestore.myshopify.com/pages/about-us"
+    store: 'https://samplestore.myshopify.com',
+    product: 'https://samplestore.myshopify.com/products/sample-product',
+    collection: 'https://samplestore.myshopify.com/collections/all',
+    page: 'https://samplestore.myshopify.com/pages/about-us',
   };
 
   describe('detection', () => {
     test('should detect all Shopify URLs', () => {
-      Object.values(samples).forEach(url => {
+      Object.values(samples).forEach((url) => {
         expect(mod.detect(url)).toBe(true);
       });
     });
 
     test('should not detect non-Shopify URLs', () => {
-      const nonPlatformUrls = [
-        'https://example.com/test',
-        'https://google.com',
-        'not-a-url',
-      ];
+      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
 
-      nonPlatformUrls.forEach(url => {
+      nonPlatformUrls.forEach((url) => {
         expect(mod.detect(url)).toBe(false);
       });
+    });
+  });
+
+  describe('extraction', () => {
+    test('should extract store from homepage', () => {
+      const result = mod.extract('https://samplestore.myshopify.com');
+      expect(result).not.toBeNull();
+      expect(result?.ids?.storeName).toBe('samplestore');
+      expect(result?.metadata?.isProfile).toBe(true);
+      expect(result?.metadata?.contentType).toBe('storefront');
+    });
+
+    test('should extract product data', () => {
+      const result = mod.extract('https://samplestore.myshopify.com/products/sample-product');
+      expect(result).not.toBeNull();
+      expect(result?.ids?.storeName).toBe('samplestore');
+      expect(result?.ids?.productHandle).toBe('sample-product');
+      expect(result?.metadata?.isProduct).toBe(true);
+      expect(result?.metadata?.contentType).toBe('product');
+    });
+
+    test('should extract collection data', () => {
+      const result = mod.extract('https://samplestore.myshopify.com/collections/all');
+      expect(result).not.toBeNull();
+      expect(result?.ids?.storeName).toBe('samplestore');
+      expect(result?.ids?.collectionName).toBe('all');
+      expect(result?.metadata?.isCollection).toBe(true);
+      expect(result?.metadata?.contentType).toBe('collection');
+    });
+
+    test('should extract page data', () => {
+      const result = mod.extract('https://samplestore.myshopify.com/pages/about-us');
+      expect(result).not.toBeNull();
+      expect(result?.ids?.storeName).toBe('samplestore');
+      expect(result?.ids?.pageSlug).toBe('about-us');
+      expect(result?.metadata?.isPage).toBe(true);
+      expect(result?.metadata?.contentType).toBe('page');
+    });
+
+    test('should return null for non-matching URLs', () => {
+      expect(mod.extract('https://example.com')).toBeNull();
+      expect(mod.extract('https://myshopify.com')).toBeNull();
+      expect(mod.extract('https://samplestore.myshopify.com/invalid')).toBeNull();
     });
   });
 
