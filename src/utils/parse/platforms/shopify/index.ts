@@ -1,14 +1,14 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
-import { normalize } from '../../utils/url'
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
+import { normalize } from '../../utils/url';
 // import { createDomainPattern } from '../../utils/url'
-import { QUERY_HASH } from '../../utils/constants'
+import { QUERY_HASH } from '../../utils/constants';
 
 // Define the config values first
-const domains = ['myshopify.com']
+const domains = ['myshopify.com'];
 // Universal subdomain support for any shopify store name
-const subdomains = ['*']
+const subdomains = ['*'];
 
-// Create the domain pattern using the config values  
+// Create the domain pattern using the config values
 // const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
 
 export const shopify: PlatformModule = {
@@ -24,64 +24,96 @@ export const shopify: PlatformModule = {
     profile: new RegExp(`^https?://([a-z0-9-]+)\\.myshopify\\.com/?${QUERY_HASH}$`, 'i'),
     handle: /^[a-z0-9-]+$/i,
     content: {
-      product: new RegExp(`^https?://([a-z0-9-]+)\\.myshopify\\.com/products/([a-z0-9-]+)/?${QUERY_HASH}$`, 'i'),
-      collection: new RegExp(`^https?://([a-z0-9-]+)\\.myshopify\\.com/collections/([a-z0-9-]+)/?${QUERY_HASH}$`, 'i'),
-      page: new RegExp(`^https?://([a-z0-9-]+)\\.myshopify\\.com/pages/([a-z0-9-]+)/?${QUERY_HASH}$`, 'i'),
+      product: new RegExp(
+        `^https?://([a-z0-9-]+)\\.myshopify\\.com/products/([a-z0-9-]+)/?${QUERY_HASH}$`,
+        'i',
+      ),
+      collection: new RegExp(
+        `^https?://([a-z0-9-]+)\\.myshopify\\.com/collections/([a-z0-9-]+)/?${QUERY_HASH}$`,
+        'i',
+      ),
+      page: new RegExp(
+        `^https?://([a-z0-9-]+)\\.myshopify\\.com/pages/([a-z0-9-]+)/?${QUERY_HASH}$`,
+        'i',
+      ),
     },
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some(domain => url.includes(domain))) return false
-
-    return !!(
-      this.patterns.profile.test(url) ||
-      this.patterns.content?.product?.test(url) ||
-      this.patterns.content?.collection?.test(url) ||
-      this.patterns.content?.page?.test(url)
-    )
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, res: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     // Handle product URLs
-    const productMatch = this.patterns.content?.product?.exec(url)
+    const productMatch = this.patterns.content?.product?.exec(url);
     if (productMatch) {
-      res.ids.storeName = productMatch[1]
-      res.ids.productHandle = productMatch[2]
-      res.metadata.isProduct = true
-      res.metadata.contentType = 'product'
-      return
+      return {
+        ids: {
+          storeName: productMatch[1],
+          productHandle: productMatch[2],
+        },
+        metadata: {
+          isProduct: true,
+          contentType: 'product',
+        },
+      };
     }
 
     // Handle collection URLs
-    const collectionMatch = this.patterns.content?.collection?.exec(url)
+    const collectionMatch = this.patterns.content?.collection?.exec(url);
     if (collectionMatch) {
-      res.ids.storeName = collectionMatch[1]
-      res.ids.collectionName = collectionMatch[2]
-      res.metadata.isCollection = true
-      res.metadata.contentType = 'collection'
-      return
+      return {
+        ids: {
+          storeName: collectionMatch[1],
+          collectionName: collectionMatch[2],
+        },
+        metadata: {
+          isCollection: true,
+          contentType: 'collection',
+        },
+      };
     }
 
     // Handle page URLs
-    const pageMatch = this.patterns.content?.page?.exec(url)
+    const pageMatch = this.patterns.content?.page?.exec(url);
     if (pageMatch) {
-      res.ids.storeName = pageMatch[1]
-      res.ids.pageSlug = pageMatch[2]
-      res.metadata.isPage = true
-      res.metadata.contentType = 'page'
-      return
+      return {
+        ids: {
+          storeName: pageMatch[1],
+          pageSlug: pageMatch[2],
+        },
+        metadata: {
+          isPage: true,
+          contentType: 'page',
+        },
+      };
     }
 
     // Handle store URLs
-    const storeMatch = this.patterns.profile.exec(url)
+    const storeMatch = this.patterns.profile.exec(url);
     if (storeMatch) {
-      res.ids.storeName = storeMatch[1]
-      res.metadata.isProfile = true
-      res.metadata.contentType = 'storefront'
+      return {
+        ids: {
+          storeName: storeMatch[1],
+        },
+        metadata: {
+          isProfile: true,
+          contentType: 'storefront',
+        },
+      };
     }
+
+    return null;
   },
 
-  validateHandle(h: string): boolean { return /^[a-z0-9-]+$/i.test(h) },
-  buildProfileUrl(u: string): string { return `https://${u}.myshopify.com` },
-  normalizeUrl(u: string): string { return normalize(u) },
-}
+  validateHandle(h: string): boolean {
+    return /^[a-z0-9-]+$/i.test(h);
+  },
+  buildProfileUrl(u: string): string {
+    return `https://${u}.myshopify.com`;
+  },
+  normalizeUrl(u: string): string {
+    return normalize(u);
+  },
+};

@@ -7,25 +7,21 @@ const mod = registry.get(id)!;
 
 describe('Threads platform tests', () => {
   const samples = {
-    profile: "https://threads.net/@sampleuser",
-    post: "https://threads.net/@sampleuser/post/ABC123DEF456"
+    profile: 'https://threads.net/@sampleuser',
+    post: 'https://threads.net/@sampleuser/post/ABC123DEF456',
   };
 
   describe('detection', () => {
     test('should detect all Threads URLs', () => {
-      Object.values(samples).forEach(url => {
+      Object.values(samples).forEach((url) => {
         expect(mod.detect(url)).toBe(true);
       });
     });
 
     test('should not detect non-Threads URLs', () => {
-      const nonPlatformUrls = [
-        'https://example.com/test',
-        'https://google.com',
-        'not-a-url',
-      ];
+      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
 
-      nonPlatformUrls.forEach(url => {
+      nonPlatformUrls.forEach((url) => {
         expect(mod.detect(url)).toBe(false);
       });
     });

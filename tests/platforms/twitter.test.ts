@@ -7,28 +7,24 @@ const mod = registry.get(id)!;
 
 describe('Twitter platform tests', () => {
   const samples = {
-    profile: "https://twitter.com/sampleuser",
-    profileX: "https://x.com/sampleuser",
-    tweet: "https://twitter.com/sampleuser/status/1234567890123456789",
-    tweetX: "https://x.com/sampleuser/status/1234567890123456789",
-    embed: "https://platform.twitter.com/embed/Tweet.html?id=1234567890123456789"
+    profile: 'https://twitter.com/sampleuser',
+    profileX: 'https://x.com/sampleuser',
+    tweet: 'https://twitter.com/sampleuser/status/1234567890123456789',
+    tweetX: 'https://x.com/sampleuser/status/1234567890123456789',
+    embed: 'https://platform.twitter.com/embed/Tweet.html?id=1234567890123456789',
   };
 
   describe('detection', () => {
     test('should detect all Twitter URLs', () => {
-      Object.values(samples).forEach(url => {
+      Object.values(samples).forEach((url) => {
         expect(mod.detect(url)).toBe(true);
       });
     });
 
     test('should not detect non-Twitter URLs', () => {
-      const nonPlatformUrls = [
-        'https://example.com/test',
-        'https://google.com',
-        'not-a-url',
-      ];
+      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
 
-      nonPlatformUrls.forEach(url => {
+      nonPlatformUrls.forEach((url) => {
         expect(mod.detect(url)).toBe(false);
       });
     });
@@ -92,7 +88,9 @@ describe('Twitter platform tests', () => {
       const result = parse('https://platform.twitter.com/embed/Tweet.html?id=1234567890123456789');
       expect(result.isValid).toBe(true);
       expect(result.platform).toBe(id);
-      expect(result.originalUrl).toBe('https://platform.twitter.com/embed/Tweet.html?id=1234567890123456789');
+      expect(result.originalUrl).toBe(
+        'https://platform.twitter.com/embed/Tweet.html?id=1234567890123456789',
+      );
 
       // Platform-specific assertions
       expect(result.embedData?.embedUrl).toContain('1234567890123456789');

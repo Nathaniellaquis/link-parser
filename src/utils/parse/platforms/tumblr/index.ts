@@ -1,11 +1,11 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
-import { normalize } from '../../utils/url'
+import { PlatformModule, Platforms, ParsedUrl, ExtractedData } from '../../core/types';
+import { normalize } from '../../utils/url';
 // import { createDomainPattern } from '../../utils/url'
-import { QUERY_HASH } from '../../utils/constants'
+import { QUERY_HASH } from '../../utils/constants';
 
 // Define the config values first
-const domains = ['tumblr.com']
-const subdomains: string[] = []
+const domains = ['tumblr.com'];
+const subdomains: string[] = [];
 
 // Note: DOMAIN_PATTERN not used for Tumblr due to complex dual URL format requirements
 
@@ -22,64 +22,74 @@ export const tumblr: PlatformModule = {
     handle: /^[a-zA-Z0-9-]{3,}$/,
     content: {
       // Subdomain post format: https://username.tumblr.com/post/123456789/optional-title
-      post: new RegExp(`^https?://([a-zA-Z0-9-]+)\\.tumblr\\.com/post/(\\d+)(?:/[^?#]*)?/?${QUERY_HASH}$`, 'i'),
+      post: new RegExp(
+        `^https?://([a-zA-Z0-9-]+)\\.tumblr\\.com/post/(\\d+)(?:/[^?#]*)?/?${QUERY_HASH}$`,
+        'i',
+      ),
       // Path format: https://tumblr.com/username
-      profileBlog: new RegExp(`^https?://(?:www\\.)?tumblr\\.com/([a-zA-Z0-9-]{3,})/?${QUERY_HASH}$`, 'i'),
+      profileBlog: new RegExp(
+        `^https?://(?:www\\.)?tumblr\\.com/([a-zA-Z0-9-]{3,})/?${QUERY_HASH}$`,
+        'i',
+      ),
     },
   },
 
   detect(url: string): boolean {
-    if (!domains.some((domain: string) => url.includes(domain))) return false
-
-    // Check if it matches any valid pattern
-    if (this.patterns.profile.test(url)) return true
-    if (this.patterns.content) {
-      for (const pattern of Object.values(this.patterns.content)) {
-        if (pattern && pattern.test(url)) return true
-      }
-    }
-
-    return false
+    // Simple domain check - allows ALL pages on the platform
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, res: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     // Handle post URLs first
-    const postMatch = this.patterns.content?.post?.exec(url)
+    const postMatch = this.patterns.content?.post?.exec(url);
     if (postMatch) {
-      res.username = postMatch[1]
-      res.ids.postId = postMatch[2]
-      res.metadata.isPost = true
-      res.metadata.contentType = 'post'
-      return
+      return {
+        username: postMatch[1],
+        ids: { postId: postMatch[2] },
+        metadata: {
+          isPost: true,
+          contentType: 'post',
+        },
+      };
     }
 
     // Handle subdomain profile URLs
-    const subdomainMatch = this.patterns.profile.exec(url)
+    const subdomainMatch = this.patterns.profile.exec(url);
     if (subdomainMatch) {
-      res.username = subdomainMatch[1]
-      res.metadata.isProfile = true
-      res.metadata.contentType = 'profile'
-      return
+      return {
+        username: subdomainMatch[1],
+        metadata: {
+          isProfile: true,
+          contentType: 'profile',
+        },
+      };
     }
 
     // Handle path profile URLs: https://tumblr.com/username
-    const pathMatch = this.patterns.content?.profileBlog?.exec(url)
+    const pathMatch = this.patterns.content?.profileBlog?.exec(url);
     if (pathMatch) {
-      res.username = pathMatch[1]
-      res.metadata.isProfile = true
-      res.metadata.contentType = 'profile'
+      return {
+        username: pathMatch[1],
+        metadata: {
+          isProfile: true,
+          contentType: 'profile',
+        },
+      };
     }
+
+    return null;
   },
 
   validateHandle(h: string): boolean {
-    return /^[a-zA-Z0-9-]{3,}$/.test(h)
+    return /^[a-zA-Z0-9-]{3,}$/.test(h);
   },
 
   buildProfileUrl(u: string): string {
-    return `https://${u}.tumblr.com`
+    return `https://${u}.tumblr.com`;
   },
 
   normalizeUrl(u: string): string {
-    return normalize(u)
+    return normalize(u);
   },
-}
+};

@@ -6,7 +6,7 @@
  * Remove known tracking query parameters from a URL string
  */
 export function stripTrackingParams(url: string): string {
-  const urlObj = new URL(url, url.startsWith('http') ? undefined : 'https://dummy.invalid')
+  const urlObj = new URL(url, url.startsWith('http') ? undefined : 'https://dummy.invalid');
 
   const paramsToStrip = [
     // Generic tracking parameters
@@ -18,11 +18,11 @@ export function stripTrackingParams(url: string): string {
     'fbclid',
     'igshid',
     // Platform-specific variants (prefix match)
-  ]
+  ];
 
-  paramsToStrip.forEach(param => urlObj.searchParams.delete(param))
+  paramsToStrip.forEach((param) => urlObj.searchParams.delete(param));
 
-  return urlObj.search ? urlObj.toString() : urlObj.toString().replace(/\?$/, '')
+  return urlObj.search ? urlObj.toString() : urlObj.toString().replace(/\?$/, '');
 }
 
 /**
@@ -30,19 +30,19 @@ export function stripTrackingParams(url: string): string {
  */
 export function ensureHttps(url: string): string {
   if (url.startsWith('http://')) {
-    return url.replace('http://', 'https://')
+    return url.replace('http://', 'https://');
   }
   if (!url.startsWith('http')) {
-    return `https://${url}`
+    return `https://${url}`;
   }
-  return url
+  return url;
 }
 
 /**
  * Remove a trailing slash from the URL (unless it is the only path separator)
  */
 export function removeTrailingSlash(url: string): string {
-  return url.endsWith('/') ? url.slice(0, -1) : url
+  return url.endsWith('/') ? url.slice(0, -1) : url;
 }
 
 /**
@@ -52,10 +52,10 @@ export function removeTrailingSlash(url: string): string {
  */
 export function getUrlSafe(urlString: string): URL | null {
   try {
-    const normalizedUrl = ensureHttps(urlString)
-    return new URL(normalizedUrl)
+    const normalizedUrl = ensureHttps(urlString);
+    return new URL(normalizedUrl);
   } catch (error) {
-    return null
+    return null;
   }
 }
 
@@ -63,7 +63,7 @@ export function getUrlSafe(urlString: string): URL | null {
  * Normalize a URL using standard rules: https enforcement, strip tracking, remove trailing slash
  */
 export function normalize(url: string): string {
-  return removeTrailingSlash(stripTrackingParams(ensureHttps(url)))
+  return removeTrailingSlash(stripTrackingParams(ensureHttps(url)));
 }
 
 export function cleanURL(url: string): string {
@@ -73,28 +73,25 @@ export function cleanURL(url: string): string {
 /**
  * Creates a regex pattern string that matches any of the provided domains
  * with optional subdomains (www, mobile, open, etc.) and proper escaping
- * 
+ *
  * @param domains - Array of domain strings (e.g., ['youtube.com', 'youtu.be'])
  * @param subdomains - Optional array of allowed subdomains (e.g., ['m', 'mobile', 'open']). Always includes 'www' by default.
  * @returns Regex pattern string (e.g., '(?:(?:www\\.|m\\.|mobile\\.)?(?:youtube\\.com|youtu\\.be))')
  */
-export function createDomainPattern(
-  domains: string[],
-  subdomains: string[] = []
-): string {
+export function createDomainPattern(domains: string[], subdomains: string[] = []): string {
   if (!domains || domains.length === 0) {
     throw new Error('At least one domain must be provided');
   }
 
   // Escape special regex characters in domains and join with |
   const escapedDomains = domains
-    .map(domain => domain.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .map((domain) => domain.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
     .join('|');
 
   // Build subdomain pattern - always include www
   const allSubdomains = ['www', ...subdomains];
   const escapedSubdomains = allSubdomains
-    .map(sub => sub.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .map((sub) => sub.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
     .join('|');
 
   // Return pattern with optional subdomain prefix

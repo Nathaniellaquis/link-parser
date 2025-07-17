@@ -7,27 +7,23 @@ const mod = registry.get(id)!;
 
 describe('GitHub platform tests', () => {
   const samples = {
-    profile: "https://github.com/sampleuser",
-    repo: "https://github.com/sampleuser/samplerepo",
-    gist: "https://gist.github.com/sampleuser/abc123def456",
-    raw: "https://raw.githubusercontent.com/sampleuser/repo/main/file.txt"
+    profile: 'https://github.com/sampleuser',
+    repo: 'https://github.com/sampleuser/samplerepo',
+    gist: 'https://gist.github.com/sampleuser/abc123def456',
+    raw: 'https://raw.githubusercontent.com/sampleuser/repo/main/file.txt',
   };
 
   describe('detection', () => {
     test('should detect all GitHub URLs', () => {
-      Object.values(samples).forEach(url => {
+      Object.values(samples).forEach((url) => {
         expect(mod.detect(url)).toBe(true);
       });
     });
 
     test('should not detect non-GitHub URLs', () => {
-      const nonPlatformUrls = [
-        'https://example.com/test',
-        'https://google.com',
-        'not-a-url',
-      ];
+      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
 
-      nonPlatformUrls.forEach(url => {
+      nonPlatformUrls.forEach((url) => {
         expect(mod.detect(url)).toBe(false);
       });
     });
@@ -80,7 +76,9 @@ describe('GitHub platform tests', () => {
       const result = parse('https://raw.githubusercontent.com/sampleuser/repo/main/file.txt');
       expect(result.isValid).toBe(true);
       expect(result.platform).toBe(id);
-      expect(result.originalUrl).toBe('https://raw.githubusercontent.com/sampleuser/repo/main/file.txt');
+      expect(result.originalUrl).toBe(
+        'https://raw.githubusercontent.com/sampleuser/repo/main/file.txt',
+      );
       // Platform-specific assertions
       expect(result.username).toBe('sampleuser');
       expect(result.ids.repoName).toBe('repo');

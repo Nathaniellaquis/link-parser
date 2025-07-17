@@ -7,27 +7,23 @@ const mod = registry.get(id)!;
 
 describe('Reddit platform tests', () => {
   const samples = {
-    profile: "https://reddit.com/user/sampleuser",
-    profileU: "https://reddit.com/u/sampleuser",
-    subreddit: "https://reddit.com/r/samplesubreddit",
-    post: "https://reddit.com/r/samplesubreddit/comments/abc123/sample_post"
+    profile: 'https://reddit.com/user/sampleuser',
+    profileU: 'https://reddit.com/u/sampleuser',
+    subreddit: 'https://reddit.com/r/samplesubreddit',
+    post: 'https://reddit.com/r/samplesubreddit/comments/abc123/sample_post',
   };
 
   describe('detection', () => {
     test('should detect all Reddit URLs', () => {
-      Object.values(samples).forEach(url => {
+      Object.values(samples).forEach((url) => {
         expect(mod.detect(url)).toBe(true);
       });
     });
 
     test('should not detect non-Reddit URLs', () => {
-      const nonPlatformUrls = [
-        'https://example.com/test',
-        'https://google.com',
-        'not-a-url',
-      ];
+      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
 
-      nonPlatformUrls.forEach(url => {
+      nonPlatformUrls.forEach((url) => {
         expect(mod.detect(url)).toBe(false);
       });
     });
@@ -79,7 +75,9 @@ describe('Reddit platform tests', () => {
       const result = parse('https://reddit.com/r/samplesubreddit/comments/abc123/sample_post');
       expect(result.isValid).toBe(true);
       expect(result.platform).toBe(id);
-      expect(result.originalUrl).toBe('https://reddit.com/r/samplesubreddit/comments/abc123/sample_post');
+      expect(result.originalUrl).toBe(
+        'https://reddit.com/r/samplesubreddit/comments/abc123/sample_post',
+      );
       // Platform-specific assertions
       expect(result.ids.postId).toBe('abc123');
       // Negative: invalid post id (empty)

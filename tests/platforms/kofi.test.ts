@@ -7,26 +7,22 @@ const mod = registry.get(id)!;
 
 describe('KoFi platform tests', () => {
   const samples = {
-    profile: "https://ko-fi.com/sampleuser",
-    shop: "https://ko-fi.com/sampleuser/shop",
-    post: "https://ko-fi.com/post/Sample-Post-A1234ABC"
+    profile: 'https://ko-fi.com/sampleuser',
+    shop: 'https://ko-fi.com/sampleuser/shop',
+    post: 'https://ko-fi.com/post/Sample-Post-A1234ABC',
   };
 
   describe('detection', () => {
     test('should detect all KoFi URLs', () => {
-      Object.values(samples).forEach(url => {
+      Object.values(samples).forEach((url) => {
         expect(mod.detect(url)).toBe(true);
       });
     });
 
     test('should not detect non-KoFi URLs', () => {
-      const nonPlatformUrls = [
-        'https://example.com/test',
-        'https://google.com',
-        'not-a-url',
-      ];
+      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
 
-      nonPlatformUrls.forEach(url => {
+      nonPlatformUrls.forEach((url) => {
         expect(mod.detect(url)).toBe(false);
       });
     });
