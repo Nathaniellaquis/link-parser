@@ -7,27 +7,23 @@ const mod = registry.get(id)!;
 
 describe('Telegram platform tests', () => {
   const samples = {
-    profile: "https://t.me/sampleuser",
-    channel: "https://t.me/s/samplechannel",
-    post: "https://t.me/samplechannel/123",
-    join: "https://t.me/joinchat/ABC123DEF456"
+    profile: 'https://t.me/sampleuser',
+    channel: 'https://t.me/s/samplechannel',
+    post: 'https://t.me/samplechannel/123',
+    join: 'https://t.me/joinchat/ABC123DEF456',
   };
 
   describe('detection', () => {
     test('should detect all Telegram URLs', () => {
-      Object.values(samples).forEach(url => {
+      Object.values(samples).forEach((url) => {
         expect(mod.detect(url)).toBe(true);
       });
     });
 
     test('should not detect non-Telegram URLs', () => {
-      const nonPlatformUrls = [
-        'https://example.com/test',
-        'https://google.com',
-        'not-a-url',
-      ];
+      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
 
-      nonPlatformUrls.forEach(url => {
+      nonPlatformUrls.forEach((url) => {
         expect(mod.detect(url)).toBe(false);
       });
     });

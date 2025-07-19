@@ -7,27 +7,23 @@ const mod = registry.get(id)!;
 
 describe('Phone platform tests', () => {
   const samples = {
-    us: "+1-555-123-4567",
-    usNoDash: "+15551234567",
-    tel: "tel:+15551234567",
-    international: "+44 20 7946 0958"
+    us: '+1-555-123-4567',
+    usNoDash: '+15551234567',
+    tel: 'tel:+15551234567',
+    international: '+44 20 7946 0958',
   };
 
   describe('detection', () => {
     test('should detect all Phone URLs', () => {
-      Object.values(samples).forEach(url => {
+      Object.values(samples).forEach((url) => {
         expect(mod.detect(url)).toBe(true);
       });
     });
 
     test('should not detect non-Phone URLs', () => {
-      const nonPlatformUrls = [
-        'https://example.com/test',
-        'https://google.com',
-        'not-a-url',
-      ];
+      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
 
-      nonPlatformUrls.forEach(url => {
+      nonPlatformUrls.forEach((url) => {
         expect(mod.detect(url)).toBe(false);
       });
     });

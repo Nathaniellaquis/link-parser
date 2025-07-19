@@ -7,26 +7,22 @@ const mod = registry.get(id)!;
 
 describe('Substack platform tests', () => {
   const samples = {
-    profile: "https://sampleuser.substack.com",
-    post: "https://sampleuser.substack.com/p/sample-post",
-    profileNew: "https://substack.com/@sampleuser"
+    profile: 'https://sampleuser.substack.com',
+    post: 'https://sampleuser.substack.com/p/sample-post',
+    profileNew: 'https://substack.com/@sampleuser',
   };
 
   describe('detection', () => {
     test('should detect all Substack URLs', () => {
-      Object.values(samples).forEach(url => {
+      Object.values(samples).forEach((url) => {
         expect(mod.detect(url)).toBe(true);
       });
     });
 
     test('should not detect non-Substack URLs', () => {
-      const nonPlatformUrls = [
-        'https://example.com/test',
-        'https://google.com',
-        'not-a-url',
-      ];
+      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
 
-      nonPlatformUrls.forEach(url => {
+      nonPlatformUrls.forEach((url) => {
         expect(mod.detect(url)).toBe(false);
       });
     });

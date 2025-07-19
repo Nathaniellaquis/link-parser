@@ -7,27 +7,23 @@ const mod = registry.get(id)!;
 
 describe('Discord platform tests', () => {
   const samples = {
-    invite: "https://discord.gg/ABC123",
-    inviteFull: "https://discord.com/invite/ABC123",
-    server: "https://discord.com/servers/sample-server",
-    user: "https://discord.com/users/1234567890"
+    invite: 'https://discord.gg/ABC123',
+    inviteFull: 'https://discord.com/invite/ABC123',
+    server: 'https://discord.com/servers/sample-server',
+    user: 'https://discord.com/users/1234567890',
   };
 
   describe('detection', () => {
     test('should detect all Discord URLs', () => {
-      Object.values(samples).forEach(url => {
+      Object.values(samples).forEach((url) => {
         expect(mod.detect(url)).toBe(true);
       });
     });
 
     test('should not detect non-Discord URLs', () => {
-      const nonPlatformUrls = [
-        'https://example.com/test',
-        'https://google.com',
-        'not-a-url',
-      ];
+      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
 
-      nonPlatformUrls.forEach(url => {
+      nonPlatformUrls.forEach((url) => {
         expect(mod.detect(url)).toBe(false);
       });
     });

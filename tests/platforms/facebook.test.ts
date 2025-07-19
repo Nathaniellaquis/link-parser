@@ -7,30 +7,26 @@ const mod = registry.get(id)!;
 
 describe('Facebook platform tests', () => {
   const samples = {
-    profile: "https://facebook.com/sampleuser",
-    profileId: "https://facebook.com/profile.php?id=1234567890",
-    page: "https://facebook.com/pages/Sample-Page/1234567890",
-    post: "https://facebook.com/sampleuser/posts/1234567890",
-    video: "https://facebook.com/watch/?v=1234567890",
-    group: "https://facebook.com/groups/samplegroup",
-    event: "https://facebook.com/events/1234567890"
+    profile: 'https://facebook.com/sampleuser',
+    profileId: 'https://facebook.com/profile.php?id=1234567890',
+    page: 'https://facebook.com/pages/Sample-Page/1234567890',
+    post: 'https://facebook.com/sampleuser/posts/1234567890',
+    video: 'https://facebook.com/watch/?v=1234567890',
+    group: 'https://facebook.com/groups/samplegroup',
+    event: 'https://facebook.com/events/1234567890',
   };
 
   describe('detection', () => {
     test('should detect all Facebook URLs', () => {
-      Object.values(samples).forEach(url => {
+      Object.values(samples).forEach((url) => {
         expect(mod.detect(url)).toBe(true);
       });
     });
 
     test('should not detect non-Facebook URLs', () => {
-      const nonPlatformUrls = [
-        'https://example.com/test',
-        'https://google.com',
-        'not-a-url',
-      ];
+      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
 
-      nonPlatformUrls.forEach(url => {
+      nonPlatformUrls.forEach((url) => {
         expect(mod.detect(url)).toBe(false);
       });
     });
@@ -163,19 +159,19 @@ describe('Facebook platform tests', () => {
   });
 
   describe('builder', () => {
-    const url = mod.buildProfileUrl('someone')
-    expect(url.startsWith('https://facebook.com')).toBe(true)
-  })
+    const url = mod.buildProfileUrl('someone');
+    expect(url.startsWith('https://facebook.com')).toBe(true);
+  });
 
   describe('live', () => {
-    const liveUrl = 'https://facebook.com/somepage/live'
+    const liveUrl = 'https://facebook.com/somepage/live';
     test('detect', () => {
-      expect(mod.detect(liveUrl)).toBe(true)
-    })
+      expect(mod.detect(liveUrl)).toBe(true);
+    });
     test('parse', () => {
-      const r = parse(liveUrl)
-      expect(r.username).toBe('somepage')
-      expect(r.metadata.isLive).toBe(true)
-    })
-  })
+      const r = parse(liveUrl);
+      expect(r.username).toBe('somepage');
+      expect(r.metadata.isLive).toBe(true);
+    });
+  });
 });

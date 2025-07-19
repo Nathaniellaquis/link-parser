@@ -1,14 +1,34 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
-import { normalize } from '../../utils/url'
-import { createDomainPattern } from '../../utils/url'
-import { QUERY_HASH } from '../../utils/constants'
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
+import { normalize } from '../../utils/url';
+import { createDomainPattern } from '../../utils/url';
+import { QUERY_HASH } from '../../utils/constants';
 
-// Define the config values first
-const domains = ['amazon.com']
-const subdomains = ['smile']
+// Define the config values first - include international domains
+const domains = [
+  'amazon.com',
+  'amazon.co.uk',
+  'amazon.de',
+  'amazon.fr',
+  'amazon.it',
+  'amazon.es',
+  'amazon.ca',
+  'amazon.com.au',
+  'amazon.co.jp',
+  'amazon.in',
+  'amazon.com.br',
+  'amazon.com.mx',
+  'amazon.nl',
+  'amazon.se',
+  'amazon.pl',
+  'amazon.com.tr',
+  'amazon.ae',
+  'amazon.sg',
+  'amazon.sa',
+];
+const subdomains = ['smile', 'www', 'sellercentral'];
 
 // Create the domain pattern using the config values
-const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains);
 
 export const amazon: PlatformModule = {
   id: Platforms.Amazon,
@@ -23,90 +43,109 @@ export const amazon: PlatformModule = {
     handle: /^[A-Za-z0-9_-]+$/,
     content: {
       product: new RegExp(`^https?://${DOMAIN_PATTERN}/.+/dp/([A-Z0-9]{10})/?${QUERY_HASH}$`, 'i'),
-      productShort: new RegExp(`^https?://${DOMAIN_PATTERN}/dp/([A-Z0-9]{10})/?${QUERY_HASH}$`, 'i'),
-      store: new RegExp(`^https?://${DOMAIN_PATTERN}/stores/page/([A-Z0-9]{2,})/?${QUERY_HASH}$`, 'i'),
+      productShort: new RegExp(
+        `^https?://${DOMAIN_PATTERN}/dp/([A-Z0-9]{10})/?${QUERY_HASH}$`,
+        'i',
+      ),
+      store: new RegExp(
+        `^https?://${DOMAIN_PATTERN}/stores/page/([A-Z0-9]{2,})/?${QUERY_HASH}$`,
+        'i',
+      ),
       review: new RegExp(`^https?://${DOMAIN_PATTERN}/review/(R[A-Z0-9]+)/?${QUERY_HASH}$`, 'i'),
     },
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some(domain => url.includes(domain))) return false
-    if (this.patterns.profile.test(url)) return true
-    for (const p of Object.values(this.patterns.content || {})) {
-      if (p && p.test(url)) return true
-    }
-    return false
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, result: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     // Check for product (with path)
-    const productMatch = this.patterns.content?.product?.exec(url)
+    const productMatch = this.patterns.content?.product?.exec(url);
     if (productMatch) {
-      result.ids.productId = productMatch[1]
-      result.metadata.contentType = 'product'
-      result.metadata.isProduct = true
-      return
+      return {
+        ids: { productId: productMatch[1] },
+        metadata: {
+          contentType: 'product',
+          isProduct: true,
+        },
+      };
     }
 
     // Check for product (short form)
-    const productShortMatch = this.patterns.content?.productShort?.exec(url)
+    const productShortMatch = this.patterns.content?.productShort?.exec(url);
     if (productShortMatch) {
-      result.ids.productId = productShortMatch[1]
-      result.metadata.contentType = 'product'
-      result.metadata.isProduct = true
-      return
+      return {
+        ids: { productId: productShortMatch[1] },
+        metadata: {
+          contentType: 'product',
+          isProduct: true,
+        },
+      };
     }
 
     // Check for store
-    const storeMatch = this.patterns.content?.store?.exec(url)
+    const storeMatch = this.patterns.content?.store?.exec(url);
     if (storeMatch) {
-      result.ids.storeId = storeMatch[1]
-      result.metadata.contentType = 'store'
-      result.metadata.isStore = true
-      return
+      return {
+        ids: { storeId: storeMatch[1] },
+        metadata: {
+          contentType: 'store',
+          isStore: true,
+        },
+      };
     }
 
     // Check for review
-    const reviewMatch = this.patterns.content?.review?.exec(url)
+    const reviewMatch = this.patterns.content?.review?.exec(url);
     if (reviewMatch) {
-      result.ids.reviewId = reviewMatch[1]
-      result.metadata.contentType = 'review'
-      result.metadata.isReview = true
-      return
+      return {
+        ids: { reviewId: reviewMatch[1] },
+        metadata: {
+          contentType: 'review',
+          isReview: true,
+        },
+      };
     }
 
     // Check for shop profile
-    const profileMatch = this.patterns.profile.exec(url)
+    const profileMatch = this.patterns.profile.exec(url);
     if (profileMatch) {
-      result.username = profileMatch[1]
-      result.metadata.isProfile = true
-      result.metadata.contentType = 'storefront'
-      return
+      return {
+        username: profileMatch[1],
+        metadata: {
+          isProfile: true,
+          contentType: 'storefront',
+        },
+      };
     }
+
+    return null;
   },
 
   validateHandle(handle: string): boolean {
-    return this.patterns.handle.test(handle)
+    return this.patterns.handle.test(handle);
   },
 
   buildProfileUrl(username: string): string {
-    return `https://amazon.com/shop/${username}`
+    return `https://amazon.com/shop/${username}`;
   },
 
   buildContentUrl(contentType: string, id: string): string {
     switch (contentType) {
       case 'product':
-        return `https://amazon.com/dp/${id}`
+        return `https://amazon.com/dp/${id}`;
       case 'store':
-        return `https://amazon.com/stores/page/${id}`
+        return `https://amazon.com/stores/page/${id}`;
       case 'review':
-        return `https://amazon.com/review/${id}`
+        return `https://amazon.com/review/${id}`;
       default:
-        return `https://amazon.com/${contentType}/${id}`
+        return `https://amazon.com/${contentType}/${id}`;
     }
   },
 
   normalizeUrl(url: string): string {
-    return normalize(url.replace(/smile\.amazon\.com/, 'amazon.com'))
+    return normalize(url.replace(/smile\.amazon\.com/, 'amazon.com'));
   },
-}
+};

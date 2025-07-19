@@ -7,16 +7,16 @@ const mod = registry.get(id)!;
 
 describe('YouTube platform tests', () => {
   const samples = {
-    profileHandle: "https://youtube.com/@sampleuser",
-    profileChannel: "https://youtube.com/channel/UC1234567890abcdefghi",
-    profileUser: "https://youtube.com/user/sampleuser",
-    profileC: "https://youtube.com/c/sampleuser",
-    video: "https://youtu.be/dQw4w9WgXcQ",
-    videoQS: "https://youtube.com/watch?v=dQw4w9WgXcQ&t=42",
-    short: "https://youtube.com/shorts/dQw4w9WgXcQ",
-    live: "https://youtube.com/live/dQw4w9WgXcQ",
-    playlist: "https://youtube.com/playlist?list=PL123456ABCDEF",
-    embed: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+    profileHandle: 'https://youtube.com/@sampleuser',
+    profileChannel: 'https://youtube.com/channel/UC1234567890abcdefghi',
+    profileUser: 'https://youtube.com/user/sampleuser',
+    profileC: 'https://youtube.com/c/sampleuser',
+    video: 'https://youtu.be/dQw4w9WgXcQ',
+    videoQS: 'https://youtube.com/watch?v=dQw4w9WgXcQ&t=42',
+    short: 'https://youtube.com/shorts/dQw4w9WgXcQ',
+    live: 'https://youtube.com/live/dQw4w9WgXcQ',
+    playlist: 'https://youtube.com/playlist?list=PL123456ABCDEF',
+    embed: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
   };
 
   describe('detection', () => {
@@ -29,13 +29,9 @@ describe('YouTube platform tests', () => {
     });
 
     test('should not detect non-YouTube URLs', () => {
-      const nonPlatformUrls = [
-        'https://example.com/test',
-        'https://google.com',
-        'not-a-url',
-      ];
+      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
 
-      nonPlatformUrls.forEach(url => {
+      nonPlatformUrls.forEach((url) => {
         expect(mod.detect(url)).toBe(false);
       });
     });
@@ -191,26 +187,26 @@ describe('YouTube platform tests', () => {
   });
 
   describe('builders', () => {
-    const url = mod.buildProfileUrl('SomeChannel')
-    expect(url).toContain('youtube.com')
-  })
+    const url = mod.buildProfileUrl('SomeChannel');
+    expect(url).toContain('youtube.com');
+  });
 
   describe('live', () => {
-    const liveWatch = 'https://www.youtube.com/watch?v=abcDEFGHIJK&live=1'
-    const channelLive = 'https://www.youtube.com/@somechannel/live'
+    const liveWatch = 'https://www.youtube.com/watch?v=abcDEFGHIJK&live=1';
+    const channelLive = 'https://www.youtube.com/@somechannel/live';
     test('detect', () => {
-      expect(mod.detect(liveWatch)).toBe(true)
-      expect(mod.detect(channelLive)).toBe(true)
-    })
+      expect(mod.detect(liveWatch)).toBe(true);
+      expect(mod.detect(channelLive)).toBe(true);
+    });
     test('parse watch live', () => {
-      const r = parse(liveWatch)
-      expect(r.ids.liveId).toBe('abcDEFGHIJK')
-      expect(r.metadata.isLive).toBe(true)
-    })
+      const r = parse(liveWatch);
+      expect(r.ids.liveId).toBe('abcDEFGHIJK');
+      expect(r.metadata.isLive).toBe(true);
+    });
     test('parse channel live', () => {
-      const r = parse(channelLive)
-      expect(r.username).toBe('somechannel')
-      expect(r.metadata.isLive).toBe(true)
-    })
-  })
+      const r = parse(channelLive);
+      expect(r.username).toBe('somechannel');
+      expect(r.metadata.isLive).toBe(true);
+    });
+  });
 });

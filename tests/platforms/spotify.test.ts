@@ -7,29 +7,25 @@ const mod = registry.get(id)!;
 
 describe('Spotify platform tests', () => {
   const samples = {
-    artist: "https://open.spotify.com/artist/1234567890abcdefghij",
-    track: "https://open.spotify.com/track/1234567890abcdefghij",
-    album: "https://open.spotify.com/album/1234567890abcdefghij",
-    playlist: "https://open.spotify.com/playlist/1234567890abcdefghij",
-    user: "https://open.spotify.com/user/sampleuser",
-    embed: "https://open.spotify.com/embed/track/1234567890abcdefghij"
+    artist: 'https://open.spotify.com/artist/1234567890abcdefghij',
+    track: 'https://open.spotify.com/track/1234567890abcdefghij',
+    album: 'https://open.spotify.com/album/1234567890abcdefghij',
+    playlist: 'https://open.spotify.com/playlist/1234567890abcdefghij',
+    user: 'https://open.spotify.com/user/sampleuser',
+    embed: 'https://open.spotify.com/embed/track/1234567890abcdefghij',
   };
 
   describe('detection', () => {
     test('should detect all Spotify URLs', () => {
-      Object.values(samples).forEach(url => {
+      Object.values(samples).forEach((url) => {
         expect(mod.detect(url)).toBe(true);
       });
     });
 
     test('should not detect non-Spotify URLs', () => {
-      const nonPlatformUrls = [
-        'https://example.com/test',
-        'https://google.com',
-        'not-a-url',
-      ];
+      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
 
-      nonPlatformUrls.forEach(url => {
+      nonPlatformUrls.forEach((url) => {
         expect(mod.detect(url)).toBe(false);
       });
     });

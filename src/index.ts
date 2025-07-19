@@ -7,9 +7,4 @@ export { registry } from './utils/parse/platforms';
 export { Platforms } from './utils/parse/core/types';
 
 // Type exports
-export type {
-    ParsedUrl,
-    PlatformModule,
-    EmbedPlatform,
-    EmbedType,
-} from './utils/parse/core/types'; 
+export type { ParsedUrl, PlatformModule, EmbedPlatform, EmbedType } from './utils/parse/core/types';

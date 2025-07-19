@@ -7,28 +7,24 @@ const mod = registry.get(id)!;
 
 describe('LinkedIn platform tests', () => {
   const samples = {
-    profileIn: "https://linkedin.com/in/sampleuser",
-    company: "https://linkedin.com/company/samplecompany",
-    school: "https://linkedin.com/school/sampleschool",
-    post: "https://linkedin.com/posts/sampleuser_sample-post-1234567890",
-    article: "https://linkedin.com/pulse/sample-article-sampleuser"
+    profileIn: 'https://linkedin.com/in/sampleuser',
+    company: 'https://linkedin.com/company/samplecompany',
+    school: 'https://linkedin.com/school/sampleschool',
+    post: 'https://linkedin.com/posts/sampleuser_sample-post-1234567890',
+    article: 'https://linkedin.com/pulse/sample-article-sampleuser',
   };
 
   describe('detection', () => {
     test('should detect all LinkedIn URLs', () => {
-      Object.values(samples).forEach(url => {
+      Object.values(samples).forEach((url) => {
         expect(mod.detect(url)).toBe(true);
       });
     });
 
     test('should not detect non-LinkedIn URLs', () => {
-      const nonPlatformUrls = [
-        'https://example.com/test',
-        'https://google.com',
-        'not-a-url',
-      ];
+      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
 
-      nonPlatformUrls.forEach(url => {
+      nonPlatformUrls.forEach((url) => {
         expect(mod.detect(url)).toBe(false);
       });
     });
@@ -79,7 +75,9 @@ describe('LinkedIn platform tests', () => {
       const result = parse('https://linkedin.com/posts/sampleuser_sample-post-1234567890');
       expect(result.isValid).toBe(true);
       expect(result.platform).toBe(id);
-      expect(result.originalUrl).toBe('https://linkedin.com/posts/sampleuser_sample-post-1234567890');
+      expect(result.originalUrl).toBe(
+        'https://linkedin.com/posts/sampleuser_sample-post-1234567890',
+      );
       // Platform-specific assertions
       expect(result.ids.postId).toBe('sample-post-1234567890');
       // Negative: invalid post id (too short)

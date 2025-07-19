@@ -7,26 +7,22 @@ const mod = registry.get(id)!;
 
 describe('Patreon platform tests', () => {
   const samples = {
-    profile: "https://patreon.com/sampleuser",
-    profileC: "https://patreon.com/c/samplecreator",
-    post: "https://patreon.com/posts/sample-post-12345678"
+    profile: 'https://patreon.com/sampleuser',
+    profileC: 'https://patreon.com/c/samplecreator',
+    post: 'https://patreon.com/posts/sample-post-12345678',
   };
 
   describe('detection', () => {
     test('should detect all Patreon URLs', () => {
-      Object.values(samples).forEach(url => {
+      Object.values(samples).forEach((url) => {
         expect(mod.detect(url)).toBe(true);
       });
     });
 
     test('should not detect non-Patreon URLs', () => {
-      const nonPlatformUrls = [
-        'https://example.com/test',
-        'https://google.com',
-        'not-a-url',
-      ];
+      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
 
-      nonPlatformUrls.forEach(url => {
+      nonPlatformUrls.forEach((url) => {
         expect(mod.detect(url)).toBe(false);
       });
     });

@@ -1,5 +1,5 @@
-import { PlatformModule } from '../core/types'
-import { QUERY_HASH } from './constants'
+import { PlatformModule } from '../core/types';
+import { QUERY_HASH } from './constants';
 
 /**
  * Append optional trailing slash, querystring and hash fragment to a RegExp pattern.
@@ -7,21 +7,21 @@ import { QUERY_HASH } from './constants'
  */
 export function enhancePattern(pattern: RegExp): RegExp {
   // Skip when already contains QUERY_HASH (heuristic)
-  if (pattern.source.includes(QUERY_HASH.replace(/\\/g, ''))) return pattern
+  if (pattern.source.includes(QUERY_HASH.replace(/\\/g, ''))) return pattern;
 
   // Remove trailing $ to re-append later
-  let source = pattern.source
+  let source = pattern.source;
   if (source.endsWith('$')) {
-    source = source.slice(0, -1)
+    source = source.slice(0, -1);
   }
 
   // Ensure pattern ends with optional slash
   if (!source.endsWith('/?')) {
-    source += '\\/?'
+    source += '\\/?';
   }
 
-  source += `${QUERY_HASH}$`
-  return new RegExp(source, pattern.flags)
+  source += `${QUERY_HASH}$`;
+  return new RegExp(source, pattern.flags);
 }
 
 /**
@@ -29,36 +29,53 @@ export function enhancePattern(pattern: RegExp): RegExp {
  */
 export function patchModulePatterns(module: PlatformModule): void {
   // Profile & handle remain unchanged except profile gets hash
-  module.patterns.profile = enhancePattern(module.patterns.profile)
+  module.patterns.profile = enhancePattern(module.patterns.profile);
   if (module.patterns.content) {
     for (const key of Object.keys(module.patterns.content)) {
-      const p = module.patterns.content[key]
+      const p = module.patterns.content[key];
       if (p) {
-        (module.patterns.content as Record<string, RegExp | undefined>)[key] = enhancePattern(p)
+        (module.patterns.content as Record<string, RegExp | undefined>)[key] = enhancePattern(p);
       }
     }
   }
 
   // Replace naive detect implementation that relies on domain includes
-  const originalDetectSrc = module.detect.toString()
-  if (/includes\(.*domain/.test(originalDetectSrc) || /includes\('.*\.com'/.test(originalDetectSrc)) {
+  const originalDetectSrc = module.detect.toString();
+  if (
+    /includes\(.*domain/.test(originalDetectSrc) ||
+    /includes\('.*\.com'/.test(originalDetectSrc)
+  ) {
     module.detect = function (this: PlatformModule, url: string): boolean {
-      // Quick domain guard
-      if (!this.domains.some(domain => url.includes(domain))) return false
+      // Check domainsRegexp first if available (supports protocol-less URLs)
+      if (this.domainsRegexp && this.domainsRegexp.test(url)) {
+        // Still need to verify it matches a valid pattern
+        if (this.patterns.profile.test(url)) return true;
 
-      if (this.patterns.profile.test(url)) return true
+        if (this.patterns.content) {
+          for (const key of Object.keys(this.patterns.content)) {
+            const pattern = this.patterns.content[key];
+            if (pattern && pattern.test(url)) return true;
+          }
+        }
+        return false;
+      }
+
+      // Quick domain guard
+      if (!this.domains.some((domain) => url.includes(domain))) return false;
+
+      if (this.patterns.profile.test(url)) return true;
 
       if (this.patterns.content) {
         for (const key of Object.keys(this.patterns.content)) {
-          const pattern = this.patterns.content[key]
-          if (pattern && pattern.test(url)) return true
+          const pattern = this.patterns.content[key];
+          if (pattern && pattern.test(url)) return true;
         }
       }
-      return false
-    }
+      return false;
+    };
   }
 }
 
 export function patchAllPlatforms(registry: Map<any, PlatformModule>) {
-  registry.forEach(patchModulePatterns)
+  registry.forEach(patchModulePatterns);
 }
