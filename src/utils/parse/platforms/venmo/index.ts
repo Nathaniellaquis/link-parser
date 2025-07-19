@@ -42,6 +42,7 @@ export const venmo: PlatformModule = {
       return {
         ids: { qrUserId: qrMatch[1] },
         metadata: {
+          isQr: true,
           contentType: 'qr',
         },
       };

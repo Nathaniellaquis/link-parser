@@ -41,6 +41,7 @@ export const calendly: PlatformModule = {
         username: match[1],
         ids: { eventType: match[2] },
         metadata: {
+          isEvent: true,
           contentType: 'event',
         },
       };

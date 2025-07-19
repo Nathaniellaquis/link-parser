@@ -8,7 +8,6 @@ const domains = ['bilibili.com'];
 const subdomains = ['m', 'space'];
 
 // Create the domain pattern using the config values
-// @ts-expect-error - DOMAIN_PATTERN kept for architectural consistency
 const DOMAIN_PATTERN = createDomainPattern(domains, subdomains);
 
 export const bilibili: PlatformModule = {
@@ -20,17 +19,17 @@ export const bilibili: PlatformModule = {
   subdomains: subdomains,
 
   patterns: {
-    profile: new RegExp(`^https?://space\\.bilibili\\.com/(\\d{1,10})(?:/.*)?${QUERY_HASH}$`, 'i'),
+    profile: new RegExp(
+      `^https?://space\\.${DOMAIN_PATTERN}/(\\d{1,10})(?:/.*)?${QUERY_HASH}$`,
+      'i',
+    ),
     handle: /^\d{1,10}$/,
     content: {
       videoBV: new RegExp(
-        `^https?://(?:www\\.|m\\.)?bilibili\\.com/video/(BV[0-9A-Za-z]{10})(?:/.*)?${QUERY_HASH}$`,
+        `^https?://${DOMAIN_PATTERN}/video/(BV[0-9A-Za-z]{10})(?:/.*)?${QUERY_HASH}$`,
         'i',
       ),
-      videoAv: new RegExp(
-        `^https?://(?:www\\.|m\\.)?bilibili\\.com/video/av(\\d+)(?:/.*)?${QUERY_HASH}$`,
-        'i',
-      ),
+      videoAv: new RegExp(`^https?://${DOMAIN_PATTERN}/video/av(\\d+)(?:/.*)?${QUERY_HASH}$`, 'i'),
     },
   },
 

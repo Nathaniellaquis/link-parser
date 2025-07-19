@@ -43,7 +43,7 @@ export const devto: PlatformModule = {
         username: post[1],
         ids: { postSlug: post[2] },
         metadata: {
-          isArticle: true,
+          isPost: true,
           contentType: 'post',
         },
       };

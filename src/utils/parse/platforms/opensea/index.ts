@@ -68,8 +68,25 @@ export const opensea: PlatformModule = {
     }
     const prof = this.patterns.profile.exec(url);
     if (prof) {
+      const username = prof[1];
+      // Reject reserved/invalid paths
+      const reserved = [
+        'invalid',
+        'assets',
+        'collection',
+        'collections',
+        'explore',
+        'rankings',
+        'activity',
+        'blog',
+        'learn',
+        'stats',
+      ];
+      if (reserved.includes(username.toLowerCase())) {
+        return null;
+      }
       return {
-        username: prof[1],
+        username: username,
         metadata: {
           isProfile: true,
           contentType: 'profile',

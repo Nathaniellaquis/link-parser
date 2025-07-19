@@ -48,7 +48,7 @@ export const medium: PlatformModule = {
       return {
         ids: { postSlug: postUserMatch[1] },
         metadata: {
-          isArticle: true,
+          isPost: true,
           contentType: 'post',
         },
       };
@@ -59,7 +59,7 @@ export const medium: PlatformModule = {
       return {
         ids: { postSlug: postPMatch[1] },
         metadata: {
-          isArticle: true,
+          isPost: true,
           contentType: 'post',
         },
       };
@@ -70,7 +70,7 @@ export const medium: PlatformModule = {
       return {
         ids: { postSlug: postSubdomainMatch[2] },
         metadata: {
-          isArticle: true,
+          isPost: true,
           contentType: 'post',
         },
       };
