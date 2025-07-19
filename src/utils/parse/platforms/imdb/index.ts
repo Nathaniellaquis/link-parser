@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -36,27 +36,38 @@ export const imdb: PlatformModule = {
     );
   },
 
-  extract(url: string, res: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const title = this.patterns.content?.title?.exec(url);
     if (title) {
-      res.ids.titleId = title[1];
-      res.metadata.isTitle = true;
-      res.metadata.contentType = 'title';
-      return;
+      return {
+        ids: { titleId: title[1] },
+        metadata: {
+          isTitle: true,
+          contentType: 'title',
+        },
+      };
     }
     const company = this.patterns.content?.company?.exec(url);
     if (company) {
-      res.ids.companyId = company[1];
-      res.metadata.isCompany = true;
-      res.metadata.contentType = 'company';
-      return;
+      return {
+        ids: { companyId: company[1] },
+        metadata: {
+          isCompany: true,
+          contentType: 'company',
+        },
+      };
     }
     const prof = this.patterns.profile.exec(url);
     if (prof) {
-      res.userId = prof[1];
-      res.metadata.isPerson = true;
-      res.metadata.contentType = 'person';
+      return {
+        userId: prof[1],
+        metadata: {
+          isPerson: true,
+          contentType: 'person',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {

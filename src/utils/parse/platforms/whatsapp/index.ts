@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 // import { createDomainPattern } from '../../utils/url'
 import { QUERY_HASH } from '../../utils/constants';
@@ -23,7 +23,7 @@ export const whatsapp: PlatformModule = {
     handle: /^\d{6,15}$/,
     content: {
       group: new RegExp(
-        `^https?://(?:chat|whatsapp)\\.whatsapp\\.com/(?:invite/)?([\A-Za-z0-9]{20,})/?${QUERY_HASH}$`,
+        `^https?://(?:chat|whatsapp)\\.whatsapp\\.com/(?:invite/)?([A-Za-z0-9]{20,})/?${QUERY_HASH}$`,
         'i',
       ),
       send: new RegExp(`^https?://api\\.whatsapp\\.com/send\\?phone=(\\d{6,15})${QUERY_HASH}`, 'i'),
@@ -31,28 +31,32 @@ export const whatsapp: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some((d) => url.includes(d))) return false;
-    return (
-      this.patterns.profile.test(url) ||
-      !!this.patterns.content?.send?.test(url) ||
-      !!this.patterns.content?.group?.test(url)
-    );
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, result: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const phoneMatch = this.patterns.profile.exec(url) || this.patterns.content?.send?.exec(url);
     if (phoneMatch) {
-      result.userId = phoneMatch[1];
-      result.metadata.isProfile = true;
-      result.metadata.contentType = 'profile';
-      return;
+      return {
+        userId: phoneMatch[1],
+        metadata: {
+          isProfile: true,
+          contentType: 'profile',
+        },
+      };
     }
     const groupMatch = this.patterns.content?.group?.exec(url);
     if (groupMatch) {
-      result.ids.groupInviteCode = groupMatch[1];
-      result.metadata.isGroupInvite = true;
-      result.metadata.contentType = 'group';
+      return {
+        ids: { groupInviteCode: groupMatch[1] },
+        metadata: {
+          isGroupInvite: true,
+          contentType: 'group',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {

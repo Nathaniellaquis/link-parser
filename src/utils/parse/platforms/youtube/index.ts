@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl, ExtractedData } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -222,13 +222,20 @@ export const youtube: PlatformModule = {
     return shortUrl;
   },
 
-  getEmbedInfo(url: string, parsed) {
+  getEmbedInfo(url: string) {
     // If already an embed src
     const embedMatch = /youtube\.com\/embed\/([A-Za-z0-9_-]{11})/.exec(url);
     if (embedMatch) {
       return { embedUrl: url, isEmbedAlready: true };
     }
-    const id = parsed.ids.videoId || parsed.ids.shortId || parsed.ids.liveId;
+
+    // Extract data to get video ID
+    const extractedData = this.extract(url);
+    if (!extractedData || !extractedData.ids) {
+      return null;
+    }
+
+    const id = extractedData.ids.videoId || extractedData.ids.shortId || extractedData.ids.liveId;
     if (id) {
       const embedUrl = this.generateEmbedUrl
         ? this.generateEmbedUrl(id)

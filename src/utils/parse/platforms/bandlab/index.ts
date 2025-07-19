@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -32,25 +32,35 @@ export const bandlab: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some((domain) => url.includes(domain))) return false;
-    return this.patterns.profile.test(url) || !!this.patterns.content?.song?.test(url);
+    // Simple domain check - allows ALL pages on the platform
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, result: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const s = this.patterns.content?.song?.exec(url);
     if (s) {
-      result.username = s[1];
-      result.ids.songSlug = s[2];
-      result.metadata.isAudio = true;
-      result.metadata.contentType = 'song';
-      return;
+      return {
+        username: s[1],
+        ids: { songSlug: s[2] },
+        metadata: {
+          isTrack: true,
+          isAudio: true,
+          contentType: 'song',
+        },
+      };
     }
     const p = this.patterns.profile.exec(url);
     if (p) {
-      result.username = p[1];
-      result.metadata.isProfile = true;
-      result.metadata.contentType = 'profile';
+      return {
+        username: p[1],
+        metadata: {
+          isProfile: true,
+          contentType: 'profile',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {

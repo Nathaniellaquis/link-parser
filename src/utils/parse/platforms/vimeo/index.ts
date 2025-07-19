@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -42,29 +42,40 @@ export const vimeo: PlatformModule = {
     );
   },
 
-  extract(url: string, res: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const videoMatch = this.patterns.content?.video?.exec(url);
     if (videoMatch) {
-      res.ids.videoId = videoMatch[1];
-      res.metadata.isVideo = true;
-      res.metadata.contentType = 'video';
-      return;
+      return {
+        ids: { videoId: videoMatch[1] },
+        metadata: {
+          isVideo: true,
+          contentType: 'video',
+        },
+      };
     }
     const channelMatch = this.patterns.content?.channel?.exec(url);
     if (channelMatch) {
-      res.username = channelMatch[1];
-      res.metadata.isChannel = true;
-      res.metadata.contentType = 'channel';
-      return;
+      return {
+        username: channelMatch[1],
+        metadata: {
+          isChannel: true,
+          contentType: 'channel',
+        },
+      };
     }
     const profMatch = this.patterns.profile.exec(url);
     if (profMatch) {
       // capture username or userID depending
       const path = url.split('/').pop()?.split('?')[0] || '';
-      res.username = path;
-      res.metadata.isProfile = true;
-      res.metadata.contentType = 'profile';
+      return {
+        username: path,
+        metadata: {
+          isProfile: true,
+          contentType: 'profile',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {

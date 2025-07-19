@@ -148,11 +148,18 @@ export const instagram: PlatformModule = {
     return normalize(url.replace(/[?&](igshid|utm_[^&]+|ig_[^&]+)=[^&]+/g, ''));
   },
 
-  getEmbedInfo(url: string, parsed) {
+  getEmbedInfo(url: string) {
     if (/instagram\.com\/.*\/embed\//.test(url)) {
       return { embedUrl: url, isEmbedAlready: true };
     }
-    const id = parsed.ids.postId || parsed.ids.reelId || parsed.ids.tvId;
+
+    // Extract data to get post/reel/tv ID
+    const extractedData = this.extract(url);
+    if (!extractedData || !extractedData.ids) {
+      return null;
+    }
+
+    const id = extractedData.ids.postId || extractedData.ids.reelId || extractedData.ids.tvId;
     if (id) {
       const embedUrl = `https://www.instagram.com/p/${id}/embed/`;
       return { embedUrl, type: 'iframe' };

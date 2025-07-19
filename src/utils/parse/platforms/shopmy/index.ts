@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -30,45 +30,49 @@ export const shopmy: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    if (!domains.some((domain: string) => url.includes(domain))) return false;
-
-    // Check if it matches any valid pattern
-    if (this.patterns.profile.test(url)) return true;
-    if (this.patterns.content) {
-      for (const pattern of Object.values(this.patterns.content)) {
-        if (pattern && pattern.test(url)) return true;
-      }
-    }
-
-    return false;
+    // Simple domain check - allows ALL pages on the platform
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, result: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     // Handle collection URLs first
     const collectionMatch = this.patterns.content?.collection?.exec(url);
     if (collectionMatch) {
-      result.ids.collectionId = collectionMatch[1];
-      result.metadata.isCollection = true;
-      result.metadata.contentType = 'collection';
-      return;
+      return {
+        ids: { collectionId: collectionMatch[1] },
+        metadata: {
+          isCollection: true,
+          contentType: 'collection',
+        },
+      };
     }
 
     // Handle product URLs
     const productMatch = this.patterns.content?.product?.exec(url);
     if (productMatch) {
-      result.ids.productId = productMatch[1];
-      result.metadata.isProduct = true;
-      result.metadata.contentType = 'product';
-      return;
+      return {
+        ids: { productId: productMatch[1] },
+        metadata: {
+          isProduct: true,
+          contentType: 'product',
+        },
+      };
     }
 
     // Handle profile URLs
     const profileMatch = this.patterns.profile.exec(url);
     if (profileMatch) {
-      result.username = profileMatch[1];
-      result.metadata.isProfile = true;
-      result.metadata.contentType = 'storefront';
+      return {
+        username: profileMatch[1],
+        metadata: {
+          isProfile: true,
+          contentType: 'storefront',
+        },
+      };
     }
+
+    return null;
   },
 
   validateHandle: (h: string): boolean => /^[A-Za-z0-9_-]{2,}$/.test(h),

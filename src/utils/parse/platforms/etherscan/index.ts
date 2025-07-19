@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -30,22 +30,30 @@ export const etherscan: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some((domain) => url.includes(domain))) return false;
-    return this.patterns.profile.test(url) || !!this.patterns.content?.tx?.test(url);
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, result: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const t = this.patterns.content?.tx?.exec(url);
     if (t) {
-      result.ids.txHash = t[1];
-      result.metadata.contentType = 'transaction';
-      return;
+      return {
+        ids: { transactionHash: t[1] },
+        metadata: {
+          contentType: 'transaction',
+        },
+      };
     }
     const a = this.patterns.profile.exec(url);
     if (a) {
-      result.userId = a[1];
-      result.metadata.contentType = 'address';
+      return {
+        userId: a[1],
+        metadata: {
+          contentType: 'address',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(h: string): boolean {

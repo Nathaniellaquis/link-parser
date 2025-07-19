@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -46,24 +46,32 @@ export const vk: PlatformModule = {
     );
   },
 
-  extract(url: string, result: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     // Posts first
     const pMatch =
       this.patterns.content?.post?.exec(url) || this.patterns.content?.postQuery?.exec(url);
     if (pMatch) {
-      result.ids.postId = pMatch[1];
-      result.metadata.isPost = true;
-      result.metadata.contentType = 'post';
-      return;
+      return {
+        ids: { postId: pMatch[1] },
+        metadata: {
+          isPost: true,
+          contentType: 'post',
+        },
+      };
     }
 
     // Profiles
     const prof = this.patterns.profile.exec(url);
     if (prof) {
-      result.username = prof[1] || prof[2];
-      result.metadata.isProfile = true;
-      result.metadata.contentType = 'profile';
+      return {
+        username: prof[1] || prof[2],
+        metadata: {
+          isProfile: true,
+          contentType: 'profile',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {

@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -47,23 +47,32 @@ export const paypal: PlatformModule = {
     return false;
   },
 
-  extract(url: string, res: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const pay = this.patterns.content?.payment?.exec(url);
     if (pay) {
-      res.username = pay[1];
-      res.ids.amount = pay[2];
-      if (pay[3]) res.ids.currency = pay[3];
-      res.metadata.isPayment = true;
-      res.metadata.contentType = 'payment';
-      return;
+      const ids: any = { amount: pay[2] };
+      if (pay[3]) ids.currency = pay[3];
+      return {
+        username: pay[1],
+        ids,
+        metadata: {
+          isPayment: true,
+          contentType: 'payment',
+        },
+      };
     }
 
     const prof = this.patterns.profile.exec(url);
     if (prof) {
-      res.username = prof[1];
-      res.metadata.isProfile = true;
-      res.metadata.contentType = 'profile';
+      return {
+        username: prof[1],
+        metadata: {
+          isProfile: true,
+          contentType: 'profile',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {

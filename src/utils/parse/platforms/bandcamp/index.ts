@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
 
@@ -29,41 +29,51 @@ export const bandcamp: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    if (!url.includes('.bandcamp.com')) return false;
-    return (
-      this.patterns.profile.test(url) ||
-      !!this.patterns.content?.album?.test(url) ||
-      !!this.patterns.content?.track?.test(url)
-    );
+    // Simple domain check - allows ALL pages on the platform
+    const urlLower = url.toLowerCase();
+    return urlLower.includes('.bandcamp.com');
   },
 
-  extract(url: string, res: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const prof = this.patterns.profile.exec(url);
     if (prof) {
-      res.username = prof[1];
-      res.metadata.isProfile = true;
-      res.metadata.contentType = 'artist';
-      return;
+      return {
+        username: prof[1],
+        metadata: {
+          isProfile: true,
+          isArtist: true,
+          contentType: 'artist',
+        },
+      };
     }
 
     const alb = this.patterns.content?.album?.exec(url);
     if (alb) {
       const artist = alb[1];
       const slug = alb[2];
-      res.username = artist;
-      res.ids.albumSlug = slug;
-      res.metadata.isAlbum = true;
-      res.metadata.contentType = 'album';
-      return;
+      return {
+        username: artist,
+        ids: { albumSlug: slug },
+        metadata: {
+          isAlbum: true,
+          contentType: 'album',
+        },
+      };
     }
 
     const tr = this.patterns.content?.track?.exec(url);
     if (tr) {
-      res.username = tr[1];
-      res.ids.trackSlug = tr[2];
-      res.metadata.isSingle = true;
-      res.metadata.contentType = 'track';
+      return {
+        username: tr[1],
+        ids: { trackSlug: tr[2] },
+        metadata: {
+          isTrack: true,
+          isSingle: true,
+          contentType: 'track',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {

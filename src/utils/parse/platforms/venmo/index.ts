@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -20,51 +20,57 @@ export const venmo: PlatformModule = {
 
   patterns: {
     profile: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_\\-]{3,})/?${QUERY_HASH}$`, 'i'),
-    handle: /^[A-Za-z0-9_\-]{3,}$/,
+    handle: /^[A-Za-z0-9_-]{3,}$/,
     content: {
       qr: new RegExp(`^https?://${DOMAIN_PATTERN}/code\\?user_id=(\\d+)${QUERY_HASH}`, 'i'),
       payment: new RegExp(
-        `^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_\\-]{3,})/?\\?txn=pay${QUERY_HASH}`,
+        `^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_-]{3,})/?\\?txn=pay${QUERY_HASH}`,
         'i',
       ),
     },
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some((domain) => url.includes(domain))) return false;
-    return (
-      this.patterns.profile.test(url) ||
-      !!this.patterns.content?.qr?.test(url) ||
-      !!this.patterns.content?.payment?.test(url)
-    );
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, res: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     // QR Code URL
     const qrMatch = this.patterns.content?.qr?.exec(url);
     if (qrMatch) {
-      res.ids.qrUserId = qrMatch[1];
-      res.metadata.isQr = true;
-      res.metadata.contentType = 'qr';
-      return;
+      return {
+        ids: { qrUserId: qrMatch[1] },
+        metadata: {
+          contentType: 'qr',
+        },
+      };
     }
 
     // Payment URL (same as profile but with txn param)
     const payMatch = this.patterns.content?.payment?.exec(url);
     if (payMatch) {
-      res.username = payMatch[1];
-      res.metadata.isPayment = true;
-      res.metadata.contentType = 'payment';
-      return;
+      return {
+        username: payMatch[1],
+        metadata: {
+          isPayment: true,
+          contentType: 'payment',
+        },
+      };
     }
 
     // Profile URL
     const profMatch = this.patterns.profile.exec(url);
     if (profMatch) {
-      res.username = profMatch[1];
-      res.metadata.isProfile = true;
-      res.metadata.contentType = 'profile';
+      return {
+        username: profMatch[1],
+        metadata: {
+          isProfile: true,
+          contentType: 'profile',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {

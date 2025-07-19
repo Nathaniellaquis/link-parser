@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -35,51 +35,63 @@ export const quora: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some((domain) => url.includes(domain))) return false;
-    if (this.patterns.profile.test(url)) return true;
-    if (this.patterns.content) {
-      for (const pattern of Object.values(this.patterns.content)) {
-        if (pattern && pattern.test(url)) return true;
-      }
-    }
-    return false;
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, result: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     // Profile
     const profileMatch = this.patterns.profile.exec(url);
     if (profileMatch) {
-      result.username = profileMatch[1];
-      result.metadata.isProfile = true;
-      return;
+      return {
+        username: profileMatch[1],
+        metadata: {
+          isProfile: true,
+          contentType: 'profile',
+        },
+      };
     }
 
     // Space
     const spaceMatch = this.patterns.content?.space?.exec(url);
     if (spaceMatch) {
-      result.ids.spaceId = spaceMatch[1];
-      result.metadata.contentType = 'space';
-      return;
+      return {
+        ids: { spaceId: spaceMatch[1] },
+        metadata: {
+          contentType: 'space',
+        },
+      };
     }
 
     // Answer URL
     const answerMatch = this.patterns.content?.answer?.exec(url);
     if (answerMatch) {
-      result.ids.questionSlug = answerMatch[1];
-      result.username = answerMatch[2];
-      result.metadata.isAnswer = true;
-      result.metadata.contentType = 'answer';
-      return;
+      return {
+        username: answerMatch[2],
+        ids: {
+          questionSlug: answerMatch[1],
+          answerId: answerMatch[2],
+        },
+        metadata: {
+          isAnswer: true,
+          contentType: 'answer',
+        },
+      };
     }
 
     // Question
     const questionMatch = this.patterns.content?.question?.exec(url);
     if (questionMatch) {
-      result.ids.questionSlug = questionMatch[1];
-      result.metadata.isQuestion = true;
-      result.metadata.contentType = 'question';
-      return;
+      return {
+        ids: { questionSlug: questionMatch[1] },
+        metadata: {
+          isQuestion: true,
+          contentType: 'question',
+        },
+      };
     }
+
+    return null;
   },
 
   validateHandle(handle: string): boolean {

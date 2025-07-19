@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -32,24 +32,32 @@ export const behance: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some((domain) => url.includes(domain))) return false;
-    return this.patterns.profile.test(url) || !!this.patterns.content?.project?.test(url);
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, result: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const pr = this.patterns.content?.project?.exec(url);
     if (pr) {
-      result.ids.projectId = pr[1];
-      result.metadata.isProject = true;
-      result.metadata.contentType = 'project';
-      return;
+      return {
+        ids: { projectId: pr[1] },
+        metadata: {
+          isProject: true,
+          contentType: 'project',
+        },
+      };
     }
     const p = this.patterns.profile.exec(url);
     if (p) {
-      result.username = p[1];
-      result.metadata.isProfile = true;
-      result.metadata.contentType = 'profile';
+      return {
+        username: p[1],
+        metadata: {
+          isProfile: true,
+          contentType: 'profile',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {

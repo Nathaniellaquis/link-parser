@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -30,17 +30,24 @@ export const looksrare: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some((domain) => url.includes(domain))) return false;
-    return !!this.patterns.content?.token?.test(url);
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, result: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const m = this.patterns.content?.token?.exec(url);
     if (m) {
-      result.ids.contract = m[1];
-      result.ids.tokenId = m[2];
-      result.metadata.contentType = 'token';
+      return {
+        ids: {
+          contract: m[1],
+          tokenId: m[2],
+        },
+        metadata: {
+          contentType: 'token',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(): boolean {

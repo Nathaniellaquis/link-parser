@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -30,25 +30,35 @@ export const mixcloud: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some((domain) => url.includes(domain))) return false;
-    return this.patterns.profile.test(url) || !!this.patterns.content?.track?.test(url);
+    // Simple domain check - allows ALL pages on the platform
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, res: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const prof = this.patterns.profile.exec(url);
     if (prof) {
-      res.username = prof[1];
-      res.metadata.isProfile = true;
-      res.metadata.contentType = 'profile';
-      return;
+      return {
+        username: prof[1],
+        metadata: {
+          isProfile: true,
+          contentType: 'profile',
+        },
+      };
     }
     const tr = this.patterns.content?.track?.exec(url);
     if (tr) {
-      res.username = tr[1];
-      res.ids.trackSlug = tr[2];
-      res.metadata.isSingle = true;
-      res.metadata.contentType = 'track';
+      return {
+        username: tr[1],
+        ids: { trackSlug: tr[2] },
+        metadata: {
+          isTrack: true,
+          isSingle: true,
+          contentType: 'track',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {
