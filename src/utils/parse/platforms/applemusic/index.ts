@@ -20,8 +20,8 @@ const domains = [
 ];
 
 // Common regex parts
-const MUSIC_DOMAIN_PATTERN = '^https?://(?:www\\.)?(?:embed\\.)?music\\.apple\\.com';
-const PODCASTS_DOMAIN_PATTERN = '^https?://(?:www\\.)?(?:embed\\.)?podcasts\\.apple\\.com';
+const MUSIC_DOMAIN_PATTERN = '^(?:https?://)?(?:www\\.)?(?:embed\\.)?music\\.apple\\.com';
+const PODCASTS_DOMAIN_PATTERN = '^(?:https?://)?(?:www\\.)?(?:embed\\.)?podcasts\\.apple\\.com';
 const LOCALE_GROUP = '(?:(?<locale>[a-z]{2}(?:-[a-z]{2})?)/)?';
 const NAME_GROUP = '(?<name>[^/]+)';
 
@@ -33,14 +33,14 @@ export const applemusic: PlatformModule = {
   domains: domains,
 
   domainsRegexp: new RegExp(
-    `^(?:https?://)?(?:www\\.)?(?:(?:music|podcasts)\\.apple\\.com|embed\\.(?:music\\.|podcasts\\.)?apple\\.com)`,
+    `^(?:https?://)?(?:www\\.)?(?:music\\.apple\\.com|embed\\.music\\.apple\\.com|podcasts\\.apple\\.com|embed\\.podcasts\\.apple\\.com)`,
     'i',
   ),
 
   patterns: {
     // Keep simple handle pattern for validation
     profile: new RegExp(
-      `^https?://(music|podcasts)\\.apple\\.com/(?:(\\w{2})/)?(album|artist|playlist|song|station|podcast)/[^/]+/([a-zA-Z0-9.-]+)/?${QUERY_HASH}$`,
+      `^(?:https?://)?(music|podcasts)\\.apple\\.com/(?:(\\w{2})/)?(album|artist|playlist|song|station|podcast)/[^/]+/([a-zA-Z0-9.-]+)/?${QUERY_HASH}$`,
       'i',
     ),
     handle: /^\d+$/, // artist id
@@ -82,8 +82,13 @@ export const applemusic: PlatformModule = {
   },
 
   detect(url: string): boolean {
+    // Use domainsRegexp if available (supports protocol-less URLs)
+    if (this.domainsRegexp) {
+      return this.domainsRegexp.test(url);
+    }
+    // Fallback to simple domain check
     const urlLower = url.toLowerCase();
-    return this.domains.some(domain => urlLower.includes(domain));
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
   extract(url: string): ExtractedData | null {

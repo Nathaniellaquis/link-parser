@@ -43,6 +43,7 @@ export const gofundme: PlatformModule = {
       return {
         ids: { campaignSlug: camp[1] },
         metadata: {
+          isCampaign: true,
           contentType: 'campaign',
         },
       };
@@ -52,7 +53,7 @@ export const gofundme: PlatformModule = {
       return {
         username: user[1],
         metadata: {
-          isProfile: true,
+          isUser: true,
           contentType: 'user',
         },
       };

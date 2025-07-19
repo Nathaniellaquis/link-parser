@@ -41,6 +41,7 @@ export const clubhouse: PlatformModule = {
       return {
         ids: { clubName: clubMatch[1] },
         metadata: {
+          isClub: true,
           contentType: 'club',
         },
       };
