@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -34,39 +34,49 @@ export const audiomack: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some((domain) => url.includes(domain))) return false;
-    return (
-      this.patterns.profile.test(url) ||
-      !!this.patterns.content?.song?.test(url) ||
-      !!this.patterns.content?.album?.test(url)
-    );
+    // Simple domain check - allows ALL pages on the platform
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, res: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const prof = this.patterns.profile.exec(url);
     if (prof) {
-      res.username = prof[1];
-      res.metadata.isProfile = true;
-      res.metadata.contentType = 'artist';
-      return;
+      return {
+        username: prof[1],
+        metadata: {
+          isProfile: true,
+          isArtist: true,
+          contentType: 'artist',
+        },
+      };
     }
 
     const song = this.patterns.content?.song?.exec(url);
     if (song) {
-      res.username = song[1];
-      res.ids.trackSlug = song[2];
-      res.metadata.isSingle = true;
-      res.metadata.contentType = 'track';
-      return;
+      return {
+        username: song[1],
+        ids: { trackSlug: song[2] },
+        metadata: {
+          isTrack: true,
+          isSingle: true,
+          contentType: 'track',
+        },
+      };
     }
 
     const album = this.patterns.content?.album?.exec(url);
     if (album) {
-      res.username = album[1];
-      res.ids.albumSlug = album[2];
-      res.metadata.isAlbum = true;
-      res.metadata.contentType = 'album';
+      return {
+        username: album[1],
+        ids: { albumSlug: album[2] },
+        metadata: {
+          isAlbum: true,
+          contentType: 'album',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {

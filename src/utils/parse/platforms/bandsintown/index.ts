@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -29,20 +29,28 @@ export const bandsintown: PlatformModule = {
     return this.patterns.profile.test(url) || !!this.patterns.content?.event?.test(url);
   },
 
-  extract(url: string, res: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const ev = this.patterns.content?.event?.exec(url);
     if (ev) {
-      res.ids.eventId = ev[1];
-      res.metadata.isEvent = true;
-      res.metadata.contentType = 'event';
-      return;
+      return {
+        ids: { eventId: ev[1] },
+        metadata: {
+          isEvent: true,
+          contentType: 'event',
+        },
+      };
     }
     const art = this.patterns.profile.exec(url);
     if (art) {
-      res.ids.artistId = art[1];
-      res.metadata.isArtist = true;
-      res.metadata.contentType = 'artist';
+      return {
+        ids: { artistId: art[1] },
+        metadata: {
+          isArtist: true,
+          contentType: 'artist',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {

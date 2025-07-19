@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 // import { createDomainPattern } from '../../utils/url'
 import { QUERY_HASH } from '../../utils/constants';
@@ -39,20 +39,28 @@ export const dailymotion: PlatformModule = {
     return this.patterns.profile.test(url) || !!this.patterns.content?.video?.test(url);
   },
 
-  extract(url: string, res: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const vid = this.patterns.content?.video?.exec(url);
     if (vid) {
-      res.ids.videoId = vid[1];
-      res.metadata.isVideo = true;
-      res.metadata.contentType = 'video';
-      return;
+      return {
+        ids: { videoId: vid[1] },
+        metadata: {
+          isVideo: true,
+          contentType: 'video',
+        },
+      };
     }
     const prof = this.patterns.profile.exec(url);
     if (prof) {
-      res.username = prof[1];
-      res.metadata.isProfile = true;
-      res.metadata.contentType = 'profile';
+      return {
+        username: prof[1],
+        metadata: {
+          isProfile: true,
+          contentType: 'profile',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {

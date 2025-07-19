@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl, ExtractedData } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -103,17 +103,21 @@ export const twitter: PlatformModule = {
     return normalize(url);
   },
 
-  getEmbedInfo(url: string, parsed) {
+  getEmbedInfo(url: string) {
     if (url.includes('twitframe.com')) {
       return { embedUrl: url, isEmbedAlready: true };
     }
-    if (parsed.ids.tweetId) {
-      const tweetUrl = this.buildContentUrl
-        ? this.buildContentUrl('post', parsed.ids.tweetId)
-        : `https://x.com/i/status/${parsed.ids.tweetId}`;
-      const embedUrl = `https://twitframe.com/show?url=${encodeURIComponent(tweetUrl)}`;
-      return { embedUrl, type: 'iframe' };
+
+    // Extract data to get tweet ID
+    const extractedData = this.extract(url);
+    if (!extractedData || !extractedData.ids || !extractedData.ids.tweetId) {
+      return null;
     }
-    return null;
+
+    const tweetUrl = this.buildContentUrl
+      ? this.buildContentUrl('post', extractedData.ids.tweetId)
+      : `https://x.com/i/status/${extractedData.ids.tweetId}`;
+    const embedUrl = `https://twitframe.com/show?url=${encodeURIComponent(tweetUrl)}`;
+    return { embedUrl, type: 'iframe' };
   },
 };

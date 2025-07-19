@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -35,25 +35,33 @@ export const flickr: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some((domain) => url.includes(domain))) return false;
-    return this.patterns.profile.test(url) || !!this.patterns.content?.photo?.test(url);
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, result: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const ph = this.patterns.content?.photo?.exec(url);
     if (ph) {
-      result.username = ph[1];
-      result.ids.photoId = ph[2];
-      result.metadata.isPhoto = true;
-      result.metadata.contentType = 'photo';
-      return;
+      return {
+        username: ph[1],
+        ids: { photoId: ph[2] },
+        metadata: {
+          isPhoto: true,
+          contentType: 'photo',
+        },
+      };
     }
     const p = this.patterns.profile.exec(url);
     if (p) {
-      result.username = p[1];
-      result.metadata.isProfile = true;
-      result.metadata.contentType = 'profile';
+      return {
+        username: p[1],
+        metadata: {
+          isProfile: true,
+          contentType: 'profile',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {

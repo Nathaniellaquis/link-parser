@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -30,25 +30,33 @@ export const vsco: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some((domain) => url.includes(domain))) return false;
-    return this.patterns.profile.test(url) || !!this.patterns.content?.image?.test(url);
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, res: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const img = this.patterns.content?.image?.exec(url);
     if (img) {
-      res.username = img[1];
-      res.ids.imageId = img[2];
-      res.metadata.isImage = true;
-      res.metadata.contentType = 'image';
-      return;
+      return {
+        username: img[1],
+        ids: { imageId: img[2] },
+        metadata: {
+          isImage: true,
+          contentType: 'image',
+        },
+      };
     }
     const prof = this.patterns.profile.exec(url);
     if (prof) {
-      res.username = prof[1];
-      res.metadata.isProfile = true;
-      res.metadata.contentType = 'profile';
+      return {
+        username: prof[1],
+        metadata: {
+          isProfile: true,
+          contentType: 'profile',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {

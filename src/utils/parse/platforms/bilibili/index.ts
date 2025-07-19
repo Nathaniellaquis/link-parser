@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -8,7 +8,7 @@ const domains = ['bilibili.com'];
 const subdomains = ['m', 'space'];
 
 // Create the domain pattern using the config values
-// @ts-ignore - DOMAIN_PATTERN kept for architectural consistency
+// @ts-expect-error - DOMAIN_PATTERN kept for architectural consistency
 const DOMAIN_PATTERN = createDomainPattern(domains, subdomains);
 
 export const bilibili: PlatformModule = {
@@ -43,27 +43,38 @@ export const bilibili: PlatformModule = {
     );
   },
 
-  extract(url: string, result: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const bv = this.patterns.content?.videoBV?.exec(url);
     if (bv) {
-      result.ids.videoId = bv[1];
-      result.metadata.isVideo = true;
-      result.metadata.contentType = 'video';
-      return;
+      return {
+        ids: { videoId: bv[1] },
+        metadata: {
+          isVideo: true,
+          contentType: 'video',
+        },
+      };
     }
     const av = this.patterns.content?.videoAv?.exec(url);
     if (av) {
-      result.ids.videoId = `av${av[1]}`;
-      result.metadata.isVideo = true;
-      result.metadata.contentType = 'video';
-      return;
+      return {
+        ids: { videoId: `av${av[1]}` },
+        metadata: {
+          isVideo: true,
+          contentType: 'video',
+        },
+      };
     }
     const prof = this.patterns.profile.exec(url);
     if (prof) {
-      result.userId = prof[1];
-      result.metadata.isProfile = true;
-      result.metadata.contentType = 'profile';
+      return {
+        userId: prof[1],
+        metadata: {
+          isProfile: true,
+          contentType: 'profile',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {

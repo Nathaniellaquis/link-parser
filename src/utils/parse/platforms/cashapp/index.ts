@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -50,34 +50,45 @@ export const cashapp: PlatformModule = {
     return false;
   },
 
-  extract(url: string, res: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     // Payment path - no amount capture
     const payPath = this.patterns.content?.payment?.exec(url);
     if (payPath) {
-      res.username = payPath[1];
-      // No amount capture for path pattern
-      res.metadata.isPayment = true;
-      res.metadata.contentType = 'payment';
-      return;
+      return {
+        username: payPath[1],
+        // No amount capture for path pattern
+        metadata: {
+          isPayment: true,
+          contentType: 'payment',
+        },
+      };
     }
 
     // Amount query - captures amount
     const payQuery = this.patterns.content?.amountQuery?.exec(url);
     if (payQuery) {
-      res.username = payQuery[1];
-      res.ids.amount = payQuery[2];
-      res.metadata.isPayment = true;
-      res.metadata.contentType = 'payment';
-      return;
+      return {
+        username: payQuery[1],
+        ids: { amount: payQuery[2] },
+        metadata: {
+          isPayment: true,
+          contentType: 'payment',
+        },
+      };
     }
 
     // Profile
     const prof = this.patterns.profile.exec(url);
     if (prof) {
-      res.username = prof[1];
-      res.metadata.isProfile = true;
-      res.metadata.contentType = 'profile';
+      return {
+        username: prof[1],
+        metadata: {
+          isProfile: true,
+          contentType: 'profile',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {

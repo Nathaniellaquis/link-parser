@@ -31,7 +31,7 @@ export function parse(url: string): ParsedUrl {
   };
 
   // Try each platform
-  for (const [_, module] of registry) {
+  for (const [, module] of registry) {
     if (module.detect(processedUrl)) {
       result.platform = module.id;
       result.platformName = module.name;
@@ -55,7 +55,7 @@ export function parse(url: string): ParsedUrl {
 
         // Extract embed data if the platform supports it
         if (module.getEmbedInfo) {
-          const embedInfo = module.getEmbedInfo(processedUrl, result);
+          const embedInfo = module.getEmbedInfo(processedUrl);
           if (embedInfo) {
             result.embedData = {
               platform: module.id,

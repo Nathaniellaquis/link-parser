@@ -236,7 +236,7 @@ describe('Apple Music platform tests', () => {
       ];
 
       testCases.forEach(({ input, expected }) => {
-        const embedInfo = mod.getEmbedInfo!(input, {} as any);
+        const embedInfo = mod.getEmbedInfo!(input);
         expect(embedInfo).toEqual({
           embedUrl: expected,
           type: 'iframe',
@@ -258,7 +258,7 @@ describe('Apple Music platform tests', () => {
       ];
 
       testCases.forEach(({ input, expected }) => {
-        const embedInfo = mod.getEmbedInfo!(input, {} as any);
+        const embedInfo = mod.getEmbedInfo!(input);
         expect(embedInfo).toEqual({
           embedUrl: expected,
           type: 'iframe',
@@ -276,7 +276,7 @@ describe('Apple Music platform tests', () => {
       ];
 
       testCases.forEach((url) => {
-        const embedInfo = mod.getEmbedInfo!(url, {} as any);
+        const embedInfo = mod.getEmbedInfo!(url);
         expect(embedInfo).toEqual({
           embedUrl: url,
           isEmbedAlready: true,
@@ -293,7 +293,7 @@ describe('Apple Music platform tests', () => {
       ];
 
       testCases.forEach((url) => {
-        const embedInfo = mod.getEmbedInfo!(url, {} as any);
+        const embedInfo = mod.getEmbedInfo!(url);
         expect(embedInfo).toBeNull();
       });
     });
@@ -304,7 +304,7 @@ describe('Apple Music platform tests', () => {
       const expected =
         'https://embed.music.apple.com/us/artist/taylor-swift/159260351?utm_source=twitter&fbclid=abc123&theme=auto';
 
-      const embedInfo = mod.getEmbedInfo!(input, {} as any);
+      const embedInfo = mod.getEmbedInfo!(input);
       expect(embedInfo).toEqual({
         embedUrl: expected,
         type: 'iframe',

@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -27,24 +27,32 @@ export const dispo: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some((domain) => url.includes(domain))) return false;
-    return this.patterns.profile.test(url) || !!this.patterns.content?.roll?.test(url);
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, res: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const roll = this.patterns.content?.roll?.exec(url);
     if (roll) {
-      res.ids.rollId = roll[1];
-      res.metadata.isRoll = true;
-      res.metadata.contentType = 'roll';
-      return;
+      return {
+        ids: { rollId: roll[1] },
+        metadata: {
+          isRoll: true,
+          contentType: 'roll',
+        },
+      };
     }
     const prof = this.patterns.profile.exec(url);
     if (prof) {
-      res.username = prof[1];
-      res.metadata.isProfile = true;
-      res.metadata.contentType = 'profile';
+      return {
+        username: prof[1],
+        metadata: {
+          isProfile: true,
+          contentType: 'profile',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {

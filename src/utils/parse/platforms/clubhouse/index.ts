@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -31,35 +31,41 @@ export const clubhouse: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some((domain) => url.includes(domain))) return false;
-    return (
-      this.patterns.profile.test(url) ||
-      !!this.patterns.content?.club?.test(url) ||
-      !!this.patterns.content?.event?.test(url)
-    );
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, res: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const clubMatch = this.patterns.content?.club?.exec(url);
     if (clubMatch) {
-      res.ids.clubName = clubMatch[1];
-      res.metadata.isClub = true;
-      res.metadata.contentType = 'club';
-      return;
+      return {
+        ids: { clubName: clubMatch[1] },
+        metadata: {
+          contentType: 'club',
+        },
+      };
     }
     const eventMatch = this.patterns.content?.event?.exec(url);
     if (eventMatch) {
-      res.ids.eventId = eventMatch[1];
-      res.metadata.isEvent = true;
-      res.metadata.contentType = 'event';
-      return;
+      return {
+        ids: { eventId: eventMatch[1] },
+        metadata: {
+          isEvent: true,
+          contentType: 'event',
+        },
+      };
     }
     const prof = this.patterns.profile.exec(url);
     if (prof) {
-      res.username = prof[1];
-      res.metadata.isProfile = true;
-      res.metadata.contentType = 'profile';
+      return {
+        username: prof[1],
+        metadata: {
+          isProfile: true,
+          contentType: 'profile',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {

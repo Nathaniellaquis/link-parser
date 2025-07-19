@@ -1,7 +1,7 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 
-const DIGIT_RE = /\+?[0-9 ()\-\.]{5,}/;
+const DIGIT_RE = /\+?[0-9 ().-]{5,}/;
 
 export const phone: PlatformModule = {
   id: Platforms.Phone,
@@ -18,17 +18,22 @@ export const phone: PlatformModule = {
     return !!pn;
   },
 
-  extract(raw: string, res: ParsedUrl): void {
-    let num = raw.startsWith('tel:') ? raw.slice(4) : raw;
+  extract(raw: string): ExtractedData | null {
+    const num = raw.startsWith('tel:') ? raw.slice(4) : raw;
     const pn = parsePhoneNumberFromString(num);
     if (pn) {
-      res.userId = pn.number;
-      res.metadata.phoneNumber = pn.formatInternational();
       const country = pn.country || (pn.countryCallingCode === '1' ? 'US' : '');
-      res.metadata.phoneCountry = country;
-      res.metadata.isProfile = true;
-      res.metadata.contentType = 'phone';
+      return {
+        userId: pn.number,
+        metadata: {
+          phoneNumber: pn.formatInternational(),
+          phoneCountry: country,
+          isProfile: true,
+          contentType: 'phone',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {

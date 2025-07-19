@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl, ExtractedData } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -132,15 +132,19 @@ export const tiktok: PlatformModule = {
     return shortUrl;
   },
 
-  getEmbedInfo(url: string, parsed) {
+  getEmbedInfo(url: string) {
     if (/tiktok\.com\/embed\//.test(url)) {
       return { embedUrl: url, isEmbedAlready: true };
     }
-    const id = parsed.ids.videoId;
-    if (id) {
-      const embedUrl = `https://www.tiktok.com/embed/v2/${id}`;
-      return { embedUrl, type: 'iframe' };
+
+    // Extract data to get video ID
+    const extractedData = this.extract(url);
+    if (!extractedData || !extractedData.ids || !extractedData.ids.videoId) {
+      return null;
     }
-    return null;
+
+    const id = extractedData.ids.videoId;
+    const embedUrl = `https://www.tiktok.com/embed/v2/${id}`;
+    return { embedUrl, type: 'iframe' };
   },
 };

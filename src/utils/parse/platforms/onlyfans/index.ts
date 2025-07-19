@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -23,17 +23,25 @@ export const onlyfans: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some((domain) => url.includes(domain))) return false;
-    return this.patterns.profile.test(url);
+    // Simple domain check - allows ALL pages on the platform
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, res: ParsedUrl): void {
-    const m = this.patterns.profile.exec(url);
-    if (m) {
-      res.username = m[1];
-      res.metadata.isProfile = true;
-      res.metadata.contentType = 'profile';
+  extract(url: string): ExtractedData | null {
+    // Handle profile URLs
+    const profileMatch = this.patterns.profile.exec(url);
+    if (profileMatch) {
+      return {
+        username: profileMatch[1],
+        metadata: {
+          isProfile: true,
+          contentType: 'profile',
+        },
+      };
     }
+
+    return null;
   },
 
   validateHandle(h: string): boolean {

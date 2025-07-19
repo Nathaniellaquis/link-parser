@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -39,35 +39,45 @@ export const beatport: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some((domain) => url.includes(domain))) return false;
-    return (
-      this.patterns.profile.test(url) ||
-      !!this.patterns.content?.track?.test(url) ||
-      !!this.patterns.content?.release?.test(url)
-    );
+    // Simple domain check - allows ALL pages on the platform
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, result: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const tr = this.patterns.content?.track?.exec(url);
     if (tr) {
-      result.ids.trackId = tr[2];
-      result.metadata.isAudio = true;
-      result.metadata.contentType = 'track';
-      return;
+      return {
+        ids: { trackId: tr[2] },
+        metadata: {
+          isTrack: true,
+          isAudio: true,
+          contentType: 'track',
+        },
+      };
     }
     const rel = this.patterns.content?.release?.exec(url);
     if (rel) {
-      result.ids.releaseId = rel[2];
-      result.metadata.contentType = 'release';
-      return;
+      return {
+        ids: { releaseId: rel[2] },
+        metadata: {
+          contentType: 'release',
+        },
+      };
     }
     const ar = this.patterns.profile.exec(url);
     if (ar) {
-      result.username = ar[1];
-      result.userId = ar[2];
-      result.metadata.isProfile = true;
-      result.metadata.contentType = 'profile';
+      return {
+        username: ar[1],
+        userId: ar[2],
+        metadata: {
+          isProfile: true,
+          isArtist: true,
+          contentType: 'profile',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {

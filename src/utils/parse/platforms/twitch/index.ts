@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl, ExtractedData } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';

@@ -190,13 +190,11 @@ export interface PlatformModule {
   resolveShortUrl?(shortUrl: string): Promise<string>;
 
   /**
-   * Return canonical embed information for a parsed URL. If the passed URL is already an
+   * Return canonical embed information for a URL. If the passed URL is already an
    * embed iframe src, return data with isEmbedAlready = true so the caller can flag it.
+   * This method should be self-contained and extract any data it needs internally.
    */
-  getEmbedInfo?(
-    url: string,
-    parsed: ParsedUrl,
-  ): {
+  getEmbedInfo?(url: string): {
     embedUrl: string;
     type?: string;
     options?: Record<string, any>;
@@ -292,6 +290,10 @@ export interface ExtractedData {
     isStream?: boolean;
     isLive?: boolean;
     isCheckout?: boolean;
+    isSong?: boolean;
+    isStation?: boolean;
+    isPodcast?: boolean;
+    isPodcastEpisode?: boolean;
     contentType?: string;
     [key: string]: any;
   };

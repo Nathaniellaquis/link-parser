@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -30,24 +30,37 @@ export const cameo: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some((domain) => url.includes(domain))) return false;
-    return this.patterns.profile.test(url) || !!this.patterns.content?.category?.test(url);
+    // Simple domain check - allows ALL pages on the platform
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, res: ParsedUrl): void {
-    const cat = this.patterns.content?.category?.exec(url);
-    if (cat) {
-      res.username = cat[1];
-      res.metadata.isCategory = true;
-      res.metadata.contentType = 'category';
-      return;
+  extract(url: string): ExtractedData | null {
+    // Handle category URLs
+    const categoryMatch = this.patterns.content?.category?.exec(url);
+    if (categoryMatch) {
+      return {
+        username: categoryMatch[1],
+        metadata: {
+          isCategory: true,
+          contentType: 'category',
+        },
+      };
     }
-    const prof = this.patterns.profile.exec(url);
-    if (prof) {
-      res.username = prof[1];
-      res.metadata.isProfile = true;
-      res.metadata.contentType = 'profile';
+
+    // Handle profile URLs
+    const profileMatch = this.patterns.profile.exec(url);
+    if (profileMatch) {
+      return {
+        username: profileMatch[1],
+        metadata: {
+          isProfile: true,
+          contentType: 'profile',
+        },
+      };
     }
+
+    return null;
   },
 
   validateHandle(handle: string): boolean {

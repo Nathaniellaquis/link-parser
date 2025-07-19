@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 // import { createDomainPattern } from '../../utils/url'
 import { QUERY_HASH } from '../../utils/constants';
@@ -32,16 +32,25 @@ export const squarecheckout: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some((domain) => url.includes(domain))) return false;
-    return !!this.patterns.content?.pay?.test(url);
+    // Simple domain check - allows ALL pages on the platform
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, result: ParsedUrl): void {
-    const m = this.patterns.content?.pay?.exec(url);
-    if (m) {
-      result.ids.code = m[1];
-      result.metadata.contentType = 'payment';
+  extract(url: string): ExtractedData | null {
+    // Handle pay URLs
+    const payMatch = this.patterns.content?.pay?.exec(url);
+    if (payMatch) {
+      return {
+        ids: { code: payMatch[1] },
+        metadata: {
+          isCheckout: true,
+          contentType: 'payment',
+        },
+      };
     }
+
+    return null;
   },
 
   validateHandle(): boolean {

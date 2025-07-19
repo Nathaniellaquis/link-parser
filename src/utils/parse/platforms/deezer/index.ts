@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -43,43 +43,55 @@ export const deezer: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some((domain) => url.includes(domain))) return false;
-    return (
-      this.patterns.profile.test(url) ||
-      !!this.patterns.content?.album?.test(url) ||
-      !!this.patterns.content?.track?.test(url) ||
-      !!this.patterns.content?.playlist?.test(url)
-    );
+    // Simple domain check - allows ALL pages on the platform
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, res: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const artist = this.patterns.profile.exec(url);
     if (artist) {
-      res.ids.artistId = artist[1];
-      res.metadata.contentType = 'artist';
-      res.metadata.isProfile = true;
-      return;
+      return {
+        ids: { artistId: artist[1] },
+        metadata: {
+          contentType: 'artist',
+          isProfile: true,
+          isArtist: true,
+        },
+      };
     }
     const alb = this.patterns.content?.album?.exec(url);
     if (alb) {
-      res.ids.albumId = alb[1];
-      res.metadata.contentType = 'album';
-      res.metadata.isAlbum = true;
-      return;
+      return {
+        ids: { albumId: alb[1] },
+        metadata: {
+          contentType: 'album',
+          isAlbum: true,
+        },
+      };
     }
     const tr = this.patterns.content?.track?.exec(url);
     if (tr) {
-      res.ids.trackId = tr[1];
-      res.metadata.contentType = 'track';
-      res.metadata.isSingle = true;
-      return;
+      return {
+        ids: { trackId: tr[1] },
+        metadata: {
+          contentType: 'track',
+          isTrack: true,
+          isSingle: true,
+        },
+      };
     }
     const pl = this.patterns.content?.playlist?.exec(url);
     if (pl) {
-      res.ids.playlistId = pl[1];
-      res.metadata.contentType = 'playlist';
-      res.metadata.isPlaylist = true;
+      return {
+        ids: { playlistId: pl[1] },
+        metadata: {
+          contentType: 'playlist',
+          isPlaylist: true,
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {

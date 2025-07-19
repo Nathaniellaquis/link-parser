@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -31,20 +31,28 @@ export const stereo: PlatformModule = {
     return this.patterns.profile.test(url) || !!this.patterns.content?.show?.test(url);
   },
 
-  extract(url: string, res: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const show = this.patterns.content?.show?.exec(url);
     if (show) {
-      res.ids.showId = show[1];
-      res.metadata.isShow = true;
-      res.metadata.contentType = 'show';
-      return;
+      return {
+        ids: { showId: show[1] },
+        metadata: {
+          isShow: true,
+          contentType: 'show',
+        },
+      };
     }
     const prof = this.patterns.profile.exec(url);
     if (prof) {
-      res.username = prof[1];
-      res.metadata.isProfile = true;
-      res.metadata.contentType = 'profile';
+      return {
+        username: prof[1],
+        metadata: {
+          isProfile: true,
+          contentType: 'profile',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {

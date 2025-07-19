@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize, getUrlSafe } from '../../utils/url';
 // import { createDomainPattern } from '../../utils/url'
 import { QUERY_HASH } from '../../utils/constants';
@@ -22,8 +22,8 @@ const domains = [
 // Common regex parts
 const MUSIC_DOMAIN_PATTERN = '^https?://(?:www\\.)?(?:embed\\.)?music\\.apple\\.com';
 const PODCASTS_DOMAIN_PATTERN = '^https?://(?:www\\.)?(?:embed\\.)?podcasts\\.apple\\.com';
-const LOCALE_GROUP = '(?:(?<locale>[a-z]{2}(?:-[a-z]{2})?)\/)?';
-const NAME_GROUP = '(?<name>[^\/]+)';
+const LOCALE_GROUP = '(?:(?<locale>[a-z]{2}(?:-[a-z]{2})?)/)?';
+const NAME_GROUP = '(?<name>[^/]+)';
 
 export const applemusic: PlatformModule = {
   id: Platforms.AppleMusic,
@@ -40,7 +40,7 @@ export const applemusic: PlatformModule = {
   patterns: {
     // Keep simple handle pattern for validation
     profile: new RegExp(
-      `^https?://(music|podcasts)\\.apple\\.com/(?:(\w{2})/)?(album|artist|playlist|song|station|podcast)/[^/]+/([a-zA-Z0-9.-]+)/?${QUERY_HASH}$`,
+      `^https?://(music|podcasts)\\.apple\\.com/(?:(\\w{2})/)?(album|artist|playlist|song|station|podcast)/[^/]+/([a-zA-Z0-9.-]+)/?${QUERY_HASH}$`,
       'i',
     ),
     handle: /^\d+$/, // artist id
@@ -82,16 +82,17 @@ export const applemusic: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    return this.domainsRegexp!.test(url);
+    const urlLower = url.toLowerCase();
+    return this.domains.some(domain => urlLower.includes(domain));
   },
 
-  extract(url: string, res: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const urlObj = getUrlSafe(url);
-    if (!urlObj) return;
+    if (!urlObj) return null;
 
     // Try each content pattern until one matches
     const contentPatterns = this.patterns.content;
-    if (!contentPatterns) return;
+    if (!contentPatterns) return null;
 
     let matchResult: { contentType: string; match: RegExpMatchArray } | null = null;
 
@@ -105,59 +106,62 @@ export const applemusic: PlatformModule = {
       }
     }
 
-    if (!matchResult) return;
+    if (!matchResult) return null;
 
     const { contentType, match } = matchResult;
     const groups = match.groups!;
 
-    // Set content type and appropriate metadata
-    res.metadata.contentType = contentType;
-
-    // Extract locale if available
-    if (groups.locale) {
-      res.metadata.locale = groups.locale;
-    }
+    const extractedData: ExtractedData = {
+      metadata: {
+        contentType,
+      },
+    };
 
     // Set content ID and metadata based on content type
     switch (contentType) {
       case 'artist':
-        res.ids.artistId = groups.artistId;
-        res.metadata.isProfile = true;
+        extractedData.ids = { artistId: groups.artistId };
+        extractedData.metadata!.isProfile = true;
+        extractedData.metadata!.isArtist = true;
         break;
       case 'album':
-        res.ids.albumId = groups.albumId;
-        res.metadata.isAlbum = true;
+        extractedData.ids = { albumId: groups.albumId };
+        extractedData.metadata!.isAlbum = true;
         break;
       case 'playlist':
-        res.ids.playlistId = groups.playlistId;
-        res.metadata.isPlaylist = true;
+        extractedData.ids = { playlistId: groups.playlistId };
+        extractedData.metadata!.isPlaylist = true;
         break;
       case 'song':
-        res.ids.songId = groups.songId;
-        res.metadata.isSong = true;
+        extractedData.ids = { songId: groups.songId };
+        extractedData.metadata!.isSong = true;
+        extractedData.metadata!.isTrack = true;
         break;
       case 'track':
-        res.ids.albumId = groups.albumId;
-        res.ids.trackId = groups.trackId;
-        res.metadata.isTrack = true;
+        extractedData.ids = {
+          albumId: groups.albumId,
+          trackId: groups.trackId,
+        };
+        extractedData.metadata!.isTrack = true;
         break;
       case 'station':
-        res.ids.stationId = groups.stationId;
-        res.metadata.isStation = true;
+        extractedData.ids = { stationId: groups.stationId };
+        extractedData.metadata!.isStation = true;
         break;
       case 'podcast':
-        res.ids.podcastId = groups.podcastId;
-        res.metadata.isPodcast = true;
+        extractedData.ids = { podcastId: groups.podcastId };
+        extractedData.metadata!.isPodcast = true;
         break;
       case 'podcastEpisode':
-        res.ids.podcastId = groups.podcastId;
-        res.ids.episodeId = groups.episodeId;
-        res.metadata.isPodcastEpisode = true;
+        extractedData.ids = {
+          podcastId: groups.podcastId,
+          episodeId: groups.episodeId,
+        };
+        extractedData.metadata!.isPodcastEpisode = true;
         break;
     }
 
-    // Set domain
-    res.metadata.domain = urlObj.hostname;
+    return extractedData;
   },
 
   validateHandle(handle: string): boolean {
@@ -179,25 +183,16 @@ export const applemusic: PlatformModule = {
       return { embedUrl: url, isEmbedAlready: true };
     }
 
-    // Parse the URL internally
-    const result: ParsedUrl = {
-      isValid: false,
-      originalUrl: url,
-      normalizedUrl: url,
-      platform: null,
-      ids: {},
-      metadata: {},
-    };
-
-    this.extract(url, result);
-
-    if (!result.metadata.contentType) {
+    // Use the extract method to get content type
+    const extractedData = this.extract(url);
+    if (!extractedData || !extractedData.metadata?.contentType) {
       return null;
     }
 
     // Determine target domain based on content type
     const targetDomain =
-      result.metadata.contentType === 'podcast' || result.metadata.contentType === 'podcastEpisode'
+      extractedData.metadata.contentType === 'podcast' ||
+      extractedData.metadata.contentType === 'podcastEpisode'
         ? 'embed.podcasts.apple.com'
         : 'embed.music.apple.com';
 

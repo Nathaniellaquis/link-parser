@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -33,31 +33,41 @@ export const pandora: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some((domain) => url.includes(domain))) return false;
-    return this.patterns.profile.test(url) || !!this.patterns.content?.station?.test(url);
+    // Simple domain check - allows ALL pages on the platform
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, res: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const station = this.patterns.content?.station?.exec(url);
     if (station) {
-      res.ids.stationId = station[1];
-      res.metadata.isStation = true;
-      res.metadata.contentType = 'station';
-      return;
+      return {
+        ids: { stationId: station[1] },
+        metadata: {
+          isStation: true,
+          contentType: 'station',
+        },
+      };
     }
 
     const prof = this.patterns.profile.exec(url);
     if (prof) {
       // prof[1] = 'artist' or 'podcast', prof[2] = slug
-      res.username = prof[2];
+      const metadata: any = {};
       if (prof[1] === 'artist') {
-        res.metadata.isArtist = true;
-        res.metadata.contentType = 'artist';
+        metadata.isArtist = true;
+        metadata.isProfile = true;
+        metadata.contentType = 'artist';
       } else if (prof[1] === 'podcast') {
-        res.metadata.isPodcast = true;
-        res.metadata.contentType = 'podcast';
+        metadata.isPodcast = true;
+        metadata.contentType = 'podcast';
       }
+      return {
+        username: prof[2],
+        metadata,
+      };
     }
+    return null;
   },
 
   validateHandle(handle: string): boolean {

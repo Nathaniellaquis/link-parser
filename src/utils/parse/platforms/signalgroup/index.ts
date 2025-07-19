@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -27,16 +27,22 @@ export const signalgroup: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some((domain) => url.includes(domain))) return false;
-    return !!this.patterns.content?.group?.test(url);
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, result: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const m = this.patterns.content?.group?.exec(url);
     if (m) {
-      result.ids.groupCode = m[1];
-      result.metadata.contentType = 'group';
+      return {
+        ids: { groupCode: m[1] },
+        metadata: {
+          isGroup: true,
+          contentType: 'group',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(): boolean {

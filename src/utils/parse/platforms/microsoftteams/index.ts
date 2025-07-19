@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 // import { createDomainPattern } from '../../utils/url'
 import { QUERY_HASH } from '../../utils/constants';
@@ -33,23 +33,33 @@ export const microsoftteams: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some((domain) => url.includes(domain))) return false;
-    return !!this.patterns.content?.team?.test(url) || !!this.patterns.content?.meeting?.test(url);
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, result: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const t = this.patterns.content?.team?.exec(url);
     if (t) {
-      result.ids.teamId = t[1];
-      result.ids.groupId = t[2];
-      result.metadata.contentType = 'team';
-      return;
+      return {
+        ids: {
+          teamId: t[1],
+          groupId: t[2],
+        },
+        metadata: {
+          contentType: 'team',
+        },
+      };
     }
     const m = this.patterns.content?.meeting?.exec(url);
     if (m) {
-      result.ids.meetingId = m[1];
-      result.metadata.contentType = 'meeting';
+      return {
+        ids: { meetingId: m[1] },
+        metadata: {
+          contentType: 'meeting',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(): boolean {

@@ -1,4 +1,4 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types';
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
@@ -30,16 +30,22 @@ export const slackinvite: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    if (!this.domains.some((domain) => url.includes(domain))) return false;
-    return !!this.patterns.content?.invite?.test(url);
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, result: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     const m = this.patterns.content?.invite?.exec(url);
     if (m) {
-      result.ids.workspace = m[1];
-      result.metadata.contentType = 'invite';
+      return {
+        ids: { workspace: m[1] },
+        metadata: {
+          isInvite: true,
+          contentType: 'invite',
+        },
+      };
     }
+    return null;
   },
 
   validateHandle(): boolean {
