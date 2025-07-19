@@ -1,6 +1,6 @@
 {
   "name": "social-link-parser",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Extract usernames, IDs, and metadata from social media URLs across 100+ platforms",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
