@@ -145,11 +145,6 @@ export const applemusic: PlatformModule = {
     },
 
     getEmbedInfo(url: string) {
-        // Check if already embed
-        if (url.includes('embed.music.apple.com') || url.includes('embed.podcasts.apple.com')) {
-            return { embedUrl: url, isEmbedAlready: true }
-        }
-        
         // Parse the URL internally
         const result: ParsedUrl = {
             isValid: false,
@@ -159,9 +154,9 @@ export const applemusic: PlatformModule = {
             ids: {},
             metadata: {}
         }
-        
+
         this.extract(url, result)
-        
+
         if (!result.metadata.contentType) {
             return null
         }
@@ -173,6 +168,6 @@ export const applemusic: PlatformModule = {
         
         // Generate embed URL using the provided function
         const embedUrl = getAppleMusicEmbedUrl(targetDomain, url)
-        return { embedUrl, type: 'iframe' }
+        return { embedUrl, type: 'iframe', contentType: result.metadata.contentType }
     }
 } 
