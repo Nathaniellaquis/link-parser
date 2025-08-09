@@ -7,27 +7,23 @@ const mod = registry.get(id)!;
 
 describe('TikTok platform tests', () => {
   const samples = {
-    profileHandle: "https://tiktok.com/@sampleuser",
-    video: "https://tiktok.com/@sampleuser/video/1234567890123456789",
-    live: "https://tiktok.com/@sampleuser/live",
-    embed: "https://tiktok.com/embed/v2/1234567890123456789"
+    profileHandle: 'https://tiktok.com/@sampleuser',
+    video: 'https://tiktok.com/@sampleuser/video/1234567890123456789',
+    live: 'https://tiktok.com/@sampleuser/live',
+    embed: 'https://tiktok.com/embed/v2/1234567890123456789',
   };
 
   describe('detection', () => {
     test('should detect all TikTok URLs', () => {
-      Object.values(samples).forEach(url => {
+      Object.values(samples).forEach((url) => {
         expect(mod.detect(url)).toBe(true);
       });
     });
 
     test('should not detect non-TikTok URLs', () => {
-      const nonPlatformUrls = [
-        'https://example.com/test',
-        'https://google.com',
-        'not-a-url',
-      ];
+      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
 
-      nonPlatformUrls.forEach(url => {
+      nonPlatformUrls.forEach((url) => {
         expect(mod.detect(url)).toBe(false);
       });
     });

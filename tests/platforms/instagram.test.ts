@@ -7,30 +7,26 @@ const mod = registry.get(id)!;
 
 describe('Instagram platform tests', () => {
   const samples = {
-    profileHandle: "https://instagram.com/sampleuser",
-    profileFull: "https://www.instagram.com/sampleuser/",
-    post: "https://instagram.com/p/ABC123DEF456",
-    reel: "https://instagram.com/reel/ABC123DEF456",
-    story: "https://instagram.com/stories/sampleuser/1234567890",
-    tv: "https://instagram.com/tv/ABC123DEF456",
-    embed: "https://instagram.com/p/ABC123DEF456/embed"
+    profileHandle: 'https://instagram.com/sampleuser',
+    profileFull: 'https://www.instagram.com/sampleuser/',
+    post: 'https://instagram.com/p/ABC123DEF456',
+    reel: 'https://instagram.com/reel/ABC123DEF456',
+    story: 'https://instagram.com/stories/sampleuser/1234567890',
+    tv: 'https://instagram.com/tv/ABC123DEF456',
+    embed: 'https://instagram.com/p/ABC123DEF456/embed',
   };
 
   describe('detection', () => {
     test('should detect all Instagram URLs', () => {
-      Object.values(samples).forEach(url => {
+      Object.values(samples).forEach((url) => {
         expect(mod.detect(url)).toBe(true);
       });
     });
 
     test('should not detect non-Instagram URLs', () => {
-      const nonPlatformUrls = [
-        'https://example.com/test',
-        'https://google.com',
-        'not-a-url',
-      ];
+      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
 
-      nonPlatformUrls.forEach(url => {
+      nonPlatformUrls.forEach((url) => {
         expect(mod.detect(url)).toBe(false);
       });
     });
@@ -144,16 +140,16 @@ describe('Instagram platform tests', () => {
   });
 
   describe('live', () => {
-    const liveUrl = 'https://instagram.com/sampleuser/live'
+    const liveUrl = 'https://instagram.com/sampleuser/live';
     test('detect', () => {
-      expect(mod.detect(liveUrl)).toBe(true)
-    })
+      expect(mod.detect(liveUrl)).toBe(true);
+    });
     test('parse', () => {
-      const r = parse(liveUrl)
-      expect(r.isValid).toBe(true)
-      expect(r.username).toBe('sampleuser')
-      expect(r.metadata.isLive).toBe(true)
-      expect(r.metadata.contentType).toBe('live')
-    })
-  })
+      const r = parse(liveUrl);
+      expect(r.isValid).toBe(true);
+      expect(r.username).toBe('sampleuser');
+      expect(r.metadata.isLive).toBe(true);
+      expect(r.metadata.contentType).toBe('live');
+    });
+  });
 });

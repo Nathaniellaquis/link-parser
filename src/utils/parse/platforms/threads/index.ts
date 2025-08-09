@@ -1,14 +1,14 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
-import { normalize } from '../../utils/url'
-import { createDomainPattern } from '../../utils/url'
-import { QUERY_HASH } from '../../utils/constants'
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
+import { normalize } from '../../utils/url';
+import { createDomainPattern } from '../../utils/url';
+import { QUERY_HASH } from '../../utils/constants';
 
 // Define the config values first
-const domains = ['threads.net']
-const subdomains: string[] = []
+const domains = ['threads.net'];
+const subdomains: string[] = [];
 
 // Create the domain pattern using the config values
-const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains);
 
 export const threads: PlatformModule = {
   id: Platforms.Threads,
@@ -18,56 +18,63 @@ export const threads: PlatformModule = {
   subdomains: subdomains,
 
   patterns: {
-    profile: new RegExp(`^https?://${DOMAIN_PATTERN}/@([a-zA-Z0-9._]{2,30})/?(?!post/)${QUERY_HASH}$`, 'i'),
+    profile: new RegExp(
+      `^https?://${DOMAIN_PATTERN}/@([a-zA-Z0-9._]{2,30})/?(?!post/)${QUERY_HASH}$`,
+      'i',
+    ),
     handle: /^@?[a-zA-Z0-9._]{2,30}$/,
     content: {
-      post: new RegExp(`^https?://${DOMAIN_PATTERN}/@([a-zA-Z0-9._]{2,30})/post/([A-Za-z0-9]{2,})/?${QUERY_HASH}$`, 'i'),
+      post: new RegExp(
+        `^https?://${DOMAIN_PATTERN}/@([a-zA-Z0-9._]{2,30})/post/([A-Za-z0-9]{2,})/?${QUERY_HASH}$`,
+        'i',
+      ),
     },
   },
 
   detect(url: string): boolean {
-    if (!domains.some((domain: string) => url.includes(domain))) return false
-
-    // Check if it matches any valid pattern
-    if (this.patterns.profile.test(url)) return true
-    if (this.patterns.content) {
-      for (const pattern of Object.values(this.patterns.content)) {
-        if (pattern && pattern.test(url)) return true
-      }
-    }
-
-    return false
+    // Simple domain check - allows ALL pages on the platform
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
   },
 
-  extract(url: string, res: ParsedUrl): void {
+  extract(url: string): ExtractedData | null {
     // Handle post URLs first
-    const postMatch = this.patterns.content?.post?.exec(url)
+    const postMatch = this.patterns.content?.post?.exec(url);
     if (postMatch) {
-      res.username = postMatch[1]
-      res.ids.postId = postMatch[2]
-      res.metadata.isPost = true
-      res.metadata.contentType = 'post'
-      return
+      return {
+        username: postMatch[1],
+        ids: { postId: postMatch[2] },
+        metadata: {
+          isPost: true,
+          contentType: 'post',
+        },
+      };
     }
 
     // Handle profile URLs
-    const profileMatch = this.patterns.profile.exec(url)
+    const profileMatch = this.patterns.profile.exec(url);
     if (profileMatch) {
-      res.username = profileMatch[1]
-      res.metadata.isProfile = true
-      res.metadata.contentType = 'profile'
+      return {
+        username: profileMatch[1],
+        metadata: {
+          isProfile: true,
+          contentType: 'profile',
+        },
+      };
     }
+
+    return null;
   },
 
   validateHandle(h: string): boolean {
-    return /^@?[a-zA-Z0-9._]{2,30}$/i.test(h)
+    return /^@?[a-zA-Z0-9._]{2,30}$/i.test(h);
   },
 
   buildProfileUrl(u: string): string {
-    return `https://threads.net/@${u.replace('@', '')}`
+    return `https://threads.net/@${u.replace('@', '')}`;
   },
 
   normalizeUrl(u: string): string {
-    return normalize(u)
+    return normalize(u);
   },
-}
+};

@@ -1,3 +1,3 @@
-export * from './core/types'
-export * from './core/parser'
-export * from './platforms'
+export * from './core/types';
+export * from './core/parser';
+export * from './platforms';

@@ -7,27 +7,23 @@ const mod = registry.get(id)!;
 
 describe('Twitch platform tests', () => {
   const samples = {
-    profile: "https://twitch.tv/sampleuser",
-    video: "https://twitch.tv/videos/1234567890",
-    clip: "https://clips.twitch.tv/SampleClipName",
-    collection: "https://twitch.tv/collections/ABC123DEF456"
+    profile: 'https://twitch.tv/sampleuser',
+    video: 'https://twitch.tv/videos/1234567890',
+    clip: 'https://clips.twitch.tv/SampleClipName',
+    collection: 'https://twitch.tv/collections/ABC123DEF456',
   };
 
   describe('detection', () => {
     test('should detect all Twitch URLs', () => {
-      Object.values(samples).forEach(url => {
+      Object.values(samples).forEach((url) => {
         expect(mod.detect(url)).toBe(true);
       });
     });
 
     test('should not detect non-Twitch URLs', () => {
-      const nonPlatformUrls = [
-        'https://example.com/test',
-        'https://google.com',
-        'not-a-url',
-      ];
+      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
 
-      nonPlatformUrls.forEach(url => {
+      nonPlatformUrls.forEach((url) => {
         expect(mod.detect(url)).toBe(false);
       });
     });

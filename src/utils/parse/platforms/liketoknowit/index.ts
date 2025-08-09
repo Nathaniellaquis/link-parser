@@ -1,66 +1,79 @@
-import { PlatformModule, Platforms, ParsedUrl } from '../../core/types'
-import { normalize } from '../../utils/url'
-import { createDomainPattern } from '../../utils/url'
-import { QUERY_HASH } from '../../utils/constants'
+import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
+import { normalize } from '../../utils/url';
+import { createDomainPattern } from '../../utils/url';
+import { QUERY_HASH } from '../../utils/constants';
 
 // Define the config values first
-const domains = ['liketoknow.it']
-const subdomains: string[] = []
+const domains = ['liketoknow.it'];
+const subdomains: string[] = [];
 
 // Create the domain pattern using the config values
-const DOMAIN_PATTERN = createDomainPattern(domains, subdomains)
+const DOMAIN_PATTERN = createDomainPattern(domains, subdomains);
 
 export const liketoknowit: PlatformModule = {
-    id: Platforms.LikeToKnowIt,
-    name: 'LikeToKnowIt',
-    color: '#000000',
+  id: Platforms.LikeToKnowIt,
+  name: 'LikeToKnowIt',
+  color: '#000000',
 
-    domains: domains,
-    subdomains: subdomains,
+  domains: domains,
+  subdomains: subdomains,
 
-    patterns: {
-        profile: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_.-]{3,40})/?${QUERY_HASH}$`, 'i'),
-        handle: /^[A-Za-z0-9_.-]{3,40}$/,
-        content: {
-            post: new RegExp(`^https?://${DOMAIN_PATTERN}/p/([A-Za-z0-9]+)/?${QUERY_HASH}$`, 'i'),
+  patterns: {
+    profile: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_.-]{3,40})/?${QUERY_HASH}$`, 'i'),
+    handle: /^[A-Za-z0-9_.-]{3,40}$/,
+    content: {
+      post: new RegExp(`^https?://${DOMAIN_PATTERN}/p/([A-Za-z0-9]+)/?${QUERY_HASH}$`, 'i'),
+    },
+  },
+
+  detect(url: string): boolean {
+    // Simple domain check - allows ALL pages on the platform
+    const urlLower = url.toLowerCase();
+    return this.domains.some((domain) => urlLower.includes(domain));
+  },
+
+  extract(url: string): ExtractedData | null {
+    // Handle post URLs
+    const postMatch = this.patterns.content?.post?.exec(url);
+    if (postMatch) {
+      return {
+        ids: { postId: postMatch[1] },
+        metadata: {
+          isPost: true,
+          contentType: 'post',
         },
-    },
+      };
+    }
 
-    detect(url: string): boolean {
-        if (!this.domains.some(domain => url.includes(domain))) return false
-        return this.patterns.profile.test(url) || !!(this.patterns.content?.post?.test(url))
-    },
+    // Handle profile URLs
+    const profileMatch = this.patterns.profile.exec(url);
+    if (profileMatch) {
+      return {
+        username: profileMatch[1],
+        metadata: {
+          isProfile: true,
+          contentType: 'profile',
+        },
+      };
+    }
 
-    extract(url: string, res: ParsedUrl): void {
-        const post = this.patterns.content?.post?.exec(url)
-        if (post) {
-            res.ids.postId = post[1]
-            res.metadata.isPost = true
-            res.metadata.contentType = 'post'
-            return
-        }
-        const prof = this.patterns.profile.exec(url)
-        if (prof) {
-            res.username = prof[1]
-            res.metadata.isProfile = true
-            res.metadata.contentType = 'profile'
-        }
-    },
+    return null;
+  },
 
-    validateHandle(handle: string): boolean {
-        return this.patterns.handle.test(handle)
-    },
+  validateHandle(handle: string): boolean {
+    return this.patterns.handle.test(handle);
+  },
 
-    buildProfileUrl(username: string): string {
-        return `https://liketoknow.it/${username}`
-    },
+  buildProfileUrl(username: string): string {
+    return `https://liketoknow.it/${username}`;
+  },
 
-    buildContentUrl(contentType: string, id: string): string {
-        if (contentType === 'post') return `https://liketoknow.it/p/${id}`
-        return ''
-    },
+  buildContentUrl(contentType: string, id: string): string {
+    if (contentType === 'post') return `https://liketoknow.it/p/${id}`;
+    return '';
+  },
 
-    normalizeUrl(url: string): string {
-        return normalize(url)
-    },
-} 
+  normalizeUrl(url: string): string {
+    return normalize(url);
+  },
+};

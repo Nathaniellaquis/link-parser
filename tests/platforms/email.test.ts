@@ -7,26 +7,22 @@ const mod = registry.get(id)!;
 
 describe('Email platform tests', () => {
   const samples = {
-    plain: "user@example.com",
-    mailto: "mailto:user@example.com",
-    mailtoSubject: "mailto:user@example.com?subject=Hello"
+    plain: 'user@example.com',
+    mailto: 'mailto:user@example.com',
+    mailtoSubject: 'mailto:user@example.com?subject=Hello',
   };
 
   describe('detection', () => {
     test('should detect all Email URLs', () => {
-      Object.values(samples).forEach(url => {
+      Object.values(samples).forEach((url) => {
         expect(mod.detect(url)).toBe(true);
       });
     });
 
     test('should not detect non-Email URLs', () => {
-      const nonPlatformUrls = [
-        'https://example.com/test',
-        'https://google.com',
-        'not-a-url',
-      ];
+      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
 
-      nonPlatformUrls.forEach(url => {
+      nonPlatformUrls.forEach((url) => {
         expect(mod.detect(url)).toBe(false);
       });
     });

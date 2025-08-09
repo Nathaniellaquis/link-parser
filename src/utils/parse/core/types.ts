@@ -99,104 +99,202 @@ export enum Platforms {
 }
 
 // Generic embed platform type (extend as needed)
-export type EmbedPlatform = 'youtube' | 'soundcloud' | 'twitter' | 'instagram' | string
-export type EmbedType = 'video' | 'post' | 'audio' | 'generic' | string
+export type EmbedPlatform = 'youtube' | 'soundcloud' | 'twitter' | 'instagram' | string;
+export type EmbedType = 'video' | 'post' | 'audio' | 'generic' | string;
 
 export interface ParsedUrl {
   // Validation
-  isValid: boolean
+  isValid: boolean;
 
   // URLs
-  originalUrl: string
-  normalizedUrl: string
-  canonicalUrl?: string
+  originalUrl: string;
+  normalizedUrl: string;
+  canonicalUrl?: string;
 
   // Platform Info
-  platform: Platforms | null
-  platformName?: string
+  platform: Platforms | null;
+  platformName?: string;
 
   // User Data
-  username?: string
-  userId?: string
+  username?: string;
+  userId?: string;
 
   // Content Data
   ids: {
-    postId?: string
-    videoId?: string
-    storyId?: string
-    [key: string]: string | undefined
-  }
+    postId?: string;
+    videoId?: string;
+    storyId?: string;
+    [key: string]: string | undefined;
+  };
 
   // Metadata
   metadata: {
-    isProfile?: boolean
-    isPost?: boolean
-    isVideo?: boolean
-    isStory?: boolean
-    isEmbed?: boolean
-    contentType?: string
-    [key: string]: any
-  }
+    isProfile?: boolean;
+    isPost?: boolean;
+    isVideo?: boolean;
+    isStory?: boolean;
+    isEmbed?: boolean;
+    contentType?: string;
+    [key: string]: any;
+  };
 
   // Embed Data
   embedData?: {
-    platform: EmbedPlatform
-    type: EmbedType
-    contentId: string
-    embedUrl?: string
-    options?: any
-  }
+    platform: EmbedPlatform;
+    type: EmbedType;
+    contentId: string;
+    embedUrl?: string;
+    options?: any;
+  };
 }
 
 export interface PlatformModule {
   // Identity
-  id: Platforms
-  name: string
-  color?: string
+  id: Platforms;
+  name: string;
+  color?: string;
 
   // Domains & Detection
-  domains: string[]
-  subdomains?: string[]
+  domains: string[];
+  subdomains?: string[];
   /** domainsRegexp is used to detect if a URL is a valid platform URL. It is a regular expression that matches the domains and subdomains of the platform. */
-  domainsRegexp?: RegExp
+  domainsRegexp?: RegExp;
 
   // Pattern Collection
   patterns: {
-    profile: RegExp
-    handle: RegExp
+    profile: RegExp;
+    handle: RegExp;
     content?: {
-      post?: RegExp
-      video?: RegExp
-      story?: RegExp
-      [key: string]: RegExp | undefined
-    }
-  }
+      post?: RegExp;
+      video?: RegExp;
+      story?: RegExp;
+      [key: string]: RegExp | undefined;
+    };
+  };
 
   // Core Methods
-  detect(url: string): boolean
-  extract(url: string, result: ParsedUrl): void
-  validateHandle(handle: string): boolean
+  detect(url: string): boolean;
+  extract(url: string): ExtractedData | null;
+  validateHandle(handle: string): boolean;
 
   // URL Builders
-  buildProfileUrl(username: string): string
-  buildContentUrl?(contentType: string, id: string): string
+  buildProfileUrl(username: string): string;
+  buildContentUrl?(contentType: string, id: string): string;
 
   // Normalization
-  normalizeUrl(url: string): string
+  normalizeUrl(url: string): string;
 
   // Platform-Specific Features (optional)
-  extractTimestamp?(url: string): number | null
-  generateEmbedUrl?(contentId: string, options?: any): string
-  resolveShortUrl?(shortUrl: string): Promise<string>
+  extractTimestamp?(url: string): number | null;
+  generateEmbedUrl?(contentId: string, options?: any): string;
+  resolveShortUrl?(shortUrl: string): Promise<string>;
 
   /**
-   * Return canonical embed information for a parsed URL. If the passed URL is already an
+   * Return canonical embed information for a URL. If the passed URL is already an
    * embed iframe src, return data with isEmbedAlready = true so the caller can flag it.
+   * This method should be self-contained and extract any data it needs internally.
    */
-  getEmbedInfo?(url: string, parsed: ParsedUrl): {
-    embedUrl: string
-    type?: string
-    options?: Record<string, any>
-    isEmbedAlready?: boolean
-  } | null
+  getEmbedInfo?(url: string): {
+    embedUrl: string;
+    type?: string;
+    options?: Record<string, any>;
+    isEmbedAlready?: boolean;
+  } | null;
+}
+
+/**
+ * Data extracted from a URL by a platform's extract method.
+ * This is returned instead of mutating a ParsedUrl object.
+ */
+export interface ExtractedData {
+  username?: string;
+  userId?: string;
+  ids?: {
+    postId?: string;
+    videoId?: string;
+    storyId?: string;
+    trackId?: string;
+    albumId?: string;
+    playlistId?: string;
+    reelId?: string;
+    tvId?: string;
+    tweetId?: string;
+    productId?: string;
+    repoId?: string;
+    issueId?: string;
+    articleId?: string;
+    shotId?: string;
+    projectId?: string;
+    serverId?: string;
+    channelId?: string;
+    inviteCode?: string;
+    groupId?: string;
+    roomId?: string;
+    eventId?: string;
+    campaignId?: string;
+    clipId?: string;
+    streamId?: string;
+    storeId?: string;
+    sellerId?: string;
+    listingId?: string;
+    collectionId?: string;
+    publicationId?: string;
+    questionId?: string;
+    gistId?: string;
+    pullId?: string;
+    phoneNumber?: string;
+    photoId?: string;
+    galleryId?: string;
+    answerId?: string;
+    tokenId?: string;
+    contractAddress?: string;
+    spaceId?: string;
+    checkoutId?: string;
+    creatorId?: string;
+    storyItemId?: string;
+    episodeId?: string;
+    showId?: string;
+    artistId?: string;
+    [key: string]: string | undefined;
+  };
+  metadata?: {
+    isProfile?: boolean;
+    isPost?: boolean;
+    isVideo?: boolean;
+    isStory?: boolean;
+    isEmbed?: boolean;
+    isTrack?: boolean;
+    isAlbum?: boolean;
+    isPlaylist?: boolean;
+    isArtist?: boolean;
+    isShow?: boolean;
+    isEpisode?: boolean;
+    isRepository?: boolean;
+    isArticle?: boolean;
+    isPublication?: boolean;
+    isCampaign?: boolean;
+    isProject?: boolean;
+    isGallery?: boolean;
+    isPhoto?: boolean;
+    isQuestion?: boolean;
+    isProduct?: boolean;
+    isStore?: boolean;
+    isCollection?: boolean;
+    isInvite?: boolean;
+    isGroup?: boolean;
+    isChannel?: boolean;
+    isPayment?: boolean;
+    isRoom?: boolean;
+    isEvent?: boolean;
+    isClip?: boolean;
+    isStream?: boolean;
+    isLive?: boolean;
+    isCheckout?: boolean;
+    isSong?: boolean;
+    isStation?: boolean;
+    isPodcast?: boolean;
+    isPodcastEpisode?: boolean;
+    contentType?: string;
+    [key: string]: any;
+  };
 }
