@@ -213,33 +213,39 @@ describe('Apple Music platform tests', () => {
         {
           input: 'https://music.apple.com/us/artist/taylor-swift/159260351',
           expected: 'https://embed.music.apple.com/us/artist/taylor-swift/159260351?theme=auto',
+          contentType: 'artist',
         },
         {
           input: 'https://music.apple.com/us/album/1989/1440913819',
           expected: 'https://embed.music.apple.com/us/album/1989/1440913819?theme=auto',
+          contentType: 'album',
         },
         {
           input:
             'https://music.apple.com/us/playlist/camila-cabello-apple-music-live/pl.a7f376b0f3af4918a722686f5e5bbc23',
           expected:
             'https://embed.music.apple.com/us/playlist/camila-cabello-apple-music-live/pl.a7f376b0f3af4918a722686f5e5bbc23?theme=auto',
+          contentType: 'playlist',
         },
         {
           input: 'https://music.apple.com/us/song/shake-it-off/1440913819',
           expected: 'https://embed.music.apple.com/us/song/shake-it-off/1440913819?theme=auto',
+          contentType: 'song',
         },
         {
           input: 'https://music.apple.com/us/station/apple-music-1/ra.978194965',
           expected:
             'https://embed.music.apple.com/us/station/apple-music-1/ra.978194965?theme=auto',
+          contentType: 'station',
         },
       ];
 
-      testCases.forEach(({ input, expected }) => {
+      testCases.forEach(({ input, expected, contentType }) => {
         const embedInfo = mod.getEmbedInfo!(input);
         expect(embedInfo).toEqual({
           embedUrl: expected,
           type: 'iframe',
+          contentType,
         });
       });
     });
@@ -249,37 +255,58 @@ describe('Apple Music platform tests', () => {
         {
           input: 'https://podcasts.apple.com/us/podcast/the-daily/id1200361736',
           expected: 'https://embed.podcasts.apple.com/us/podcast/the-daily/id1200361736?theme=auto',
+          contentType: 'podcast',
         },
         {
           input: 'https://podcasts.apple.com/us/podcast/the-daily/id1200361736?i=1000123456789',
           expected:
             'https://embed.podcasts.apple.com/us/podcast/the-daily/id1200361736?i=1000123456789&theme=auto',
+          contentType: 'podcastEpisode',
         },
       ];
 
-      testCases.forEach(({ input, expected }) => {
+      testCases.forEach(({ input, expected, contentType }) => {
         const embedInfo = mod.getEmbedInfo!(input);
         expect(embedInfo).toEqual({
           embedUrl: expected,
           type: 'iframe',
+          contentType,
         });
       });
     });
 
     test('detect already embed URLs', () => {
       const testCases = [
-        'https://embed.music.apple.com/us/artist/taylor-swift/159260351',
-        'https://embed.music.apple.com/us/album/1989/1440913819',
-        'https://embed.music.apple.com/us/playlist/camila-cabello-apple-music-live/pl.a7f376b0f3af4918a722686f5e5bbc23',
-        'https://embed.podcasts.apple.com/us/podcast/the-daily/id1200361736',
-        'https://embed.podcasts.apple.com/us/podcast/the-daily/id1200361736?i=1000123456789',
+        {
+          url: 'https://embed.music.apple.com/us/artist/taylor-swift/159260351',
+          contentType: 'artist',
+        },
+        {
+          url: 'https://embed.music.apple.com/us/album/1989/1440913819',
+          contentType: 'album',
+        },
+        {
+          url: 'https://embed.music.apple.com/us/playlist/camila-cabello-apple-music-live/pl.a7f376b0f3af4918a722686f5e5bbc23',
+          contentType: 'playlist',
+        },
+        {
+          url: 'https://embed.podcasts.apple.com/us/podcast/the-daily/id1200361736',
+          contentType: 'podcast',
+        },
+        {
+          url: 'https://embed.podcasts.apple.com/us/podcast/the-daily/id1200361736?i=1000123456789',
+          contentType: 'podcastEpisode',
+        },
       ];
 
-      testCases.forEach((url) => {
+      testCases.forEach(({ url, contentType }) => {
         const embedInfo = mod.getEmbedInfo!(url);
+        const expectedUrl = url.includes('?') ? `${url}&theme=auto` : `${url}?theme=auto`;
         expect(embedInfo).toEqual({
-          embedUrl: url,
-          isEmbedAlready: true,
+          embedUrl: expectedUrl,
+          // isEmbedAlready: true,
+          type: 'iframe',
+          contentType,
         });
       });
     });
@@ -308,6 +335,7 @@ describe('Apple Music platform tests', () => {
       expect(embedInfo).toEqual({
         embedUrl: expected,
         type: 'iframe',
+        contentType: 'artist',
       });
     });
   });

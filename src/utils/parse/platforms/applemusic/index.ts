@@ -140,7 +140,6 @@ export const applemusic: PlatformModule = {
       case 'song':
         extractedData.ids = { songId: groups.songId };
         extractedData.metadata!.isSong = true;
-        extractedData.metadata!.isTrack = true;
         break;
       case 'track':
         extractedData.ids = {
@@ -183,26 +182,21 @@ export const applemusic: PlatformModule = {
   },
 
   getEmbedInfo(url: string) {
-    // Check if already embed
-    if (url.includes('embed.music.apple.com') || url.includes('embed.podcasts.apple.com')) {
-      return { embedUrl: url, isEmbedAlready: true };
-    }
-
     // Use the extract method to get content type
     const extractedData = this.extract(url);
-    if (!extractedData || !extractedData.metadata?.contentType) {
+    if (!extractedData?.metadata?.contentType) {
       return null;
     }
+    const { contentType } = extractedData.metadata;
 
     // Determine target domain based on content type
     const targetDomain =
-      extractedData.metadata.contentType === 'podcast' ||
-      extractedData.metadata.contentType === 'podcastEpisode'
+      contentType === 'podcast' || contentType === 'podcastEpisode'
         ? 'embed.podcasts.apple.com'
         : 'embed.music.apple.com';
 
     // Generate embed URL using the provided function
     const embedUrl = getAppleMusicEmbedUrl(targetDomain, url);
-    return { embedUrl, type: 'iframe' };
+    return { embedUrl, type: 'iframe', contentType };
   },
 };
