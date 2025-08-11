@@ -76,7 +76,7 @@ export function cleanURL(url: string): string {
  *
  * @param domains - Array of domain strings (e.g., ['youtube.com', 'youtu.be'])
  * @param subdomains - Optional array of allowed subdomains (e.g., ['m', 'mobile', 'open']). Always includes 'www' by default.
- * @returns Regex pattern string (e.g., '(?:(?:www\\.|m\\.|mobile\\.)?(?:youtube\\.com|youtu\\.be))')
+ * @returns Regex pattern string (e.g., '(?:(?:www\\.)?(?:m\\.|mobile\\.)?(?:youtube\\.com|youtu\\.be))')
  */
 export function createDomainPattern(domains: string[], subdomains: string[] = []): string {
   if (!domains || domains.length === 0) {
@@ -88,12 +88,16 @@ export function createDomainPattern(domains: string[], subdomains: string[] = []
     .map((domain) => domain.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
     .join('|');
 
-  // Build subdomain pattern - always include www
-  const allSubdomains = ['www', ...subdomains];
-  const escapedSubdomains = allSubdomains
-    .map((sub) => sub.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-    .join('|');
+  // Build subdomain pattern - www can be combined with other subdomains
+  let subdomainPattern = '(?:www\\.)?'; // www is always optional
 
-  // Return pattern with optional subdomain prefix
-  return `(?:(?:(?:${escapedSubdomains})\\.)?(?:${escapedDomains}))`;
+  if (subdomains.length > 0) {
+    const escapedSubdomains = subdomains
+      .map((sub) => sub.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      .join('|');
+    subdomainPattern += `(?:(?:${escapedSubdomains})\\.)?`; // other subdomains are optional
+  }
+
+  // Return pattern with optional subdomain prefixes that can be combined
+  return `(?:${subdomainPattern}(?:${escapedDomains}))`;
 }

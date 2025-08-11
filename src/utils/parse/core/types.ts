@@ -200,6 +200,23 @@ export interface PlatformModule {
     options?: Record<string, any>;
     isEmbedAlready?: boolean;
   } | null;
+
+  /**
+   * Async version of getEmbedInfo for cases that require API calls.
+   * Falls back to getEmbedInfo for synchronous cases.
+   */
+  getEmbedInfoAsync?(url: string): Promise<{
+    embedUrl: string;
+    type?: string;
+    options?: Record<string, any>;
+    isEmbedAlready?: boolean;
+  } | null>;
+
+  /**
+   * Platform-specific helper methods for async operations
+   * for now used only for youtube
+   */
+  resolveUsernameToChannelId?(username: string): Promise<string | null>;
 }
 
 /**
