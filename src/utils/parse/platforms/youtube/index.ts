@@ -48,6 +48,7 @@ export const youtube: PlatformModule = {
       urlsPatterns: {
         channel: '/channel/(?<channelId>UC[a-zA-Z0-9_-]+)/?',
         userProfile: '/user/(?<username>[a-zA-Z0-9_-]+)/?',
+        handleProfile: '/@(?<username>[a-zA-Z0-9_-]+)/?',
         liveWatch: '/watch\\?v=(?<liveId>[a-zA-Z0-9_-]+)&.*\\blive=1',
         videoInPlaylist:
           '/watch\\?v=(?<videoId>[a-zA-Z0-9_-]+)&.*list=(?<playlistId>[a-zA-Z0-9_-]+)',
@@ -104,6 +105,7 @@ export const youtube: PlatformModule = {
           extractedData.metadata!.isProfile = true;
           break;
         case 'userProfile':
+        case 'handleProfile':
           extractedData.username = groups.username;
           extractedData.metadata!.isProfile = true;
           break;
@@ -290,49 +292,74 @@ export const youtube: PlatformModule = {
       case 'userProfile':
         // Legacy user URLs - handle in async method
         return null;
+
+      case 'handleProfile':
+        // @ handles cannot be reliably resolved to channel IDs without YouTube Data API. It resolves in async method
+        return null;
     }
 
     return null;
   },
 
-  async getEmbedInfoAsync(url: string) {
-    // First try the synchronous method
-    const syncResult = this.getEmbedInfo?.(url);
-    if (syncResult) {
-      return syncResult;
-    }
-
+  async getEmbedInfoAsync(
+    url: string,
+    options?: {
+      getChannelIdFromHandle?: (handle: string) => Promise<string | null>;
+    },
+  ) {
     // Handle cases that need async processing
     const extractedData = this.extract(url);
-    if (!extractedData) {
-      return null;
-    }
+    if (extractedData) {
+      const { metadata } = extractedData;
+      const contentType = metadata?.contentType;
 
-    const { metadata } = extractedData;
-    const contentType = metadata?.contentType;
+      switch (contentType) {
+        // case 'userProfile':
+        //   if (extractedData.username) {
+        //     try {
+        //       // Try to resolve username to channel ID via YouTube's RSS feed
+        //       // This is a workaround since we don't have API keys
+        //       const channelId = await this.resolveUsernameToChannelId?.(extractedData.username);
+        //       if (channelId && channelId.startsWith('UC')) {
+        //         // Convert to uploads playlist (UC -> UU)
+        //         const uploadsPlaylistId = 'UU' + channelId.substring(2);
+        //         const embedUrl = `https://www.youtube.com/embed/videoseries?list=${uploadsPlaylistId}`;
+        //         return { embedUrl, type: 'iframe', contentType };
+        //       }
+        //     } catch (error) {
+        //       console.warn(`Failed to resolve YouTube username ${extractedData.username}:`, error);
+        //     }
 
-    switch (contentType) {
-      case 'userProfile':
-        if (extractedData.username) {
-          try {
-            // Try to resolve username to channel ID via YouTube's RSS feed
-            // This is a workaround since we don't have API keys
-            const channelId = await this.resolveUsernameToChannelId?.(extractedData.username);
-            if (channelId && channelId.startsWith('UC')) {
-              // Convert to uploads playlist (UC -> UU)
-              const uploadsPlaylistId = 'UU' + channelId.substring(2);
-              const embedUrl = `https://www.youtube.com/embed/videoseries?list=${uploadsPlaylistId}`;
-              return { embedUrl, type: 'iframe', contentType };
+        //     // Fallback: use the legacy embed format (may not work for all users)
+        //     const embedUrl = `https://www.youtube.com/embed?listType=user_uploads&list=${extractedData.username}`;
+        //     return { embedUrl, type: 'iframe', contentType };
+        //   }
+        //   break;
+
+        case 'userProfile':
+        case 'handleProfile':
+          if (extractedData.username && options?.getChannelIdFromHandle) {
+            try {
+              // Use the provided channel ID resolver
+              const channelId = await options.getChannelIdFromHandle(extractedData.username);
+              if (channelId && channelId.startsWith('UC')) {
+                // Convert to uploads playlist (UC -> UU)
+                const uploadsPlaylistId = 'UU' + channelId.substring(2);
+                const embedUrl = `https://www.youtube.com/embed/videoseries?list=${uploadsPlaylistId}`;
+                return { embedUrl, type: 'iframe', contentType };
+              }
+            } catch (error) {
+              console.warn(`Failed to resolve YouTube handle ${extractedData.username}:`, error);
             }
-          } catch (error) {
-            console.warn(`Failed to resolve YouTube username ${extractedData.username}:`, error);
           }
 
-          // Fallback: use the legacy embed format (may not work for all users)
           const embedUrl = `https://www.youtube.com/embed?listType=user_uploads&list=${extractedData.username}`;
           return { embedUrl, type: 'iframe', contentType };
-        }
-        break;
+          // @ handles cannot be reliably resolved to channel IDs without YouTube Data API
+          return null;
+        default:
+          return this.getEmbedInfo?.(url, options) ?? null;
+      }
     }
 
     return null;
@@ -341,34 +368,34 @@ export const youtube: PlatformModule = {
   async resolveUsernameToChannelId(username: string): Promise<string | null> {
     try {
       // Method 1: Try to fetch the user page and extract channel ID from redirect
-      const userPageResponse = await fetch(`https://www.youtube.com/user/${username}`, {
-        method: 'HEAD',
-        redirect: 'manual',
-      });
+      // const userPageResponse = await fetch(`https://www.youtube.com/user/${username}`, {
+      //   method: 'HEAD',
+      //   redirect: 'manual',
+      // });
 
-      // YouTube redirects /user/USERNAME to /channel/CHANNEL_ID
-      if (userPageResponse.status === 301 || userPageResponse.status === 302) {
-        const location = userPageResponse.headers.get('location');
-        if (location) {
-          const channelMatch = location.match(/\/channel\/([A-Za-z0-9_-]+)/);
-          if (channelMatch) {
-            return channelMatch[1];
-          }
-        }
-      }
+      // // YouTube redirects /user/USERNAME to /channel/CHANNEL_ID
+      // if (userPageResponse.status === 301 || userPageResponse.status === 302) {
+      //   const location = userPageResponse.headers.get('location');
+      //   if (location) {
+      //     const channelMatch = location.match(/\/channel\/([A-Za-z0-9_-]+)/);
+      //     if (channelMatch) {
+      //       return channelMatch[1];
+      //     }
+      //   }
+      // }
 
       // Method 2: Try RSS feed approach
-      const rssUrl = `https://www.youtube.com/feeds/videos.xml?user=${username}`;
-      const rssResponse = await fetch(rssUrl);
+      // const rssUrl = `https://www.youtube.com/feeds/videos.xml?user=${username}`;
+      // const rssResponse = await fetch(rssUrl);
 
-      if (rssResponse.ok) {
-        const rssText = await rssResponse.text();
-        // Extract channel ID from RSS feed
-        const channelMatch = rssText.match(/<yt:channelId>([A-Za-z0-9_-]+)<\/yt:channelId>/);
-        if (channelMatch) {
-          return channelMatch[1];
-        }
-      }
+      // if (rssResponse.ok) {
+      //   const rssText = await rssResponse.text();
+      //   // Extract channel ID from RSS feed
+      //   const channelMatch = rssText.match(/<yt:channelId>([A-Za-z0-9_-]+)<\/yt:channelId>/);
+      //   if (channelMatch) {
+      //     return channelMatch[1];
+      //   }
+      // }
 
       return null;
     } catch (error) {

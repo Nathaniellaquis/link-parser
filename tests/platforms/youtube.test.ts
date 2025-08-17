@@ -118,6 +118,13 @@ describe('YouTube platform tests', () => {
       expect(mod.detect('www.mobile.youtube.com/watch?v=dQw4w9WgXcQ')).toBe(true);
     });
 
+    test('detect @ handle URLs', () => {
+      expect(mod.detect('https://www.youtube.com/@ESLDota2')).toBe(true);
+      expect(mod.detect('https://youtube.com/@MrBeast')).toBe(true);
+      expect(mod.detect('https://m.youtube.com/@pewdiepie')).toBe(true);
+      expect(mod.detect('youtube.com/@ESLDota2')).toBe(true); // protocol-less
+    });
+
     test.each(handleVariants.allUrls)('detect handle URL: %s', (url) => {
       expect(mod.detect(url)).toBe(true);
     });
@@ -188,6 +195,27 @@ describe('YouTube platform tests', () => {
       expect(r.username).toBe('testuser');
       expect(r.metadata.contentType).toBe('profile');
       expect(r.metadata.isProfile).toBe(true);
+    });
+  });
+
+  describe('@ Handle Parsing', () => {
+    test('parse @ handle URLs', () => {
+      const testUrls = [
+        'https://www.youtube.com/@ESLDota2',
+        'https://youtube.com/@MrBeast',
+        'https://m.youtube.com/@pewdiepie',
+        'youtube.com/@ESLDota2', // protocol-less
+      ];
+
+      testUrls.forEach((url) => {
+        const r = parse(url);
+        expect(r.isValid).toBe(true);
+        expect(r.metadata.contentType).toBe('handleProfile');
+        expect(r.metadata.isProfile).toBe(true);
+        // Extract expected username from URL
+        const expectedUsername = url.match(/@([^/?]+)/)?.[1];
+        expect(r.username).toBe(expectedUsername);
+      });
     });
   });
 
