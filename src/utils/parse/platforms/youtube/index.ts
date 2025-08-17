@@ -2,6 +2,7 @@ import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
+import { createUrlPattern } from '../../utils/pattern';
 
 // Define the config values first
 const domains = ['youtube.com', 'youtu.be'];
@@ -9,23 +10,6 @@ const subdomains = ['m', 'mobile'];
 
 // Create the domain pattern using the config values
 const DOMAIN_PATTERN = createDomainPattern(domains, subdomains);
-
-function createUrlPattern({
-  domainPattern,
-  urlsPatterns,
-}: {
-  domainPattern: string;
-  urlsPatterns: Record<string, string>;
-}) {
-  const patterns: Record<string, RegExp> = {};
-  for (const [key, value] of Object.entries(urlsPatterns)) {
-    patterns[key] = new RegExp(
-      `^(?:https?://)?${domainPattern}${value}(?:&.*)?${QUERY_HASH}$`,
-      'i',
-    );
-  }
-  return patterns;
-}
 
 export const youtube: PlatformModule = {
   id: Platforms.YouTube,
