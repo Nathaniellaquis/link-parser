@@ -13,8 +13,14 @@ describe('Pandora platform tests', () => {
   };
 
   describe('detection', () => {
-    test('should detect valid Pandora URLs', () => {
-      Object.values(samples).forEach((url) => expect(mod.detect(url)).toBe(true));
+    describe('detection', () => {
+
+      test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+
+        expect(mod.detect(url)).toBe(true);
+
+      });
+
     });
 
     test('should not detect invalid URLs', () => {

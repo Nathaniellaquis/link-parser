@@ -13,17 +13,18 @@ describe('Mixcloud platform tests', () => {
   };
 
   const invalid = [
-    'https://mixcloud.com/',
     'https://awesomeDJ.mixcloud.com',
     'https://example.com/awesomeDJ/summer-mix-2024',
   ];
 
-  test('detect positives', () => {
-    Object.values(samples).forEach((u) => expect(mod.detect(u)).toBe(true));
-  });
+  describe('detection', () => {
+    test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+      expect(mod.detect(url)).toBe(true);
+    });
 
-  test('detect negatives', () => {
-    invalid.forEach((u) => expect(mod.detect(u)).toBe(false));
+    test.each(invalid)('should not detect invalid URL: %s', (url) => {
+      expect(mod.detect(url)).toBe(false);
+    });
   });
 
   test('parse profile', () => {

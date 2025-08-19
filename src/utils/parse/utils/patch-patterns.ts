@@ -40,40 +40,40 @@ export function patchModulePatterns(module: PlatformModule): void {
   }
 
   // Replace naive detect implementation that relies on domain includes
-  const originalDetectSrc = module.detect.toString();
-  if (
-    /includes\(.*domain/.test(originalDetectSrc) ||
-    /includes\('.*\.com'/.test(originalDetectSrc)
-  ) {
-    module.detect = function (this: PlatformModule, url: string): boolean {
-      // Check domainsRegexp first if available (supports protocol-less URLs)
-      if (this.domainsRegexp && this.domainsRegexp.test(url)) {
-        // Still need to verify it matches a valid pattern
-        if (this.patterns.profile.test(url)) return true;
+  // const originalDetectSrc = module.detect.toString();
+  // if (
+  //   /includes\(.*domain/.test(originalDetectSrc) ||
+  //   /includes\('.*\.com'/.test(originalDetectSrc)
+  // ) {
+  //   module.detect = function (this: PlatformModule, url: string): boolean {
+  //     // Check domainsRegexp first if available (supports protocol-less URLs)
+  //     if (this.domainsRegexp && this.domainsRegexp.test(url)) {
+  //       // Still need to verify it matches a valid pattern
+  //       if (this.patterns.profile.test(url)) return true;
 
-        if (this.patterns.content) {
-          for (const key of Object.keys(this.patterns.content)) {
-            const pattern = this.patterns.content[key];
-            if (pattern && pattern.test(url)) return true;
-          }
-        }
-        return false;
-      }
+  //       if (this.patterns.content) {
+  //         for (const key of Object.keys(this.patterns.content)) {
+  //           const pattern = this.patterns.content[key];
+  //           if (pattern && pattern.test(url)) return true;
+  //         }
+  //       }
+  //       return false;
+  //     }
 
-      // Quick domain guard
-      if (!this.domains.some((domain) => url.includes(domain))) return false;
+  //     // Quick domain guard
+  //     if (!this.domains.some((domain) => url.includes(domain))) return false;
 
-      if (this.patterns.profile.test(url)) return true;
+  //     if (this.patterns.profile.test(url)) return true;
 
-      if (this.patterns.content) {
-        for (const key of Object.keys(this.patterns.content)) {
-          const pattern = this.patterns.content[key];
-          if (pattern && pattern.test(url)) return true;
-        }
-      }
-      return false;
-    };
-  }
+  //     if (this.patterns.content) {
+  //       for (const key of Object.keys(this.patterns.content)) {
+  //         const pattern = this.patterns.content[key];
+  //         if (pattern && pattern.test(url)) return true;
+  //       }
+  //     }
+  //     return false;
+  //   };
+  // }
 }
 
 export function patchAllPlatforms(registry: Map<any, PlatformModule>) {

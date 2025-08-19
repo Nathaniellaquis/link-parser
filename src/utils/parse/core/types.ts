@@ -201,7 +201,8 @@ export interface PlatformModule {
     },
   ): {
     embedUrl: string;
-    type?: string;
+    type?: string; // 'iframe'
+    contentType?: string; // 'video', 'showcase', 'channel', 'profile'
     options?: Record<string, any>;
     isEmbedAlready?: boolean;
   } | null;
@@ -214,6 +215,7 @@ export interface PlatformModule {
     url: string,
     options?: {
       getChannelIdFromHandle?: (handle: string) => Promise<string | null>;
+      resolveShortUrl?: (shortUrl: string) => Promise<string | null>;
     },
   ): Promise<{
     embedUrl: string;

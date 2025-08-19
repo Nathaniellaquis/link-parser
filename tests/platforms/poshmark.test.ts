@@ -12,14 +12,16 @@ describe('Poshmark platform tests', () => {
   };
 
   describe('detection', () => {
-    test('should detect Poshmark URLs', () => {
-      Object.values(samples).forEach((u) => expect(mod.detect(u)).toBe(true));
+    test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+      expect(mod.detect(url)).toBe(true);
     });
 
-    test('should not detect non-Poshmark URLs', () => {
-      expect(mod.detect('https://example.com/closet/user')).toBe(false);
-      expect(mod.detect('https://grailed.com/listing/123')).toBe(false);
-    });
+    test.each(['https://example.com/closet/user', 'https://grailed.com/listing/123'])(
+      'should not detect non-Poshmark URL: %s',
+      (url) => {
+        expect(mod.detect(url)).toBe(false);
+      },
+    );
   });
 
   describe('extraction', () => {

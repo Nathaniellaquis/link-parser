@@ -163,7 +163,7 @@ describe('YouTube platform tests', () => {
       const r = parse(url);
       expect(r.isValid).toBe(true);
       expect(r.username).toBe('testchannel');
-      expect(r.metadata.contentType).toBe('profile');
+      expect(r.metadata.contentType).toBe('handleProfile');
       expect(r.metadata.isProfile).toBe(true);
     });
   });
@@ -199,23 +199,19 @@ describe('YouTube platform tests', () => {
   });
 
   describe('@ Handle Parsing', () => {
-    test('parse @ handle URLs', () => {
-      const testUrls = [
-        'https://www.youtube.com/@ESLDota2',
-        'https://youtube.com/@MrBeast',
-        'https://m.youtube.com/@pewdiepie',
-        'youtube.com/@ESLDota2', // protocol-less
-      ];
-
-      testUrls.forEach((url) => {
-        const r = parse(url);
-        expect(r.isValid).toBe(true);
-        expect(r.metadata.contentType).toBe('handleProfile');
-        expect(r.metadata.isProfile).toBe(true);
-        // Extract expected username from URL
-        const expectedUsername = url.match(/@([^/?]+)/)?.[1];
-        expect(r.username).toBe(expectedUsername);
-      });
+    test.each([
+      'https://www.youtube.com/@ESLDota2',
+      'https://youtube.com/@MrBeast',
+      'https://m.youtube.com/@pewdiepie',
+      'youtube.com/@ESLDota2', // protocol-less
+    ])('should parse @ handle URL: %s', (url) => {
+      const r = parse(url);
+      expect(r.isValid).toBe(true);
+      expect(r.metadata.contentType).toBe('handleProfile');
+      expect(r.metadata.isProfile).toBe(true);
+      // Extract expected username from URL
+      const expectedUsername = url.match(/@([^/?]+)/)?.[1];
+      expect(r.username).toBe(expectedUsername);
     });
   });
 

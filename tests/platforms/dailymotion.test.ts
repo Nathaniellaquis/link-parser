@@ -14,8 +14,18 @@ describe('Dailymotion platform tests', () => {
 
   const invalid = ['https://dailymotion.com/video/', 'https://example.com/video/x7tgczq'];
 
-  test('detect positives', () => {
-    Object.values(samples).forEach((u) => expect(mod.detect(u)).toBe(true));
+  describe('detection', () => {
+
+
+    test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+
+
+      expect(mod.detect(url)).toBe(true);
+
+
+    });
+
+
   });
 
   test('detect negatives', () => {

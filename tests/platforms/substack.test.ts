@@ -13,10 +13,10 @@ describe('Substack platform tests', () => {
   };
 
   describe('detection', () => {
-    test('should detect all Substack URLs', () => {
-      Object.values(samples).forEach((url) => {
-        expect(mod.detect(url)).toBe(true);
-      });
+    test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+
+      expect(mod.detect(url)).toBe(true);
+
     });
 
     test('should not detect non-Substack URLs', () => {

@@ -12,9 +12,14 @@ describe('Cameo platform tests', () => {
     category: 'https://cameo.com/c/actors',
   };
 
-  test('detect', () => {
-    Object.values(samples).forEach((u) => expect(mod.detect(u)).toBe(true));
-    expect(mod.detect('https://example.com')).toBe(false);
+  describe('detection', () => {
+    test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+      expect(mod.detect(url)).toBe(true);
+    });
+
+    test('should not detect non-Cameo URL', () => {
+      expect(mod.detect('https://example.com')).toBe(false);
+    });
   });
 
   test('parse profile', () => {

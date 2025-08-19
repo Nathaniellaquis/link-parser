@@ -1,5 +1,5 @@
 import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
-import { normalize } from '../../utils/url';
+import { getUrlSafe, normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
 
@@ -56,8 +56,16 @@ export const amazon: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    const urlLower = url.toLowerCase();
-    return this.domains.some((domain) => urlLower.includes(domain));
+    // const urlLower = url.toLowerCase();
+    // return this.domains.some((domain) => urlLower.includes(domain));
+    const urlObj = getUrlSafe(url);
+
+    if (!urlObj) return false;
+    if (urlObj.hostname.split('.').length > 2) {
+      // we have subdomain
+      return urlObj.hostname.includes('.amazon.');
+    }
+    return urlObj.hostname.startsWith('amazon.');
   },
 
   extract(url: string): ExtractedData | null {

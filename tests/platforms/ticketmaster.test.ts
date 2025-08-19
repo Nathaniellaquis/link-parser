@@ -11,8 +11,14 @@ describe('Ticketmaster tests', () => {
     event: 'https://ticketmaster.com/event/EVT123',
     venue: 'https://ticketmaster.com/venue/VEN456',
   };
-  test('detect', () => {
-    Object.values(samples).forEach((u) => expect(mod.detect(u)).toBe(true));
+  describe('detection', () => {
+
+    test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+
+      expect(mod.detect(url)).toBe(true);
+
+    });
+
   });
   test('artist', () => {
     const r = parse(samples.artist);

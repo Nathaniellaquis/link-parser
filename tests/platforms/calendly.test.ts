@@ -10,8 +10,14 @@ describe('Calendly tests', () => {
     profile: 'https://calendly.com/johndoe',
     event: 'https://calendly.com/johndoe/30min',
   };
-  test('detect', () => {
-    Object.values(samples).forEach((u) => expect(mod.detect(u)).toBe(true));
+  describe('detection', () => {
+
+    test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+
+      expect(mod.detect(url)).toBe(true);
+
+    });
+
   });
   test('profile', () => {
     const r = parse(samples.profile);

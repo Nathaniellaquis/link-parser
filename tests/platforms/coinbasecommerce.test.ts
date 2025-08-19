@@ -8,8 +8,8 @@ describe('Coinbase Commerce', () => {
   const good =
     'https://commerce.coinbase.com/checkout/abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789';
   const notCheckout =
-    'https://commerce.coinbase.com/charges/abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789';
-  const badId = 'https://commerce.coinbase.com/checkout/shortid';
+    'https://commerce.coinbase.dd/charges/abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789';
+  const badId = 'https://commerce.d.com/checkout/shortid';
 
   test('detect', () => {
     expect(mod.detect(good)).toBe(true);

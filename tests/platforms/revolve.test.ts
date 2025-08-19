@@ -12,8 +12,14 @@ describe('Revolve tests', () => {
   };
 
   describe('detection', () => {
-    test('should detect Revolve URLs', () => {
-      Object.values(samples).forEach((u) => expect(mod.detect(u)).toBe(true));
+    describe('detection', () => {
+
+      test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+
+        expect(mod.detect(url)).toBe(true);
+
+      });
+
     });
 
     test('should not detect non-Revolve URLs', () => {
