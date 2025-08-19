@@ -10,8 +10,10 @@ describe('BandsInTown tests', () => {
     artist: 'https://bandsintown.com/a/12345',
     event: 'https://bandsintown.com/e/98765',
   };
-  test('detect', () => {
-    Object.values(samples).forEach((u) => expect(mod.detect(u)).toBe(true));
+  describe('detection', () => {
+    test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+      expect(mod.detect(url)).toBe(true);
+    });
   });
   test('artist parse', () => {
     const r = parse(samples.artist);

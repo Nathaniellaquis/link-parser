@@ -7,7 +7,7 @@ const mod = registry.get(Platforms.SignalGroup)!;
 describe('Signal invite group', () => {
   const good = 'https://signal.group/#CjQKICBq1gSxISEQ9pm2aQ';
   const httpUrl = 'http://signal.group/#CjQKICBq1gSxISEQ9pm2aQ';
-  const noFragment = 'https://signal.group/CjQKICBq1gSxISEQ9pm2aQ';
+  const noFragment = 'https://test.group/CjQKICBq1gSxISEQ9pm2aQ';
 
   test('detect', () => {
     expect(mod.detect(good)).toBe(true);

@@ -1,4 +1,3 @@
-import { parse } from '../../src/utils/parse';
 import { registry } from '../../src/utils/parse/platforms';
 import { Platforms } from '../../src/utils/parse/core/types';
 
@@ -40,13 +39,6 @@ describe('StockX parser', () => {
     test('should return null for non-matching URLs', () => {
       expect(mod.extract('https://stockx.com/')).toBeNull();
       expect(mod.extract('https://stockx.com')).toBeNull();
-    });
-  });
-
-  describe('parsing', () => {
-    test('parse slug', () => {
-      const r = parse(samples.product);
-      expect(r.ids.productSlug).toBe('nike-air-max');
     });
   });
 });

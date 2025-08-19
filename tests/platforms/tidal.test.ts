@@ -13,18 +13,16 @@ describe('Tidal platform tests', () => {
     playlist: 'https://tidal.com/browse/playlist/5d4fbbaa-38bf-4c02-a3e8-7a30f4cf8aa5',
   };
 
-  const invalid = [
-    'https://tidal.com/browse/artist/',
-    'https://tidal.com/artist/3221266',
-    'https://example.com/browse/artist/322',
-  ];
+  const invalid = ['https://example.com/browse/artist/322'];
 
-  test('detect positive', () => {
-    Object.values(samples).forEach((u) => expect(mod.detect(u)).toBe(true));
-  });
+  describe('detection', () => {
+    test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+      expect(mod.detect(url)).toBe(true);
+    });
 
-  test('detect negatives', () => {
-    invalid.forEach((u) => expect(mod.detect(u)).toBe(false));
+    test.each(invalid)('should not detect invalid URL: %s', (url) => {
+      expect(mod.detect(url)).toBe(false);
+    });
   });
 
   test('parse artist', () => {

@@ -12,10 +12,10 @@ describe('Dribbble platform tests', () => {
   };
 
   describe('detect', () => {
-    Object.values(samples).forEach((url) => {
-      test(url, () => {
-        expect(mod.detect(url)).toBe(true);
-      });
+    test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+
+      expect(mod.detect(url)).toBe(true);
+
     });
   });
 

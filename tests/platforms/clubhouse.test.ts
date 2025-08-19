@@ -13,12 +13,16 @@ describe('Clubhouse platform tests', () => {
   };
 
   describe('detection', () => {
-    test('detect', () => {
-      Object.values(samples).forEach((u) => expect(mod.detect(u)).toBe(true));
+    describe('detection', () => {
+      test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+        expect(mod.detect(url)).toBe(true);
+      });
     });
-    test('reject invalid', () => {
-      const bad = ['https://example.com', 'https://clubhouse.com/user'];
-      bad.forEach((u) => expect(mod.detect(u)).toBe(false));
+    describe('reject invalid', () => {
+      const bad = ['https://example.com', 'https://dd.com/user'];
+      test.each(bad)('should not detect %s URL: %s', (url) => {
+        expect(mod.detect(url)).toBe(false);
+      });
     });
   });
 

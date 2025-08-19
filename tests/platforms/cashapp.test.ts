@@ -13,8 +13,14 @@ describe('Cash App platform tests', () => {
   };
 
   describe('detection', () => {
-    test('detect all valid URLs', () => {
-      Object.values(samples).forEach((u) => expect(mod.detect(u)).toBe(true));
+    describe('detection', () => {
+
+      test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+
+        expect(mod.detect(url)).toBe(true);
+
+      });
+
     });
     test('reject non-platform URLs', () => {
       const bad = ['https://venmo.com/$user', 'https://example.com'];

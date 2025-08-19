@@ -194,12 +194,41 @@ export interface PlatformModule {
    * embed iframe src, return data with isEmbedAlready = true so the caller can flag it.
    * This method should be self-contained and extract any data it needs internally.
    */
-  getEmbedInfo?(url: string): {
+  getEmbedInfo?(
+    url: string,
+    options?: {
+      getChannelIdFromHandle?: (handle: string) => Promise<string | null>;
+    },
+  ): {
+    embedUrl: string;
+    type?: string; // 'iframe'
+    contentType?: string; // 'video', 'showcase', 'channel', 'profile'
+    options?: Record<string, any>;
+    isEmbedAlready?: boolean;
+  } | null;
+
+  /**
+   * Async version of getEmbedInfo for cases that require API calls.
+   * Falls back to getEmbedInfo for synchronous cases.
+   */
+  getEmbedInfoAsync?(
+    url: string,
+    options?: {
+      getChannelIdFromHandle?: (handle: string) => Promise<string | null>;
+      resolveShortUrl?: (shortUrl: string) => Promise<string | null>;
+    },
+  ): Promise<{
     embedUrl: string;
     type?: string;
     options?: Record<string, any>;
     isEmbedAlready?: boolean;
-  } | null;
+  } | null>;
+
+  /**
+   * Platform-specific helper methods for async operations
+   * for now used only for youtube
+   */
+  resolveUsernameToChannelId?(username: string): Promise<string | null>;
 }
 
 /**

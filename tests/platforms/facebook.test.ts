@@ -17,19 +17,16 @@ describe('Facebook platform tests', () => {
   };
 
   describe('detection', () => {
-    test('should detect all Facebook URLs', () => {
-      Object.values(samples).forEach((url) => {
-        expect(mod.detect(url)).toBe(true);
-      });
+    test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+      expect(mod.detect(url)).toBe(true);
     });
 
-    test('should not detect non-Facebook URLs', () => {
-      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
-
-      nonPlatformUrls.forEach((url) => {
+    test.each(['https://example.com/test', 'https://google.com', 'not-a-url'])(
+      'should not detect non-Facebook URL: %s',
+      (url) => {
         expect(mod.detect(url)).toBe(false);
-      });
-    });
+      },
+    );
   });
 
   describe('parsing', () => {

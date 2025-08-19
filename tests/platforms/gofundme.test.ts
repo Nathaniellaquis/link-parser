@@ -10,8 +10,14 @@ describe('GoFundMe tests', () => {
     campaign: 'https://gofundme.com/f/help-my-dog',
     user: 'https://gofundme.com/u/johndoe',
   };
-  test('detect', () => {
-    Object.values(samples).forEach((u) => expect(mod.detect(u)).toBe(true));
+  describe('detection', () => {
+
+    test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+
+      expect(mod.detect(url)).toBe(true);
+
+    });
+
   });
   test('campaign', () => {
     const r = parse(samples.campaign);

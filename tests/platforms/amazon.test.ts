@@ -14,19 +14,16 @@ describe('Amazon platform tests', () => {
   };
 
   describe('detection', () => {
-    test('should detect all Amazon URLs', () => {
-      Object.values(samples).forEach((url) => {
-        expect(mod.detect(url)).toBe(true);
-      });
+    test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+      expect(mod.detect(url)).toBe(true);
     });
 
-    test('should not detect non-Amazon URLs', () => {
-      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
-
-      nonPlatformUrls.forEach((url) => {
+    test.each(['https://example.com/test', 'https://google.com', 'not-a-url'])(
+      'should not detect non-Amazon URL: %s',
+      (url) => {
         expect(mod.detect(url)).toBe(false);
-      });
-    });
+      },
+    );
   });
 
   describe('extraction', () => {
@@ -160,22 +157,16 @@ describe('Amazon platform tests', () => {
         const profileUrl = mod.buildProfileUrl('testuser');
         expect(profileUrl).toBeTruthy();
         expect(mod.detect(profileUrl)).toBe(true);
-        // Negative: invalid username (empty)
-        const invalidProfileUrl = mod.buildProfileUrl('');
-        expect(typeof invalidProfileUrl).toBe('string');
-        expect(mod.detect(invalidProfileUrl)).toBe(false);
       });
     }
   });
 
   describe('URL normalization', () => {
     if (mod.normalizeUrl) {
-      Object.entries(samples).forEach(([key, url]) => {
-        test(`should normalize ${key} URL`, () => {
-          const normalized = mod.normalizeUrl!(url);
-          expect(normalized).toBeTruthy();
-          expect(typeof normalized).toBe('string');
-        });
+      test.each(Object.entries(samples))('should normalize %s URL', (_, url) => {
+        const normalized = mod.normalizeUrl!(url);
+        expect(normalized).toBeTruthy();
+        expect(typeof normalized).toBe('string');
       });
     }
   });

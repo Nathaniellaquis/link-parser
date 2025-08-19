@@ -12,8 +12,14 @@ describe('Triller platform tests', () => {
   };
 
   describe('detection', () => {
-    test('detect valid URLs', () => {
-      Object.values(samples).forEach((url) => expect(mod.detect(url)).toBe(true));
+    describe('detection', () => {
+
+      test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+
+        expect(mod.detect(url)).toBe(true);
+
+      });
+
     });
     test('reject invalid', () => {
       const bad = ['https://example.com', 'https://triller.co/user'];

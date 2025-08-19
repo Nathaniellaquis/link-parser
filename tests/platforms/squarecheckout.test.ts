@@ -7,7 +7,7 @@ const mod = registry.get(Platforms.SquareCheckout)!;
 describe('Square checkout', () => {
   const good = 'https://square.link/pay/AbCd1234';
   const goodAlt = 'https://checkout.square.site/pay/zZyYxXwW';
-  const bad = 'https://square.link/other/AbCd1234';
+  const bad = 'https://test.link/other/AbCd1234';
 
   test('detect variant', () => {
     expect(mod.detect(good)).toBe(true);

@@ -15,13 +15,16 @@ describe('PayPal platform tests', () => {
   };
 
   describe('detection', () => {
-    test('detect all valid URLs', () => {
-      Object.values(samples).forEach((u) => expect(mod.detect(u)).toBe(true));
+    test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+      expect(mod.detect(url)).toBe(true);
     });
-    test('reject invalid', () => {
-      const bad = ['https://example.com', 'https://paypal.me/'];
-      bad.forEach((u) => expect(mod.detect(u)).toBe(false));
-    });
+
+    test.each(['https://example.com', 'https://paypal.me/'])(
+      'should not detect invalid URL: %s',
+      (url) => {
+        expect(mod.detect(url)).toBe(false);
+      },
+    );
   });
 
   describe('parsing', () => {

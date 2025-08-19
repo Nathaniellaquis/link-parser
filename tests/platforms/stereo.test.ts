@@ -10,8 +10,14 @@ describe('Stereo tests', () => {
     profile: 'https://stereo.com/radiohost',
     show: 'https://stereo.com/s/SHOW123',
   };
-  test('detect', () => {
-    Object.values(samples).forEach((u) => expect(mod.detect(u)).toBe(true));
+  describe('detection', () => {
+
+    test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+
+      expect(mod.detect(url)).toBe(true);
+
+    });
+
   });
   test('profile parse', () => {
     const r = parse(samples.profile);

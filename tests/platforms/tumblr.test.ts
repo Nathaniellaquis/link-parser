@@ -13,19 +13,16 @@ describe('Tumblr platform tests', () => {
   };
 
   describe('detection', () => {
-    test('should detect all Tumblr URLs', () => {
-      Object.values(samples).forEach((url) => {
-        expect(mod.detect(url)).toBe(true);
-      });
+    test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+      expect(mod.detect(url)).toBe(true);
     });
 
-    test('should not detect non-Tumblr URLs', () => {
-      const nonPlatformUrls = ['https://example.com/test', 'https://google.com', 'not-a-url'];
-
-      nonPlatformUrls.forEach((url) => {
+    test.each(['https://example.com/test', 'https://google.com', 'not-a-url'])(
+      'should not detect non-Tumblr URL: %s',
+      (url) => {
         expect(mod.detect(url)).toBe(false);
-      });
-    });
+      },
+    );
   });
 
   describe('parsing', () => {
@@ -83,12 +80,10 @@ describe('Tumblr platform tests', () => {
 
   describe('URL normalization', () => {
     if (mod.normalizeUrl) {
-      Object.entries(samples).forEach(([key, url]) => {
-        test(`should normalize ${key} URL`, () => {
-          const normalized = mod.normalizeUrl!(url);
-          expect(normalized).toBeTruthy();
-          expect(typeof normalized).toBe('string');
-        });
+      test.each(Object.entries(samples))('should normalize %s URL', (_, url) => {
+        const normalized = mod.normalizeUrl!(url);
+        expect(normalized).toBeTruthy();
+        expect(typeof normalized).toBe('string');
       });
     }
   });

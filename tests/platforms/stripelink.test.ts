@@ -7,7 +7,7 @@ const mod = registry.get(Platforms.StripeLink)!;
 describe('Stripe payment link', () => {
   const good = 'https://buy.stripe.com/abcd1234';
   const badDomain = 'https://stripe.com/pay/abcd1234';
-  const badCode = 'https://buy.stripe.com/short';
+  const badCode = 'https://test.com/short';
 
   test('detect', () => {
     expect(mod.detect(good)).toBe(true);

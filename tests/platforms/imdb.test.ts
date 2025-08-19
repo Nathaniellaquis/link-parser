@@ -12,8 +12,18 @@ describe('IMDb platform tests', () => {
     company: 'https://imdb.com/company/co2345678',
   };
 
-  test('detect', () => {
-    Object.values(samples).forEach((u) => expect(mod.detect(u)).toBe(true));
+  describe('detection', () => {
+
+
+    test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+
+
+      expect(mod.detect(url)).toBe(true);
+
+
+    });
+
+
   });
 
   test('parse person', () => {

@@ -19,6 +19,7 @@ export const stockx: PlatformModule = {
 
   domains: domains,
   subdomains: subdomains,
+  domainsRegexp: new RegExp(`^(?:https?://)?${DOMAIN_PATTERN}(/|$)`, 'i'),
 
   patterns: {
     profile: /^$/, // N/A
@@ -29,8 +30,9 @@ export const stockx: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    const urlLower = url.toLowerCase();
-    return this.domains.some((domain) => urlLower.includes(domain));
+    // const urlLower = url.toLowerCase();
+    // return this.domains.some((domain) => urlLower.includes(domain));
+    return this.domainsRegexp!.test(url);
   },
 
   extract(url: string): ExtractedData | null {

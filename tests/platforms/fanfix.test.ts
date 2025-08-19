@@ -10,8 +10,14 @@ describe('Fanfix tests', () => {
     profile: 'https://fanfix.io/@creator',
     post: 'https://fanfix.io/post/12345',
   };
-  test('detect', () => {
-    Object.values(samples).forEach((u) => expect(mod.detect(u)).toBe(true));
+  describe('detection', () => {
+
+    test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+
+      expect(mod.detect(url)).toBe(true);
+
+    });
+
   });
   test('profile', () => {
     const r = parse(samples.profile);

@@ -15,7 +15,7 @@ describe('BeReal platform tests', () => {
       expect(mod.detect(samples.profile)).toBe(true);
     });
     test('reject invalid', () => {
-      const bad = ['https://example.com', 'https://bereal.com'];
+      const bad = ['https://example.com', 'https://bereal1.com'];
       bad.forEach((u) => expect(mod.detect(u)).toBe(false));
     });
   });

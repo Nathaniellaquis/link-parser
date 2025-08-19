@@ -2,9 +2,10 @@ import { PlatformModule, Platforms, ExtractedData } from '../../core/types';
 import { normalize } from '../../utils/url';
 import { createDomainPattern } from '../../utils/url';
 import { QUERY_HASH } from '../../utils/constants';
+import { createUrlPattern } from '../../utils/pattern';
 
 // Define the config values first
-const domains = ['youtube.com', 'youtu.be', 'youtube-nocookie.com'];
+const domains = ['youtube.com', 'youtu.be'];
 const subdomains = ['m', 'mobile'];
 
 // Create the domain pattern using the config values
@@ -18,150 +19,133 @@ export const youtube: PlatformModule = {
   domains: domains,
   subdomains: subdomains,
 
+  domainsRegexp: new RegExp(`^(?:https?://)?${DOMAIN_PATTERN}(/|$)`, 'i'),
+
   patterns: {
     profile: new RegExp(
-      `^https?://${DOMAIN_PATTERN}/(?:c/|user/|@)([a-zA-Z0-9_-]{2,30})/?${QUERY_HASH}$`,
+      `^(?:https?://)?${DOMAIN_PATTERN}/(?:c/|user/|@)([a-zA-Z0-9_-]{2,30})/?${QUERY_HASH}$`,
       'i',
     ),
     handle: /^[a-zA-Z0-9][a-zA-Z0-9._-]{2,29}$/,
-    content: {
-      channel: new RegExp(
-        `^https?://${DOMAIN_PATTERN}/channel/(UC[a-zA-Z0-9_-]{17,22})/?${QUERY_HASH}$`,
-        'i',
-      ),
-      video: new RegExp(
-        `^https?://${DOMAIN_PATTERN}/watch\\?v=([a-zA-Z0-9_-]{11})(?:&.*)?${QUERY_HASH}$`,
-        'i',
-      ),
-      videoShort: new RegExp(
-        `^https?://${DOMAIN_PATTERN}/([a-zA-Z0-9_-]{11})/?${QUERY_HASH}$`,
-        'i',
-      ),
-      short: new RegExp(
-        `^https?://${DOMAIN_PATTERN}/shorts/([a-zA-Z0-9_-]{11})/?${QUERY_HASH}$`,
-        'i',
-      ),
-      playlist: new RegExp(
-        `^https?://${DOMAIN_PATTERN}/playlist\\?list=([a-zA-Z0-9_-]+)(?:&.*)?${QUERY_HASH}$`,
-        'i',
-      ),
-      live: new RegExp(`^https?://${DOMAIN_PATTERN}/live/([a-zA-Z0-9_-]{11})/?${QUERY_HASH}$`, 'i'),
-      liveWatch: new RegExp(
-        `^https?://${DOMAIN_PATTERN}/watch\\?v=([a-zA-Z0-9_-]{11})&.*\\blive=1(?:&.*)?${QUERY_HASH}$`,
-        'i',
-      ),
-      channelLive: new RegExp(
-        `^https?://${DOMAIN_PATTERN}/@([a-zA-Z0-9_-]+)/live/?${QUERY_HASH}$`,
-        'i',
-      ),
-      embed: new RegExp(
-        `^https?://${DOMAIN_PATTERN}/embed/([a-zA-Z0-9_-]{11})/?${QUERY_HASH}$`,
-        'i',
-      ),
-    },
+    content: createUrlPattern({
+      domainPattern: DOMAIN_PATTERN,
+      urlsPatterns: {
+        channel: '/channel/(?<channelId>UC[a-zA-Z0-9_-]+)/?',
+        userProfile: '/user/(?<username>[a-zA-Z0-9_-]+)/?',
+        handleProfile: '/@(?<username>[a-zA-Z0-9_-]+)/?',
+        liveWatch: '/watch\\?v=(?<liveId>[a-zA-Z0-9_-]+)&.*\\blive=1',
+        videoInPlaylist:
+          '/watch\\?v=(?<videoId>[a-zA-Z0-9_-]+)&.*list=(?<playlistId>[a-zA-Z0-9_-]+)',
+        video: '/watch\\?v=(?<videoId>[a-zA-Z0-9_-]+)',
+        videoShort:
+          '/(?<videoId>(?!playlist|channel|shorts|live|embed|watch|user|c|@)[a-zA-Z0-9_-]+)/?',
+        short: '/shorts/(?<shortId>[a-zA-Z0-9_-]+)/?',
+        playlist: '/playlist\\?list=(?<playlistId>[a-zA-Z0-9_-]+)',
+        live: '/live/(?<liveId>[a-zA-Z0-9_-]+)/?',
+        channelLive: '/@(?<username>[a-zA-Z0-9_-]+)/live/?',
+        userLive: '/user/(?<username>[a-zA-Z0-9_-]+)/live/?',
+        channelIdLive: '/channel/(?<channelId>UC[a-zA-Z0-9_-]+)/live/?',
+        embed: '/embed/(?<videoId>[a-zA-Z0-9_-]+)/?',
+      },
+    }),
   },
 
   detect(url: string): boolean {
-    // Simple domain check - allows ALL pages on the platform
-    const urlLower = url.toLowerCase();
-    return this.domains.some((domain) => urlLower.includes(domain));
+    // Use domainsRegexp to properly handle subdomains
+    return this.domainsRegexp!.test(url);
   },
 
   extract(url: string): ExtractedData | null {
-    // Handle channel URLs
-    const channelMatch = this.patterns.content?.channel?.exec(url);
-    if (channelMatch) {
-      return {
-        ids: { channelId: channelMatch[1] },
-        metadata: {
-          isProfile: true,
-          contentType: 'channel',
-        },
-      };
-    }
+    // Try each content pattern until one matches
+    const contentPatterns = this.patterns.content;
+    if (!contentPatterns) return null;
 
-    // Handle embed URLs
-    const embedMatch = this.patterns.content?.embed?.exec(url);
-    if (embedMatch) {
-      return {
-        ids: { videoId: embedMatch[1] },
-        metadata: {
-          isEmbed: true,
-          contentType: 'embed',
-        },
-      };
-    }
+    let matchResult: { contentType: string; match: RegExpMatchArray } | null = null;
 
-    // Handle live videos first to avoid matching the generic video pattern
-    const liveMatch =
-      this.patterns.content?.live?.exec(url) ||
-      this.patterns.content?.liveWatch?.exec(url) ||
-      this.patterns.content?.channelLive?.exec(url);
-    if (liveMatch) {
-      // For /@user/live the capturing group is username not videoId, treat accordingly
-      if (url.includes('/@') && url.endsWith('/live')) {
-        return {
-          username: liveMatch[1],
-          metadata: {
-            isLive: true,
-            contentType: 'live',
-          },
-        };
-      } else {
-        return {
-          ids: { liveId: liveMatch[1] },
-          metadata: {
-            isLive: true,
-            contentType: 'live',
-          },
-        };
+    // Try each pattern
+    for (const [contentType, pattern] of Object.entries(contentPatterns)) {
+      if (!pattern) continue;
+      const match = pattern.exec(url);
+      if (match && match.groups) {
+        matchResult = { contentType, match };
+        break;
       }
     }
 
-    // Handle video URLs (both regular and short)
-    const videoMatch = this.patterns.content?.video?.exec(url);
-    const videoShortMatch = this.patterns.content?.videoShort?.exec(url);
-    if (videoMatch || videoShortMatch) {
-      const match = videoMatch || videoShortMatch;
-      const data: ExtractedData = {
-        ids: { videoId: match![1] },
+    if (matchResult) {
+      const { contentType, match } = matchResult;
+      const groups = match.groups!;
+
+      const extractedData: ExtractedData = {
         metadata: {
-          isVideo: true,
-          contentType: 'video',
+          contentType,
         },
       };
 
-      // Extract timestamp if present
-      const tMatch = url.match(/[?&]t=(\d+)/);
-      if (tMatch) data.metadata!.timestamp = parseInt(tMatch[1]);
-      return data;
+      // Set content ID and metadata based on content type
+      switch (contentType) {
+        case 'channel':
+          extractedData.ids = { channelId: groups.channelId };
+          extractedData.metadata!.isProfile = true;
+          break;
+        case 'userProfile':
+        case 'handleProfile':
+          extractedData.username = groups.username;
+          extractedData.metadata!.isProfile = true;
+          break;
+        case 'video':
+        case 'videoShort':
+          extractedData.ids = { videoId: groups.videoId };
+          extractedData.metadata!.isVideo = true;
+          // Extract timestamp if present
+          const tMatch = url.match(/[?&]t=(?<timestamp>\d+)/);
+          if (tMatch && tMatch.groups)
+            extractedData.metadata!.timestamp = parseInt(tMatch.groups.timestamp);
+          break;
+        case 'videoInPlaylist':
+          extractedData.ids = {
+            videoId: groups.videoId,
+            playlistId: groups.playlistId,
+          };
+          extractedData.metadata!.isVideo = true;
+          extractedData.metadata!.isPlaylist = true;
+          // Extract timestamp if present
+          const tMatchPlaylist = url.match(/[?&]t=(?<timestamp>\d+)/);
+          if (tMatchPlaylist && tMatchPlaylist.groups)
+            extractedData.metadata!.timestamp = parseInt(tMatchPlaylist.groups.timestamp);
+          break;
+        case 'short':
+          extractedData.ids = { shortId: groups.shortId };
+          extractedData.metadata!.isShort = true;
+          break;
+        case 'playlist':
+          extractedData.ids = { playlistId: groups.playlistId };
+          extractedData.metadata!.isPlaylist = true;
+          break;
+        case 'live':
+        case 'liveWatch':
+          extractedData.ids = { liveId: groups.liveId };
+          extractedData.metadata!.isLive = true;
+          break;
+        case 'channelLive':
+        case 'userLive':
+          extractedData.username = groups.username;
+          extractedData.metadata!.isLive = true;
+          break;
+        case 'channelIdLive':
+          extractedData.ids = { channelId: groups.channelId };
+          extractedData.metadata!.isLive = true;
+          break;
+        case 'embed':
+          extractedData.ids = { videoId: groups.videoId };
+          extractedData.metadata!.isEmbed = true;
+          break;
+      }
+
+      return extractedData;
     }
 
-    // Handle shorts
-    const shortMatch = this.patterns.content?.short?.exec(url);
-    if (shortMatch) {
-      return {
-        ids: { shortId: shortMatch[1] },
-        metadata: {
-          isShort: true,
-          contentType: 'short',
-        },
-      };
-    }
-
-    // Handle playlists
-    const playlistMatch = this.patterns.content?.playlist?.exec(url);
-    if (playlistMatch) {
-      return {
-        ids: { playlistId: playlistMatch[1] },
-        metadata: {
-          isPlaylist: true,
-          contentType: 'playlist',
-        },
-      };
-    }
-
-    // Handle profile URLs
+    // Handle profile URLs (not in content patterns)
     const profileMatch = this.patterns.profile.exec(url);
     if (profileMatch) {
       return {
@@ -201,8 +185,8 @@ export const youtube: PlatformModule = {
   },
 
   extractTimestamp(url: string): number | null {
-    const match = url.match(/[?&]t=(\d+)/);
-    return match ? parseInt(match[1]) : null;
+    const match = url.match(/[?&]t=(?<timestamp>\d+)/);
+    return match && match.groups ? parseInt(match.groups.timestamp) : null;
   },
 
   generateEmbedUrl(
@@ -217,31 +201,190 @@ export const youtube: PlatformModule = {
   },
 
   async resolveShortUrl(shortUrl: string): Promise<string> {
-    const match = /youtu\.be\/([a-zA-Z0-9_-]{11})/.exec(shortUrl);
-    if (match) return `https://youtube.com/watch?v=${match[1]}`;
+    const match = /youtu\.be\/(?<videoId>[a-zA-Z0-9_-]+)/.exec(shortUrl);
+    if (match && match.groups) return `https://youtube.com/watch?v=${match.groups.videoId}`;
     return shortUrl;
   },
 
   getEmbedInfo(url: string) {
-    // If already an embed src
-    const embedMatch = /youtube\.com\/embed\/([A-Za-z0-9_-]{11})/.exec(url);
-    if (embedMatch) {
-      return { embedUrl: url, isEmbedAlready: true };
-    }
-
-    // Extract data to get video ID
+    // Extract data to determine content type (this will handle embed URLs too)
     const extractedData = this.extract(url);
-    if (!extractedData || !extractedData.ids) {
+    if (!extractedData) {
       return null;
     }
 
-    const id = extractedData.ids.videoId || extractedData.ids.shortId || extractedData.ids.liveId;
-    if (id) {
-      const embedUrl = this.generateEmbedUrl
-        ? this.generateEmbedUrl(id)
-        : `https://www.youtube.com/embed/${id}`;
-      return { embedUrl, type: 'iframe' };
+    const { metadata, ids } = extractedData;
+    const contentType = metadata?.contentType;
+
+    // If it's already an embed URL, return it as-is
+    if (contentType === 'embed') {
+      return { embedUrl: url, isEmbedAlready: true, type: 'iframe', contentType: 'video' };
     }
+
+    // Handle different content types
+    switch (contentType) {
+      case 'video':
+      case 'videoShort':
+      case 'embed':
+        if (ids?.videoId) {
+          const embedUrl = `https://www.youtube.com/embed/${ids.videoId}`;
+          return { embedUrl, type: 'iframe', contentType };
+        }
+        break;
+
+      case 'short':
+        // Shorts embed as regular videos
+        if (ids?.shortId) {
+          const embedUrl = `https://www.youtube.com/embed/${ids.shortId}`;
+          return { embedUrl, type: 'iframe', contentType };
+        }
+        break;
+
+      case 'videoInPlaylist':
+        // Video in playlist: embed video with playlist parameter
+        if (ids?.videoId && ids?.playlistId) {
+          const embedUrl = `https://www.youtube.com/embed/${ids.videoId}?list=${ids.playlistId}`;
+          return { embedUrl, type: 'iframe', contentType };
+        }
+        break;
+
+      case 'playlist':
+        // Playlist: use videoseries endpoint
+        if (ids?.playlistId) {
+          const embedUrl = `https://www.youtube.com/embed/videoseries?list=${ids.playlistId}`;
+          return { embedUrl, type: 'iframe', contentType };
+        }
+        break;
+
+      case 'channel':
+        // Channel: convert to uploads playlist (UC -> UU)
+        if (ids?.channelId && ids.channelId.startsWith('UC')) {
+          const uploadsPlaylistId = 'UU' + ids.channelId.substring(2);
+          const embedUrl = `https://www.youtube.com/embed/videoseries?list=${uploadsPlaylistId}`;
+          return { embedUrl, type: 'iframe', contentType };
+        }
+        break;
+
+      case 'live':
+      case 'liveWatch':
+      case 'channelLive':
+      case 'userLive':
+      case 'channelIdLive':
+        // Live streams are not embeddable
+        return null;
+
+      case 'userProfile':
+        // Legacy user URLs - handle in async method
+        return null;
+
+      case 'handleProfile':
+        // @ handles cannot be reliably resolved to channel IDs without YouTube Data API. It resolves in async method
+        return null;
+    }
+
     return null;
+  },
+
+  async getEmbedInfoAsync(
+    url: string,
+    options?: {
+      getChannelIdFromHandle?: (handle: string) => Promise<string | null>;
+    },
+  ) {
+    // Handle cases that need async processing
+    const extractedData = this.extract(url);
+    if (extractedData) {
+      const { metadata } = extractedData;
+      const contentType = metadata?.contentType;
+
+      switch (contentType) {
+        // case 'userProfile':
+        //   if (extractedData.username) {
+        //     try {
+        //       // Try to resolve username to channel ID via YouTube's RSS feed
+        //       // This is a workaround since we don't have API keys
+        //       const channelId = await this.resolveUsernameToChannelId?.(extractedData.username);
+        //       if (channelId && channelId.startsWith('UC')) {
+        //         // Convert to uploads playlist (UC -> UU)
+        //         const uploadsPlaylistId = 'UU' + channelId.substring(2);
+        //         const embedUrl = `https://www.youtube.com/embed/videoseries?list=${uploadsPlaylistId}`;
+        //         return { embedUrl, type: 'iframe', contentType };
+        //       }
+        //     } catch (error) {
+        //       console.warn(`Failed to resolve YouTube username ${extractedData.username}:`, error);
+        //     }
+
+        //     // Fallback: use the legacy embed format (may not work for all users)
+        //     const embedUrl = `https://www.youtube.com/embed?listType=user_uploads&list=${extractedData.username}`;
+        //     return { embedUrl, type: 'iframe', contentType };
+        //   }
+        //   break;
+
+        case 'userProfile':
+        case 'handleProfile':
+          if (extractedData.username && options?.getChannelIdFromHandle) {
+            try {
+              // Use the provided channel ID resolver
+              const channelId = await options.getChannelIdFromHandle(extractedData.username);
+              if (channelId && channelId.startsWith('UC')) {
+                // Convert to uploads playlist (UC -> UU)
+                const uploadsPlaylistId = 'UU' + channelId.substring(2);
+                const embedUrl = `https://www.youtube.com/embed/videoseries?list=${uploadsPlaylistId}`;
+                return { embedUrl, type: 'iframe', contentType };
+              }
+            } catch (error) {
+              console.warn(`Failed to resolve YouTube handle ${extractedData.username}:`, error);
+            }
+          }
+
+          const embedUrl = `https://www.youtube.com/embed?listType=user_uploads&list=${extractedData.username}`;
+          return { embedUrl, type: 'iframe', contentType };
+          // @ handles cannot be reliably resolved to channel IDs without YouTube Data API
+          return null;
+        default:
+          return this.getEmbedInfo?.(url, options) ?? null;
+      }
+    }
+
+    return null;
+  },
+
+  async resolveUsernameToChannelId(username: string): Promise<string | null> {
+    try {
+      // Method 1: Try to fetch the user page and extract channel ID from redirect
+      // const userPageResponse = await fetch(`https://www.youtube.com/user/${username}`, {
+      //   method: 'HEAD',
+      //   redirect: 'manual',
+      // });
+
+      // // YouTube redirects /user/USERNAME to /channel/CHANNEL_ID
+      // if (userPageResponse.status === 301 || userPageResponse.status === 302) {
+      //   const location = userPageResponse.headers.get('location');
+      //   if (location) {
+      //     const channelMatch = location.match(/\/channel\/([A-Za-z0-9_-]+)/);
+      //     if (channelMatch) {
+      //       return channelMatch[1];
+      //     }
+      //   }
+      // }
+
+      // Method 2: Try RSS feed approach
+      // const rssUrl = `https://www.youtube.com/feeds/videos.xml?user=${username}`;
+      // const rssResponse = await fetch(rssUrl);
+
+      // if (rssResponse.ok) {
+      //   const rssText = await rssResponse.text();
+      //   // Extract channel ID from RSS feed
+      //   const channelMatch = rssText.match(/<yt:channelId>([A-Za-z0-9_-]+)<\/yt:channelId>/);
+      //   if (channelMatch) {
+      //     return channelMatch[1];
+      //   }
+      // }
+
+      return null;
+    } catch (error) {
+      console.warn(`Error resolving YouTube username ${username}:`, error);
+      return null;
+    }
   },
 };

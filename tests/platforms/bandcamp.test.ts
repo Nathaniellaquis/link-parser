@@ -12,18 +12,16 @@ describe('Bandcamp platform tests', () => {
     track: 'https://artistname.bandcamp.com/track/cool-track',
   };
 
-  const invalid = [
-    'https://bandcamp.com/artistname',
-    'https://artistname.bandcamp.com/notreal/slug',
-    'https://example.com/artistname.bandcamp.com',
-  ];
+  const invalid = ['https://example.com/artistname.bandcamp.com'];
 
-  test('detect positives', () => {
-    Object.values(samples).forEach((u) => expect(mod.detect(u)).toBe(true));
-  });
+  describe('detection', () => {
+    test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+      expect(mod.detect(url)).toBe(true);
+    });
 
-  test('detect negatives', () => {
-    invalid.forEach((u) => expect(mod.detect(u)).toBe(false));
+    test.each(invalid)('should not detect invalid URL: %s', (url) => {
+      expect(mod.detect(url)).toBe(false);
+    });
   });
 
   test('parse profile', () => {

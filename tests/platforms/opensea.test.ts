@@ -13,8 +13,14 @@ describe('OpenSea tests', () => {
   };
 
   describe('detection', () => {
-    test('should detect OpenSea URLs', () => {
-      Object.values(samples).forEach((u) => expect(mod.detect(u)).toBe(true));
+    describe('detection', () => {
+
+      test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+
+        expect(mod.detect(url)).toBe(true);
+
+      });
+
     });
 
     test('should not detect non-OpenSea URLs', () => {

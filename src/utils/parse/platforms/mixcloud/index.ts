@@ -17,6 +17,7 @@ export const mixcloud: PlatformModule = {
 
   domains: domains,
   subdomains: subdomains,
+  domainsRegexp: new RegExp(`^(?:https?://)?${DOMAIN_PATTERN}(/|$)`, 'i'),
 
   patterns: {
     profile: new RegExp(`^https?://${DOMAIN_PATTERN}/([A-Za-z0-9_-]{3,30})/?${QUERY_HASH}$`, 'i'),
@@ -31,8 +32,9 @@ export const mixcloud: PlatformModule = {
 
   detect(url: string): boolean {
     // Simple domain check - allows ALL pages on the platform
-    const urlLower = url.toLowerCase();
-    return this.domains.some((domain) => urlLower.includes(domain));
+    // const urlLower = url.toLowerCase();
+    // return this.domains.some((domain) => urlLower.includes(domain));
+    return this.domainsRegexp!.test(url);
   },
 
   extract(url: string): ExtractedData | null {

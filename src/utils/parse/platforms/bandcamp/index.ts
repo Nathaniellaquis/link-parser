@@ -9,6 +9,7 @@ export const bandcamp: PlatformModule = {
 
   // bandcamp uses subdomains per artist
   domains: ['bandcamp.com'],
+  domainsRegexp: new RegExp(`^(?:https?://)?(?:www\\.)?(?:[a-z0-9-]+\\.)*bandcamp\\.com(/|$)`, 'i'),
 
   patterns: {
     profile: new RegExp(
@@ -29,9 +30,9 @@ export const bandcamp: PlatformModule = {
   },
 
   detect(url: string): boolean {
-    // Simple domain check - allows ALL pages on the platform
-    const urlLower = url.toLowerCase();
-    return urlLower.includes('.bandcamp.com');
+    // const urlLower = url.toLowerCase();
+    // return urlLower.includes('.bandcamp.com');
+    return this.domainsRegexp!.test(url);
   },
 
   extract(url: string): ExtractedData | null {

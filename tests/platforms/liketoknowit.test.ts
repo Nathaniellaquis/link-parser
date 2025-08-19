@@ -10,8 +10,10 @@ describe('LikeToKnowIt tests', () => {
     profile: 'https://liketoknow.it/stylishgal',
     post: 'https://liketoknow.it/p/ABCD123',
   };
-  test('detect', () => {
-    Object.values(samples).forEach((u) => expect(mod.detect(u)).toBe(true));
+  describe('detection', () => {
+    test.each(Object.entries(samples))('should detect %s URL: %s', (_, url) => {
+      expect(mod.detect(url)).toBe(true);
+    });
   });
   test('parse profile', () => {
     const r = parse(samples.profile);
